@@ -1,0 +1,8 @@
+{
+  "modifiers": {
+    "PIERCING": {
+      "flat": 10,
+      "percent": 15
+    }
+  }
+}

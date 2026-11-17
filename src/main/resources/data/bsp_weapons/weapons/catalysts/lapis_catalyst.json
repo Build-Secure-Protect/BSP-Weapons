@@ -1,0 +1,9 @@
+{
+  "ingredient": "forge:dusts/redstone",
+  "odds": [
+    70,
+    25,
+    5,
+    0
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "ingredient": "forge:ingots/magnatite",
+  "odds": [
+    20,
+    55,
+    25,
+    0
+  ]
+}

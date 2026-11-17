@@ -1,0 +1,11 @@
+{
+  "tag": "forge:ingots/pig_iron",
+  "band": 2,
+  "colour": "#E0A8A0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ]
+}

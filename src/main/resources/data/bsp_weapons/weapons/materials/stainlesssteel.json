@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/stainlesssteel",
+  "band": 3,
+  "colour": "#C7CDD3",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 12
+      }
+    }
+  }
+}

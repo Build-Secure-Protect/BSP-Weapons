@@ -1,0 +1,10 @@
+{
+  "modifiers": {
+    "DAMAGE": {
+      "percent": 20
+    },
+    "HEAT_CAP": {
+      "percent": -20
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/lead",
+  "band": 2,
+  "colour": "#5B5F73",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 10
+      }
+    },
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": -4
+      }
+    }
+  }
+}

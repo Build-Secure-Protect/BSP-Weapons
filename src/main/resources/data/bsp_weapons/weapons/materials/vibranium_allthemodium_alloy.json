@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/vibranium_allthemodium_alloy",
+  "band": 5,
+  "colour": "#A8E8A0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 8
+      },
+      "RANGE": {
+        "percent": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "tag": "forge:ingots/insanite",
+  "band": 4,
+  "colour": "#B83A8A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ]
+}

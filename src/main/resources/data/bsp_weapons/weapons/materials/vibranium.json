@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/vibranium",
+  "band": 5,
+  "colour": "#3AD8C8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 16
+      }
+    },
+    "BARREL": {
+      "RANGE": {
+        "percent": 12
+      }
+    }
+  }
+}

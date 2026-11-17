@@ -1,0 +1,12 @@
+{
+  "tag": "forge:ingots/gobber_end",
+  "band": 5,
+  "colour": "#C8A8F0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "trait": "regenerating"
+}

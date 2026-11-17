@@ -1,0 +1,552 @@
+<title>Spine Rail Pistol</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header, then three stages in a row (the pistol, first person, on a player) stacking on phones; the bars sheet and the points to confirm below. BSP dark-board look, single theme by choice; every model is voxels. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.78); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label i { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 1px; }
+  .hud { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; font-family: var(--pixel); }
+  .hud .cross { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); }
+  .hud .cross::before, .hud .cross::after { content: ""; position: absolute; background: #fff; }
+  .hud .cross::before { left: 6px; top: 0; width: 2px; height: 14px; }
+  .hud .cross::after { top: 6px; left: 0; width: 14px; height: 2px; }
+  .hud .heat { position: absolute; right: 10px; bottom: 10px; width: 120px; display: grid; gap: 2px; font-size: 16px; color: var(--muted); }
+  .hud .heat .bar { height: 8px; background: rgba(12,14,18,0.8); border: 1px solid var(--dim); position: relative; }
+  .hud .heat .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+  .hud .heat .bar i.hot { background: var(--red); }
+  .hud .charge { position: absolute; left: 10px; bottom: 10px; font-size: 22px; color: var(--text); }
+  .hud .charge small { font-size: 16px; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .controls .group { display: flex; gap: 4px; align-items: center; }
+  .controls .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .below { max-width: 1240px; margin: 16px auto 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; }
+  @media (max-width: 1000px) { .below { grid-template-columns: 1fr; } }
+  .sheet { background: var(--panel); border: 1px solid var(--dim); padding: 10px 14px 12px; display: grid; gap: 6px; align-content: start; }
+  .sheet h3 { font-family: var(--pixel); font-weight: 400; font-size: 24px; margin: 0; color: var(--teal); }
+  .formula { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .formula b { color: var(--gold); font-weight: 400; }
+  .bars { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; font-family: var(--pixel); font-size: 18px; }
+  .bars .n { color: var(--muted); }
+  .bars .t { height: 10px; background: var(--slot); border: 1px solid var(--dim); position: relative; }
+  .bars .t i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+  .bars .t i.extra { background: var(--gold); }
+  .bars .v { font-variant-numeric: tabular-nums; text-align: right; min-width: 4ch; }
+  .parts { font-family: var(--pixel); font-size: 17px; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; }
+  .parts b { color: var(--text); font-weight: 400; }
+  .points { background: var(--panel); border: 1px solid var(--dim); padding: 10px 14px 12px; color: var(--muted); }
+  .points h3 { font-family: var(--pixel); font-weight: 400; font-size: 24px; margin: 0 0 6px; color: var(--violet); }
+  .points ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+  .points b { color: var(--text); font-weight: 500; }
+  @media (prefers-reduced-motion: reduce) { .stage { cursor: default; } }
+</style>
+
+<header>
+  <h1>SPINE RAIL PISTOL, IN PIXELS</h1>
+  <p>The refined pick from set 1: build A drawn as a voxel model with pixel shading in the feel of vanilla Minecraft. One voxel is one sixteenth of a block; the pistol is 36 voxels long and 20 tall with the grip, drawn large on the turntable and at about two thirds of a block in the hand (a rifle will be held at about one block). The same model is shown three ways. Drag any view to turn it. Set RARITY to EPIC or S to see the edge glow and the runes.</p>
+</header>
+
+<div class="row">
+  <section class="card">
+    <div class="head"><h2>THE PISTOL</h2><small>turntable, pulls apart</small></div>
+    <div class="stage" data-view="pistol"><div class="grid"></div></div>
+    <div class="controls" data-for="pistol"></div>
+    <p class="blurb"><b>Five parts on one rail.</b> The frame is a 4 by 4 rail with a cut groove and notches every four voxels, gold side rails and a rear block. The Core sits in a gold cradle on top and glows its tier colour. The Barrel is 4 by 4 with two vent fins a side, a gold clamp ring where it meets the rail and a gold muzzle ring round a 2 by 2 glowing bore. The Cell hangs under the middle with a teal charge window on each side and a gold latch. The Grip steps back one voxel every two rows, with dark finger grooves and a gold trigger. The Optic sits on a dark rear mount with a teal lens.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2>IN THE HAND</h2><small>first person: fire, reload, heat</small></div>
+    <div class="stage" data-view="hand">
+      <div class="hud"><div class="cross"></div><div class="charge"><span data-charge>24</span><small> / 24</small></div><div class="heat"><span>HEAT</span><div class="bar"><i data-heat style="width:0%"></i></div></div></div>
+    </div>
+    <div class="controls" data-for="hand"></div>
+    <p class="blurb"><b>What firing looks like.</b> A shot kicks the pistol back and up for a tenth of a second, the bore flashes, a teal beam leaves the muzzle, and the heat bar fills; keep firing and it runs red and the gun locks for a moment. RELOAD drops the Cell out of the rail, the charge count resets and the Cell slides back in. These are the animations GeckoLib will play: fire, reload, overheat; an inspect turn can come later.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2>ON THE PLAYER</h2><small>third person, aiming</small></div>
+    <div class="stage" data-view="player"><div class="grid"></div></div>
+    <div class="controls" data-for="player"></div>
+    <p class="blurb"><b>Scale against a player.</b> A blocky player two blocks tall holds the pistol in the right hand at a little over one block long, about the size of a vanilla crossbow. The tier glow and the muzzle bore read from this distance, which is what matters in a fight. The player sways as vanilla idles do.</p>
+  </section>
+</div>
+
+<div class="below">
+  <section class="sheet">
+    <h3>SHEET: BARS (D38)</h3>
+    <div class="formula">Pistol base × <b>Core II</b> → + parts → × <b>Rare</b> → + chips</div>
+    <div class="bars" data-bars></div>
+    <div class="parts" data-parts></div>
+  </section>
+  <section class="points">
+    <h3>AS DECIDED (R1 TO R8)</h3>
+    <ol>
+      <li><b>R1 Scale.</b> 36 by 20 by 6 voxels for a pistol; a rifle about 56 long. Held 40 % smaller than the first draft: about two thirds of a block for the pistol, about one block for a rifle.</li>
+      <li><b>R2 Pixel shading.</b> Each part is its material colour in three shades scattered as pixels, plus vanilla face lighting.</li>
+      <li><b>R3 What glows.</b> The Core (tier colour), the bore, the Cell windows and the Optic lens glow full bright.</li>
+      <li><b>R4 Gold fittings.</b> Clamp rings, side rails, cradle, latch and trigger are gold whatever the material.</li>
+      <li><b>R5 Rarity.</b> Epic and S weapons carry a faint edge glow in the rarity colour (violet, gold) and glowing embossed runes on the barrel sides, the rear block and the Cell, pulsing slowly. Normal and Rare show nothing on the model; the tooltip border shows every rarity. <b>To confirm:</b> the rune look as drawn here.</li>
+      <li><b>R6 Animations for the laser pistol.</b> Fire (kick back and up, bore flash, beam), reload (Cell drops and returns, 1.2 s), overheat (red bore pulse, lock 1.5 s), idle sway.</li>
+      <li><b>R7 First-person position.</b> Lower right, grip pointing down and back, barrel level with the crosshair.</li>
+      <li><b>R8 Heat and charge HUD.</b> A heat bar and a charge count at the bottom corners, only while a BSP weapon is held, clear of the other BSP overlays.</li>
+    </ol>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- palette -----------------------------------------------------------------------------------------------------
+  var MATERIALS = [
+    { name: 'Tetrium', color: 0x7D97B0 }, { name: 'Magnatite', color: 0x4A5BB5 }, { name: 'Steel', color: 0x8C949F }, { name: 'Illyrium', color: 0xE8D77A }
+  ];
+  var TIERS = [0x9AA3B5, 0x19D3B0, 0x4DA3FF, 0xB58CFF, 0xFFD23A];
+  var RARITIES = [{ name: 'NORMAL', color: 0x9AA3B5 }, { name: 'RARE', color: 0x4DA3FF }, { name: 'EPIC', color: 0xB58CFF }, { name: 'S', color: 0xFFD23A }];
+  /** Rune glyphs, 3 wide by 4 tall, drawn as embossed glowing pixels on Epic and S weapons. */
+  var GLYPHS = [['x.x', 'xxx', '.x.', 'x.x'], ['xx.', '.xx', 'x..', 'xxx'], ['x.x', '.x.', '.x.', 'x.x'], ['.x.', 'xxx', 'x.x', '.x.']];
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, RED = 0xFF6B5C;
+  var SKIN = 0xC58C62, SHIRT = 0x2F6F8F, TROUSERS = 0x3B3F8F, SHOES = 0x24262E, HAIR = 0x3A2A1C, EYE = 0x3366CC;
+
+  var STATS = [
+    { n: 'Damage', v: 6.4, max: 20, parts: 4.0 }, { n: 'Range', v: 36, max: 160, parts: 24 }, { n: 'Fire rate', v: 3.0, max: 12, parts: 2.4 },
+    { n: 'Piercing', v: 8, max: 75, parts: 0 }, { n: 'Heat cap', v: 70, max: 200, parts: 50 }, { n: 'Durability', v: 480, max: 2000, parts: 300 }
+  ];
+  var PARTS = [['Pattern', 'Laser Pistol'], ['Core', 'Tier II'], ['Barrel', 'Focused, Tetrium'], ['Cell', 'Energy, Steel'],
+    ['Grip', 'Standard, Magnatite'], ['Optic', 'Iron sight, Tetrium'], ['Roll', 'Rare'], ['Chips', '1 slot, empty']];
+
+  // ---- voxels --------------------------------------------------------------------------------------------------------
+  /** A deterministic 0..1 hash of a voxel position, so the pixel shading is the same every frame and every build. */
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function shade(hex, f) { var c = new T.Color(hex); c.multiplyScalar(f); return c; }
+
+  /**
+   * A voxel part: lists of unit cubes with a colour role each ('mat' for the material tint, or a fixed colour), drawn as
+   * one InstancedMesh for lit voxels and one for glowing voxels. Positions are whole voxels (x, y, z), the cube filling
+   * [x, x+1) on each axis.
+   */
+  function VoxelPart(name) {
+    this.name = name; this.cubes = {}; this.group = new T.Group();
+    this.home = new T.Vector3(); this.apart = new T.Vector3();
+    this.mesh = null; this.glowMesh = null; this.material = 0; this.tier = 1;
+  }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) {
+    for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role;
+    return this;
+  };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) {
+    for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z];
+    return this;
+  };
+  VoxelPart.prototype.at = function (home, apart) { this.home.set(home[0], home[1], home[2]); this.apart.set(apart[0], apart[1], apart[2]); this.group.position.copy(this.home); return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; (r === 'glow' || r === 'teal' || r === 'rune' ? glow : lit).push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1);
+    this.litKeys = lit; this.glowKeys = glow;
+    if (lit.length) {
+      this.mesh = new T.InstancedMesh(cube, new T.MeshLambertMaterial({ color: 0xFFFFFF }), lit.length);
+      this.group.add(this.mesh);
+      // the rarity halo: the same cubes a little larger, drawn inside out and faint, shown for Epic and S only
+      this.haloMesh = new T.InstancedMesh(cube, new T.MeshBasicMaterial({ color: 0xB58CFF, transparent: true, opacity: 0.3, side: T.BackSide, depthWrite: false }), lit.length);
+      this.haloMesh.visible = false;
+      this.group.add(this.haloMesh);
+    }
+    if (glow.length) {
+      this.glowMesh = new T.InstancedMesh(cube, new T.MeshBasicMaterial({ color: 0xFFFFFF }), glow.length);
+      this.group.add(this.glowMesh);
+    }
+    var m = new T.Matrix4(), s = new T.Vector3(1.22, 1.22, 1.22), q = new T.Quaternion();
+    [this.mesh, this.glowMesh, this.haloMesh].forEach(function (mesh, which) {
+      if (!mesh) return;
+      var keys = which === 1 ? glow : lit;
+      keys.forEach(function (k, i) {
+        var p = k.split(',').map(Number), c = new T.Vector3(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5);
+        if (which === 2) m.compose(c, q, s); else m.makeTranslation(c.x, c.y, c.z);
+        mesh.setMatrixAt(i, m);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+    this.paint();
+    return this;
+  };
+  /** Colours every voxel from its role: the material tint in three scattered shades, fixed colours likewise, glows in two. */
+  VoxelPart.prototype.paint = function () {
+    var self = this, tint = MATERIALS[this.material].color, tierC = TIERS[this.tier], rarityC = RARITIES[this.rarity || 0].color;
+    function roleColor(role) {
+      if (role === 'mat') return tint; if (role === 'glow') return tierC; if (role === 'teal') return TEAL; if (role === 'rune') return rarityC;
+      return role; // a fixed hex
+    }
+    if (this.haloMesh) { this.haloMesh.material.color.setHex(rarityC); this.haloMesh.visible = (this.rarity || 0) >= 2; }
+    if (this.mesh) {
+      this.litKeys.forEach(function (k, i) {
+        var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]);
+        var f = h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68);
+        self.mesh.setColorAt(i, shade(roleColor(self.cubes[k]), f));
+      });
+      this.mesh.instanceColor.needsUpdate = true;
+    }
+    if (this.glowMesh) {
+      this.glowKeys.forEach(function (k, i) {
+        var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]);
+        self.glowMesh.setColorAt(i, shade(roleColor(self.cubes[k]), h < 0.6 ? 1.0 : 0.8));
+      });
+      this.glowMesh.instanceColor.needsUpdate = true;
+    }
+  };
+  VoxelPart.prototype.set = function (e) { this.group.position.copy(this.home).addScaledVector(this.apart, e); };
+
+  /** The Spine Rail laser pistol: frame, core, barrel, cell, grip, optic. Forward is +z, up is +y, x is width (-3..2). */
+  function buildPistol() {
+    var frame = new VoxelPart('Frame').at([0, 0, 0], [0, 0, 0]);
+    frame.fill(-2, 0, -10, 1, 3, 12, GUNMETAL);
+    frame.cut(-1, 3, -10, 0, 3, 12);                                  // the groove along the top
+    for (var z = -8; z <= 12; z += 4) frame.cut(-2, 3, z, 1, 3, z);     // the notches
+    frame.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD); // gold side rails
+    frame.fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD); // rear block and its cap
+    frame.fill(-2, -2, -4, 1, -1, -1, DARK);                             // the trigger guard
+    frame.cut(-1, -2, -3, 0, -1, -2);
+    frame.fill(-1, -2, -3, 0, -1, -3, GOLD);                             // the trigger
+
+    var core = new VoxelPart('Core').at([0, 0, 0], [0, 10, 0]);
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD);  // the cradle brackets
+    core.cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow');                             // the glowing core body
+    core.fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL); // its dark top and bottom plates
+    core.cut(-1, 7, -2, 0, 7, -1);                                       // a window in the top plate
+    core.fill(-1, 7, -2, 0, 7, -1, 'glow');
+
+    var barrel = new VoxelPart('Barrel').at([0, 0, 0], [0, 0, 14]);
+    barrel.fill(-2, 1, 13, 1, 4, 24, 'mat');
+    barrel.fill(-1, 2, 25, 0, 3, 25, 'teal');                          // the bore at the muzzle
+    barrel.fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23);     // muzzle ring
+    barrel.fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);     // clamp ring
+    barrel.fill(-3, 1, 16, -3, 4, 16, 'mat').fill(-3, 1, 18, -3, 4, 18, 'mat'); // vent fins, left
+    barrel.fill(2, 1, 16, 2, 4, 16, 'mat').fill(2, 1, 18, 2, 4, 18, 'mat');     // vent fins, right
+    barrel.fill(-1, 5, 15, 0, 5, 21, DARK);                             // a dark top rib
+
+    var cell = new VoxelPart('Cell').at([0, 0, 0], [0, -11, 0]);
+    cell.fill(-2, -6, -8, 1, -1, -3, 'mat');
+    cell.fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal'); // the charge windows
+    cell.fill(-2, -6, -8, 1, -6, -3, DARK);                             // dark base
+    cell.fill(-2, -1, -3, 1, -1, -3, GOLD);                             // the latch
+
+    var grip = new VoxelPart('Grip').at([0, 0, 0], [0, -8, -7]);
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, 'mat'); }
+    grip.fill(-2, -3, -6, 1, -3, -6, DARK).fill(-2, -6, -7, 1, -6, -7, DARK); // finger grooves (replace the front voxel)
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7);
+    grip.fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK);
+    grip.fill(-2, -10, -14, 1, -10, -10, DARK);                         // the base plate
+
+    var optic = new VoxelPart('Optic').at([0, 0, 0], [0, 10, 0]);
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK);                               // the rear mount
+    optic.fill(-1, 8, -10, 0, 10, -4, 'mat');
+    optic.fill(-1, 8, -3, 0, 9, -3, 'teal');                             // the lens
+    optic.fill(-1, 11, -9, 0, 11, -9, GOLD);                             // the rear sight pin
+    optic.fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD); // side knobs
+
+    // the runes: embossed one voxel out from the surfaces, on the barrel sides, the rear block sides and the Cell's front
+    var runes = new VoxelPart('Runes').at([0, 0, 0], [0, 0, 0]);
+    function glyph(g, place) { // place(col, row) gives the voxel for glyph column 0..2 and row 0..3 (row 0 at the top)
+      for (var r = 0; r < 4; r++) for (var c = 0; c < 3; c++) if (g[r].charAt(c) === 'x') { var v = place(c, r); runes.fill(v[0], v[1], v[2], v[0], v[1], v[2], 'rune'); }
+    }
+    glyph(GLYPHS[0], function (c, r) { return [-3, 4 - r, 20 + c]; });   // barrel, left
+    glyph(GLYPHS[1], function (c, r) { return [2, 4 - r, 22 - c]; });    // barrel, right (mirrored)
+    glyph(GLYPHS[2], function (c, r) { return [-3, 4 - r, -12 + c]; });  // rear block, left
+    glyph(GLYPHS[3], function (c, r) { return [2, 4 - r, -10 - c]; });   // rear block, right
+    glyph(GLYPHS[0], function (c, r) { return [-2 + c, -2 - r, -2]; });  // the Cell's front face
+    runes.carried = ['Barrel', 'Barrel', 'Frame', 'Frame', 'Cell'];
+
+    var parts = [frame, core, barrel, cell, grip, optic];
+    var root = new T.Group();
+    parts.forEach(function (p) { p.build(); root.add(p.group); });
+    runes.build(); runes.group.visible = false; root.add(runes.group);
+    root.position.set(0.5, 0, -6.5); // centre the model on its rail
+    return { root: root, parts: parts, runes: runes, byName: function (n) { for (var i = 0; i < parts.length; i++) if (parts[i].name === n) return parts[i]; } };
+  }
+
+  /** A blocky player (vanilla proportions in voxels, 32 tall), right arm raised to aim; returns the group and the hand group. */
+  function buildPlayer() {
+    var root = new T.Group();
+    function part(name, x0, y0, z0, x1, y1, z1, color) { var p = new VoxelPart(name); p.fill(x0, y0, z0, x1, y1, z1, color); return p; }
+    var head = part('head', -4, 24, -4, 3, 31, 3, SKIN);
+    head.fill(-4, 29, -4, 3, 31, 3, HAIR).fill(-4, 24, -4, 3, 28, -4, HAIR);
+    head.fill(-3, 27, 3, -2, 27, 3, EYE).fill(1, 27, 3, 2, 27, 3, EYE);
+    head.fill(-1, 27, 3, 0, 27, 3, 0xF0F0F0);
+    head.fill(-1, 25, 3, 0, 25, 3, 0x9E6A4A);
+    var body = part('body', -4, 12, -2, 3, 23, 1, SHIRT);
+    body.fill(-4, 12, -2, 3, 13, 1, 0x1F2A33).fill(-1, 15, 1, 0, 21, 1, TEAL);
+    var legL = part('legL', -4, 0, -2, -1, 11, 1, TROUSERS); legL.fill(-4, 0, -2, -1, 1, 1, SHOES);
+    var legR = part('legR', 0, 0, -2, 3, 11, 1, TROUSERS); legR.fill(0, 0, -2, 3, 1, 1, SHOES);
+    var armL = part('armL', -8, 12, -2, -5, 23, 1, SHIRT); armL.fill(-8, 12, -2, -5, 15, 1, SKIN);
+    [head, body, legL, legR, armL].forEach(function (p) { p.build(); root.add(p.group); });
+    // the right arm hangs from a pivot at the shoulder so it can swing forward
+    var shoulder = new T.Group(); shoulder.position.set(0, 22, 0);
+    var armR = part('armR', 4, -10, -2, 7, 1, 1, SHIRT); armR.fill(4, -10, -2, 7, -7, 1, SKIN); armR.build();
+    shoulder.add(armR.group);
+    var hand = new T.Group(); hand.position.set(6, -9, 0); shoulder.add(hand);
+    root.add(shoulder);
+    return { root: root, shoulder: shoulder, hand: hand };
+  }
+
+  // ---- stages ------------------------------------------------------------------------------------------------------
+  var stages = [], pistols = [];
+  function makeStage(el, opts) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var camera = new T.PerspectiveCamera(opts.fov || 30, 4 / 3, 0.1, 500);
+    camera.position.set(opts.cam[0], opts.cam[1], opts.cam[2]); camera.lookAt(opts.look[0], opts.look[1], opts.look[2]);
+    // vanilla-like lighting: sky from above, a warm key from the front-right, a cool fill from behind
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, yaw: opts.yaw || 0, dragging: false, lastX: 0, labels: [], update: opts.update || function () {}, turn: opts.turn !== false };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() {
+      var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return;
+      renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+    }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function addLabels(st, pistol, yOffset) {
+    pistol.parts.forEach(function (p) {
+      var d = document.createElement('div'); d.className = 'label';
+      var i = document.createElement('i'); d.appendChild(i); d.appendChild(document.createTextNode(p.name));
+      st.el.appendChild(d);
+      st.labels.push({ part: p, el: d, sw: i, y: yOffset });
+    });
+  }
+  function hex(c) { return '#' + ('000000' + c.toString(16)).slice(-6); }
+  function labelColors(st) {
+    st.labels.forEach(function (l) {
+      var p = l.part, c = p.name === 'Core' ? TIERS[p.tier] : (p.name === 'Frame' ? GUNMETAL : MATERIALS[p.material].color);
+      l.sw.style.background = hex(c);
+      if (p.name === 'Core') l.el.lastChild.nodeValue = 'Core ' + ['I', 'II', 'III', 'IV', 'V'][p.tier];
+    });
+  }
+  function setMaterialAll(i) { pistols.forEach(function (g) { g.parts.forEach(function (p) { p.material = i; p.paint(); }); }); stages.forEach(labelColors); }
+  function setTierAll(i) { pistols.forEach(function (g) { g.parts.forEach(function (p) { p.tier = i; p.paint(); }); g.light.color.setHex(TIERS[i]); }); stages.forEach(labelColors); }
+  var rarity = 1;
+  function setRarityAll(i) {
+    rarity = i;
+    pistols.forEach(function (g) {
+      g.parts.forEach(function (p) { p.rarity = i; p.paint(); });
+      g.runes.rarity = i; g.runes.paint(); g.runes.group.visible = i >= 2;
+    });
+  }
+  /** The runes pulse and the halo breathes; the runes only move with the parts when the weapon is together. */
+  function pulse(now) {
+    var f = 0.75 + 0.25 * Math.sin(now * 3.0);
+    pistols.forEach(function (g) {
+      if (g.runes.glowMesh) g.runes.glowMesh.material.color.setScalar(f);
+      g.parts.forEach(function (p) { if (p.haloMesh) p.haloMesh.material.opacity = 0.18 + 0.14 * f; });
+    });
+  }
+
+  function group(holder, label, items, current, onPick, swatch) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button';
+      if (swatch) { b.className = 'sw'; b.style.background = hex(it.color); b.title = it.name; b.setAttribute('aria-label', it.name); } else b.textContent = it;
+      if (current >= 0) b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { if (current >= 0) buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i, b); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+    return buttons;
+  }
+
+  function pistolWithLight() {
+    var p = buildPistol();
+    var light = new T.PointLight(TIERS[1], 0.8, 30); light.position.set(0, 7, -1.5); p.byName('Core').group.add(light);
+    p.light = light; pistols.push(p); return p;
+  }
+
+  // 1. the turntable
+  (function () {
+    var el = document.querySelector('[data-view="pistol"]');
+    var pistol = pistolWithLight();
+    var mode = reduced ? 'apart' : 'cycle';
+    var st = makeStage(el, { cam: [48, 26, 58], look: [0, 1, 0], fov: 28, update: function (now) {
+      var e = mode === 'cycle' ? cycleValue(now) : (mode === 'apart' ? 1 : 0);
+      pistol.parts.forEach(function (p) { p.set(e); });
+      pistol.runes.group.visible = rarity >= 2 && e < 0.02; // runes sit on the parts, so they hide while the weapon is apart
+    } });
+    st.scene.add(pistol.root);
+    addLabels(st, pistol, 5);
+    var holder = document.querySelector('.controls[data-for="pistol"]');
+    group(holder, 'MOTION', ['CYCLE', 'TOGETHER', 'APART'], reduced ? 2 : 0, function (i) { mode = ['cycle', 'together', 'apart'][i]; });
+    group(holder, 'MATERIAL', MATERIALS, 0, setMaterialAll, true);
+    group(holder, 'CORE', ['I', 'II', 'III', 'IV', 'V'], 1, setTierAll);
+    group(holder, 'RARITY', RARITIES.map(function (r) { return r.name; }), 1, setRarityAll);
+  })();
+
+  // 2. first person
+  (function () {
+    var el = document.querySelector('[data-view="hand"]');
+    var pistol = pistolWithLight();
+    var heatEl = el.querySelector('[data-heat]'), chargeEl = el.querySelector('[data-charge]');
+    var heat = 0, charge = 24, locked = 0, auto = !reduced, nextShot = 1.0, nextReload = 7.0;
+    var kick = 0, flash = 0, reload = 0; // seconds left in each animation
+    var holdGroup = new T.Group();
+    var S = 0.3; // the held scale (D40: 40 % smaller than the first draft's 0.5)
+    var gun = new T.Group(); gun.scale.setScalar(S); gun.add(pistol.root); holdGroup.add(gun);
+    // the arm: a skin-and-sleeve block from the bottom right up to the grip, at the player's own scale
+    var arm = new VoxelPart('arm'); arm.fill(-2, -14, -3, 1, -1, 0, SHIRT).fill(-2, -4, -3, 1, -1, 0, SKIN).build();
+    arm.group.scale.setScalar(0.5); arm.group.rotation.set(0.5, 0, -0.35); arm.group.position.set(0.3, -2.2, -2.4); holdGroup.add(arm.group);
+    var HOLD = [4.6, -4.4, 12];
+    holdGroup.position.set(HOLD[0], HOLD[1], HOLD[2]);
+    var bore = [HOLD[0] + 0.5 * S, HOLD[1] + 3 * S, HOLD[2] + 19 * S]; // the muzzle's world position at scale S
+    var beam = new T.Mesh(new T.BoxGeometry(0.4, 0.4, 80), new T.MeshBasicMaterial({ color: TEAL })); beam.visible = false;
+    var flashMesh = new T.Mesh(new T.BoxGeometry(1.5, 1.5, 0.8), new T.MeshBasicMaterial({ color: 0xBFFFF0 })); flashMesh.visible = false;
+    var st = makeStage(el, { cam: [0, 0, 0], look: [0, 0, 1], fov: 70, turn: false, update: function (now, dt) {
+      if (auto) {
+        if (now >= nextShot && locked <= 0 && reload <= 0) { fire(now); nextShot = now + 0.45; }
+        if (now >= nextReload && reload <= 0) { doReload(); nextReload = now + 7.0; }
+      }
+      kick = Math.max(0, kick - dt); flash = Math.max(0, flash - dt); reload = Math.max(0, reload - dt); locked = Math.max(0, locked - dt);
+      heat = Math.max(0, heat - dt * 22);
+      var k = kick > 0 ? Math.sin(kick / 0.18 * Math.PI) : 0;
+      var bob = reduced ? 0 : Math.sin(now * 1.6) * 0.15;
+      gun.position.set(0, bob, -k * 1.0);
+      arm.group.position.set(0.3, -2.2 + bob, -2.4 - k * 1.0);
+      gun.rotation.x = -k * 0.22 + (reload > 0 ? Math.sin(reload / 1.2 * Math.PI) * 0.35 : 0);
+      var cellDrop = reload > 0 ? Math.sin(reload / 1.2 * Math.PI) : 0;
+      pistol.parts.forEach(function (p) { p.set(0); });
+      pistol.byName('Cell').group.position.y = -cellDrop * 9;
+      pistol.runes.group.visible = rarity >= 2;
+      beam.visible = flash > 0; flashMesh.visible = flash > 0;
+      if (flash > 0) { beam.position.set(bore[0], bore[1] + bob, bore[2] + 40); flashMesh.position.set(bore[0], bore[1] + bob, bore[2] + 0.5); }
+      heatEl.style.width = Math.min(100, heat).toFixed(0) + '%'; heatEl.className = heat > 75 ? 'hot' : '';
+      chargeEl.textContent = String(charge);
+    } });
+    function fire(now) {
+      if (charge <= 0) { doReload(); return; }
+      charge -= 1; kick = 0.18; flash = 0.08; heat += 14;
+      if (heat >= 100) { locked = 1.5; heat = 100; }
+    }
+    function doReload() { reload = 1.2; charge = 24; }
+    st.scene.add(holdGroup); st.scene.add(beam); st.scene.add(flashMesh);
+    var holder = document.querySelector('.controls[data-for="hand"]');
+    group(holder, 'DO', ['FIRE', 'RELOAD'], -1, function (i) { if (i === 0) fire(performance.now() / 1000); else doReload(); });
+    group(holder, 'AUTO', ['ON', 'OFF'], auto ? 0 : 1, function (i) { auto = i === 0; });
+    group(holder, 'RARITY', RARITIES.map(function (r) { return r.name; }), 1, setRarityAll);
+  })();
+
+  // 3. on the player
+  (function () {
+    var el = document.querySelector('[data-view="player"]');
+    var pistol = pistolWithLight();
+    var player = buildPlayer();
+    // the gun hangs from the shoulder with the arm: turned so its barrel runs along the arm and its grip sits in the hand
+    // scale 0.27 (D40): the grip's centre in the model is (0.5, -5, -15), so after the quarter turn it sits in the hand at (6, -9, 0)
+    var gun = new T.Group(); gun.scale.setScalar(0.27); gun.rotation.x = Math.PI / 2; gun.position.set(5.87, -13.05, 1.35); gun.add(pistol.root);
+    player.shoulder.add(gun);
+    player.shoulder.rotation.x = -Math.PI / 2 + 0.1;
+    var st = makeStage(el, { cam: [40, 30, 62], look: [0, 16, 2], fov: 30, yaw: -0.3, update: function (now) {
+      var sway = reduced ? 0 : Math.sin(now * 1.3) * 0.03;
+      player.root.position.y = reduced ? 0 : Math.sin(now * 1.3) * 0.25;
+      player.shoulder.rotation.x = -Math.PI / 2 + 0.1 + sway;
+      pistol.parts.forEach(function (p) { p.set(0); });
+      pistol.runes.group.visible = rarity >= 2;
+    } });
+    player.root.position.x = -0.5;
+    st.scene.add(player.root);
+    // a floor slab of two blocks, for scale
+    var floor = new VoxelPart('floor'); floor.fill(-16, -1, -16, 15, -1, 15, 0x3F4A3A).build(); st.scene.add(floor.group);
+    var holder = document.querySelector('.controls[data-for="player"]');
+    group(holder, 'MATERIAL', MATERIALS, 0, setMaterialAll, true);
+    group(holder, 'CORE', ['I', 'II', 'III', 'IV', 'V'], 1, setTierAll);
+    group(holder, 'RARITY', RARITIES.map(function (r) { return r.name; }), 1, setRarityAll);
+  })();
+
+  // ---- the sheet -----------------------------------------------------------------------------------------------------
+  (function () {
+    var holder = document.querySelector('[data-bars]');
+    STATS.forEach(function (s) {
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = s.n;
+      var t = document.createElement('span'); t.className = 't';
+      var base = document.createElement('i'); base.style.width = (100 * s.parts / s.max).toFixed(1) + '%';
+      var extra = document.createElement('i'); extra.className = 'extra'; extra.style.left = (100 * s.parts / s.max).toFixed(1) + '%'; extra.style.width = (100 * (s.v - s.parts) / s.max).toFixed(1) + '%';
+      t.appendChild(base); t.appendChild(extra);
+      var v = document.createElement('span'); v.className = 'v'; v.textContent = s.n === 'Piercing' ? s.v + '%' : (s.n === 'Fire rate' ? s.v.toFixed(1) + '/s' : String(s.v));
+      holder.appendChild(n); holder.appendChild(t); holder.appendChild(v);
+    });
+    var ph = document.querySelector('[data-parts]');
+    PARTS.forEach(function (p) { var a = document.createElement('span'); a.textContent = p[0]; var b = document.createElement('b'); b.textContent = p[1]; ph.appendChild(a); ph.appendChild(b); });
+  })();
+
+  // ---- the loop ----------------------------------------------------------------------------------------------------
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  function cycleValue(time) {
+    var p = time % 7.5;
+    if (p < 2.5) return 0; if (p < 3.5) return smooth(p - 2.5); if (p < 5.5) return 1; if (p < 6.5) return 1 - smooth(p - 5.5); return 0;
+  }
+  /** Where each part's label sits, in the part's own voxel space. */
+  var ANCHORS = { Frame: [0, 5, 8], Core: [0, 10, -1.5], Barrel: [0, 7, 19], Cell: [0, -8, -5], Grip: [0, -9, -11], Optic: [0, 13, -7] };
+  setTierAll(1); setMaterialAll(0); setRarityAll(1);
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function frame() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    pulse(now);
+    stages.forEach(function (st) {
+      st.update(now, dt);
+      if (st.turn) {
+        if (!st.dragging && !reduced) st.yaw += dt * 0.3;
+        st.scene.rotation.y = st.yaw;
+      }
+      st.renderer.render(st.scene, st.camera);
+      if (st.labels.length) {
+        var r = st.el.getBoundingClientRect();
+        st.labels.forEach(function (l) {
+          var c = ANCHORS[l.part.name];
+          l.part.group.localToWorld(v.set(c[0], c[1], c[2])); // the anchor turns with the scene
+          v.project(st.camera);
+          l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+          l.el.style.opacity = v.z < 1 ? 1 : 0;
+        });
+      }
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>

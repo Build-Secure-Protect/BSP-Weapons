@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/diamond",
+  "band": 3,
+  "colour": "#6AF0E8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "SPREAD": {
+        "percent": -12
+      }
+    }
+  }
+}

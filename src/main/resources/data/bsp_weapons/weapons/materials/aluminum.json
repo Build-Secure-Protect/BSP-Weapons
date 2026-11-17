@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/aluminum",
+  "band": 2,
+  "colour": "#CFD6D9",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "SPREAD": {
+        "percent": -8
+      }
+    }
+  }
+}

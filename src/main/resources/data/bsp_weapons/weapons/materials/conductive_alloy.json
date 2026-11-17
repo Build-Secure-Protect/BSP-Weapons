@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/conductive_alloy",
+  "band": 2,
+  "colour": "#B0B0B8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -10
+      }
+    }
+  }
+}

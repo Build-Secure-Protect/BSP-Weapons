@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/allthemodium",
+  "band": 4,
+  "colour": "#F2C94A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 12
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 240
+      }
+    }
+  }
+}

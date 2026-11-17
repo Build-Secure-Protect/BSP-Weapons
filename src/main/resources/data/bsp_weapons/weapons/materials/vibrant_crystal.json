@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/vibrant_crystal",
+  "band": 4,
+  "colour": "#A8E83A",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 12
+      }
+    }
+  }
+}

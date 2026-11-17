@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/platinum",
+  "band": 3,
+  "colour": "#D9E6F2",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -12
+      }
+    }
+  }
+}

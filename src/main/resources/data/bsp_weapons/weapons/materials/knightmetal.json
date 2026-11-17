@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/knightmetal",
+  "band": 4,
+  "colour": "#7A9A4A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 10
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 180
+      }
+    }
+  }
+}

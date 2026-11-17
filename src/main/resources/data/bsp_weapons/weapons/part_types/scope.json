@@ -1,0 +1,14 @@
+{
+  "kind": "OPTIC",
+  "modifiers": {
+    "ZOOM": {
+      "flat": 3
+    },
+    "SPREAD": {
+      "percent": -25
+    },
+    "FIRE_RATE": {
+      "percent": -10
+    }
+  }
+}

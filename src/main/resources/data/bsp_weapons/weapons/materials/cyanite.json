@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/cyanite",
+  "band": 3,
+  "colour": "#3AB8E8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 14
+      }
+    }
+  }
+}

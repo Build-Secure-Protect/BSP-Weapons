@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/tin",
+  "band": 1,
+  "colour": "#D5D9DD",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "SPREAD": {
+        "percent": -6
+      }
+    }
+  }
+}

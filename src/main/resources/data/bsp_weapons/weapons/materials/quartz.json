@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/quartz",
+  "band": 1,
+  "colour": "#F0E8E0",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 6
+      }
+    }
+  }
+}

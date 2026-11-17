@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/refined_glowstone",
+  "band": 3,
+  "colour": "#F0C84A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 10
+      }
+    },
+    "CELL": {
+      "RECHARGE": {
+        "percent": -8
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/cast_iron",
+  "band": 1,
+  "colour": "#4D4F52",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 8
+      }
+    }
+  }
+}

@@ -1,0 +1,285 @@
+<title>Part Icon Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header, three concept panels in a row (stacking on phones), each a hotbar at game scale, large previews and a note. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .controls { max-width: 1240px; margin: 0 auto 16px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; }
+  .k { font-family: var(--pixel); font-size: 18px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: grid; gap: 10px; padding: 10px 14px 14px; align-content: start; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head h2 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .hotbar { display: flex; gap: 0; background: #C6C6C6; padding: 3px; border: 2px solid #373737; width: max-content; max-width: 100%; overflow-x: auto; image-rendering: pixelated; }
+  .hotbar canvas { display: block; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; image-rendering: pixelated; }
+  .big { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .big figure { margin: 0; display: grid; gap: 4px; justify-items: center; }
+  .big canvas { width: 96px; height: 96px; background: var(--slot); border: 1px solid var(--dim); image-rendering: pixelated; }
+  .big figcaption { font-family: var(--pixel); font-size: 16px; color: var(--muted); text-align: center; line-height: 1.1; }
+  .note { margin: 0; color: var(--muted); }
+  .note b { color: var(--text); font-weight: 500; }
+  .tip { background: var(--slot); border: 1px solid var(--violet); padding: 6px 10px; font-family: var(--pixel); font-size: 17px; width: max-content; max-width: 100%; display: grid; gap: 1px; }
+  .tip .n { color: var(--text); font-size: 20px; }
+  .tip .r { color: var(--violet); }
+  .tip .s { color: var(--muted); }
+  .tip .s b { color: var(--teal); font-weight: 400; }
+  .notes { max-width: 1240px; margin: 18px auto 0; color: var(--muted); display: grid; gap: 6px; }
+  .notes h2 { font-family: var(--pixel); font-weight: 400; font-size: 26px; margin: 0; color: var(--violet); }
+  .notes ol { margin: 0; padding-left: 22px; }
+</style>
+
+<header>
+  <h1>PART ICONS: THREE STYLES</h1>
+  <p>The item icons of the weapon parts, 16 by 16 pixels as every Minecraft item is. The same fifteen parts in each style (the laser pistol's four slots in every type, and the Core), shown in a hotbar at the game's own scale and enlarged. The material tints the part, gold fittings stay gold, glows stay teal, the Core glows its tier. Change the material and tier above; every style follows.</p>
+</header>
+
+<div class="controls">
+  <div class="group" data-materials><span class="k">MATERIAL</span></div>
+  <div class="group" data-tiers><span class="k">CORE</span></div>
+</div>
+
+<div class="row">
+  <section class="card">
+    <div class="head"><h2><span>A</span>SIDE PROFILE</h2><small>the part itself, drawn flat</small></div>
+    <div class="hotbar" data-hotbar="a"></div>
+    <div class="big" data-big="a"></div>
+    <div class="tip"><span class="n">Focused Barrel</span><span class="r">Rare · Tetrium</span><span class="s">Range <b>+28%</b>  Spread <b>-30%</b></span><span class="s">Damage <b>+14%</b>  Durability <b>+60</b></span></div>
+    <p class="note"><b>Like Tinkers' parts.</b> Each part is its own silhouette from the side, in the material's shades with a dark outline, the way a vanilla item is drawn. Barrels are long and low, cells upright, grips angled, optics squat. Quick to read in a chest: the shape says the kind, the colour says the material, the glow says energy.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2><span>B</span>FRAMED CHIP</h2><small>the part on a dark card</small></div>
+    <div class="hotbar" data-hotbar="b"></div>
+    <div class="big" data-big="b"></div>
+    <div class="tip"><span class="n">Focused Barrel</span><span class="r">Rare · Tetrium</span><span class="s">Range <b>+28%</b>  Spread <b>-30%</b></span><span class="s">Damage <b>+14%</b>  Durability <b>+60</b></span></div>
+    <p class="note"><b>A manufactured component.</b> The same silhouette sits on a dark plate with a one-pixel rim and a coloured tab at the foot that names the kind: teal for barrels, gold for cells, violet for grips, blue for optics, white for the core. Reads as "made in the parts machine" and groups well in a sorted inventory; the part is a little smaller inside its frame.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2><span>C</span>FROM THE MODEL</h2><small>the voxel part, rendered small</small></div>
+    <div class="hotbar" data-hotbar="c"></div>
+    <div class="big" data-big="c"></div>
+    <div class="tip"><span class="n">Focused Barrel</span><span class="r">Rare · Tetrium</span><span class="s">Range <b>+28%</b>  Spread <b>-30%</b></span><span class="s">Damage <b>+14%</b>  Durability <b>+60</b></span></div>
+    <p class="note"><b>Rendered from the real parts.</b> The pistol's own voxel parts from the refined pick, drawn from a three-quarter angle into 16 pixels, as block items are. Icons always match the weapon they build, and a generator makes them from the model files with no hand pixelling; the cost is that thin parts turn to a few pixels at 16 and read best at 32. Shown here for the five pistol parts; the other types follow once their models exist.</p>
+  </section>
+</div>
+
+<section class="notes">
+  <h2>WHAT TO PICK</h2>
+  <ol>
+    <li>The icon style (A, B or C), or a mix such as "A's shapes on B's card" or "C, but at 32 pixels".</li>
+    <li>Whether the kind should show on the icon at all (B's tab) or only in the name and tooltip.</li>
+    <li>The tooltip: the part's name, its rarity and material on one violet line, and its own changes to the sheet underneath, as drawn.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var MATERIALS = [
+    { name: 'Tetrium', color: 0x7D97B0 }, { name: 'Magnatite', color: 0x4A5BB5 }, { name: 'Steel', color: 0x8C949F }, { name: 'Illyrium', color: 0xE8D77A }, { name: 'Manyullyn', color: 0x8A4FB0 }
+  ];
+  var TIERS = [0x9AA3B5, 0x19D3B0, 0x4DA3FF, 0xB58CFF, 0xFFD23A];
+  var KIND_TAB = { barrel: '#19D3B0', cell: '#FFD23A', grip: '#B58CFF', optic: '#4DA3FF', core: '#E6EBF2' };
+  var material = 0, tier = 1;
+
+  // ---- pixel sprites: a 16 x 16 grid of roles, built from rectangles ---------------------------------------------------
+  function Grid() { this.g = []; for (var y = 0; y < 16; y++) this.g.push('................'.split('')); }
+  Grid.prototype.rect = function (x, y, w, h, ch) { for (var j = y; j < y + h; j++) for (var i = x; i < x + w; i++) if (i >= 0 && i < 16 && j >= 0 && j < 16) this.g[j][i] = ch; return this; };
+  Grid.prototype.px = function (x, y, ch) { return this.rect(x, y, 1, 1, ch); };
+  /** An outlined box: dark edge, M body, m along the bottom (the shade line), a W highlight along the top inside. */
+  Grid.prototype.body = function (x, y, w, h) {
+    this.rect(x, y, w, h, 'K').rect(x + 1, y + 1, w - 2, h - 2, 'M');
+    if (h > 3) this.rect(x + 1, y + h - 2, w - 2, 1, 'm');
+    if (h > 4 && w > 4) this.rect(x + 2, y + 1, w - 4, 1, 'W');
+    return this;
+  };
+
+  function barrelBase(g, x0, x1) { g.body(x0, 6, x1 - x0 + 1, 5); g.rect(x1 - 1, 7, 1, 3, 'T'); g.rect(x1, 7, 1, 3, 'K'); g.rect(x0 + 1, 5, 1, 7, 'G'); g.px(x0 + 1, 5, 'g').px(x0 + 1, 11, 'g'); return g; }
+  var SPRITES = {
+    focused_barrel: function () { var g = barrelBase(new Grid(), 1, 14); g.rect(9, 5, 4, 1, 'K').rect(9, 11, 4, 1, 'K'); return g; },
+    scatter_barrel: function () { var g = barrelBase(new Grid(), 2, 11); g.rect(11, 5, 3, 7, 'K').rect(12, 6, 1, 5, 'M').rect(13, 7, 1, 3, 'T'); return g; },
+    thermal_barrel: function () { var g = barrelBase(new Grid(), 2, 13); g.px(6, 5, 'R').px(8, 5, 'R').px(10, 5, 'R').px(6, 11, 'R').px(8, 11, 'R').px(10, 11, 'R'); return g; },
+    pulse_barrel: function () { var g = barrelBase(new Grid(), 2, 13); g.px(5, 8, 'T').px(8, 8, 'T').px(11, 8, 'T'); return g; },
+    energy_cell: function () { var g = new Grid().body(5, 2, 6, 12); g.rect(7, 5, 2, 6, 'T').rect(6, 12, 4, 1, 'G'); return g; },
+    overcharge_cell: function () { var g = new Grid().body(5, 2, 6, 12); g.rect(7, 5, 2, 6, 'R').rect(5, 1, 6, 1, 'G').rect(6, 12, 4, 1, 'G'); return g; },
+    magazine: function () { var g = new Grid().body(5, 2, 6, 12); g.rect(6, 5, 4, 1, 'm').rect(6, 8, 4, 1, 'm').rect(6, 11, 4, 1, 'm').rect(5, 13, 6, 1, 'K').rect(6, 12, 4, 1, 'G'); return g; },
+    emp_cell: function () { var g = new Grid().body(5, 2, 6, 12); g.px(7, 5, 'V').px(8, 6, 'V').px(7, 7, 'V').px(8, 8, 'V').px(7, 9, 'V').px(8, 10, 'V').rect(6, 12, 4, 1, 'G'); return g; },
+    standard_grip: function () { var g = new Grid(); for (var y = 3; y <= 13; y++) { var s = Math.floor((y - 3) / 2); g.rect(5 + s, y, 5, 1, y === 3 || y === 13 ? 'K' : 'M'); g.px(5 + s, y, 'K').px(9 + s, y, 'K'); } g.rect(7, 4, 2, 1, 'W').px(6, 7, 'K').px(7, 10, 'K').rect(3, 4, 2, 2, 'G').px(4, 5, 'g'); for (var y2 = 4; y2 <= 12; y2++) g.px(8 + Math.floor((y2 - 3) / 2), y2, 'm'); return g; },
+    light_grip: function () { var g = new Grid(); for (var y = 3; y <= 13; y++) { var s = Math.floor((y - 3) / 2); g.rect(6 + s, y, 4, 1, y === 3 || y === 13 ? 'K' : 'M'); g.px(6 + s, y, 'K').px(9 + s, y, 'K'); } g.px(7, 7, 'K').px(8, 10, 'K').rect(4, 4, 2, 2, 'G'); for (var y2 = 4; y2 <= 12; y2++) g.px(8 + Math.floor((y2 - 3) / 2), y2, 'm'); return g; },
+    heavy_grip: function () { var g = new Grid(); for (var y = 2; y <= 13; y++) { var s = Math.floor((y - 2) / 2); g.rect(4 + s, y, 6, 1, y === 2 ? 'K' : 'M'); g.px(4 + s, y, 'K').px(9 + s, y, 'K'); } g.rect(9, 13, 7, 1, 'K').rect(9, 14, 7, 1, 'K').rect(6, 3, 2, 1, 'W').px(5, 6, 'K').px(6, 9, 'K').px(7, 12, 'K').rect(2, 3, 2, 2, 'G'); for (var y2 = 3; y2 <= 12; y2++) g.px(8 + Math.floor((y2 - 2) / 2), y2, 'm'); return g; },
+    iron_sight: function () { var g = new Grid().body(3, 7, 10, 4); g.rect(11, 8, 2, 2, 'T').px(13, 8, 'K').px(13, 9, 'K').rect(4, 5, 1, 2, 'K').rect(6, 11, 4, 2, 'K').rect(7, 12, 2, 1, 'G'); return g; },
+    scope: function () { var g = new Grid().body(1, 5, 14, 5); g.rect(13, 6, 1, 3, 'T').rect(14, 6, 1, 3, 'K').rect(4, 4, 1, 7, 'G').rect(10, 4, 1, 7, 'G').px(4, 4, 'g').px(10, 4, 'g').rect(6, 10, 4, 3, 'K').rect(7, 11, 2, 1, 'm'); return g; },
+    holo_sight: function () { var g = new Grid(); g.rect(4, 3, 8, 8, 'K').rect(5, 4, 6, 6, 'T').rect(6, 5, 4, 4, '.').px(7, 6, 'T').px(8, 7, 'T').rect(4, 11, 8, 2, 'K').rect(5, 11, 6, 1, 'M').rect(7, 13, 2, 1, 'G'); return g; },
+    core: function () { var g = new Grid(); g.rect(3, 5, 10, 6, 'K').rect(4, 6, 8, 4, 'C').rect(4, 6, 8, 1, 'c').rect(3, 4, 1, 8, 'G').rect(12, 4, 1, 8, 'G').px(3, 4, 'g').px(12, 4, 'g').px(3, 11, 'g').px(12, 11, 'g').rect(6, 4, 4, 1, 'K').rect(6, 11, 4, 1, 'K'); return g; }
+  };
+  var ORDER = ['core', 'focused_barrel', 'scatter_barrel', 'thermal_barrel', 'pulse_barrel', 'energy_cell', 'overcharge_cell', 'magazine', 'emp_cell', 'standard_grip', 'light_grip', 'heavy_grip', 'iron_sight', 'scope', 'holo_sight'];
+  var KIND = function (name) { return name === 'core' ? 'core' : (/barrel/.test(name) ? 'barrel' : (/cell|magazine/.test(name) ? 'cell' : (/grip/.test(name) ? 'grip' : 'optic'))); };
+  var LABEL = function (name) { return name.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); };
+
+  function hex(c) { return '#' + ('000000' + c.toString(16)).slice(-6); }
+  function shade(c, f) { var r = ((c >> 16) & 255) * f, g = ((c >> 8) & 255) * f, b = (c & 255) * f; return 'rgb(' + Math.round(Math.min(255, r)) + ',' + Math.round(Math.min(255, g)) + ',' + Math.round(Math.min(255, b)) + ')'; }
+  function colourOf(ch) {
+    var m = MATERIALS[material].color, t = TIERS[tier];
+    switch (ch) {
+      case 'M': return shade(m, 1.0); case 'm': return shade(m, 0.68); case 'W': return shade(m, 1.25);
+      case 'K': return '#14181E'; case 'G': return '#D9B23A'; case 'g': return '#8A6E1E'; case 'T': return '#19D3B0'; case 'R': return '#FF6B5C'; case 'V': return '#B58CFF';
+      case 'C': return hex(t); case 'c': return shade(t, 1.3);
+      default: return null;
+    }
+  }
+  /** Draws a sprite into a 16 x 16 canvas, with style B's card and tab when framed. */
+  function drawSprite(canvas, name, framed) {
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 16, 16);
+    if (framed) {
+      ctx.fillStyle = '#14181E'; ctx.fillRect(0, 0, 16, 16);
+      ctx.fillStyle = '#1F252E'; ctx.fillRect(1, 1, 14, 14);
+      ctx.fillStyle = '#2A2F3A'; ctx.fillRect(1, 1, 14, 1);
+      ctx.fillStyle = KIND_TAB[KIND(name)]; ctx.fillRect(3, 14, 10, 1);
+    }
+    var g = SPRITES[name]().g;
+    for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+      var c = colourOf(g[y][x]);
+      if (!c) continue;
+      if (framed && (x === 0 || x === 15 || y === 0 || y >= 14)) continue; // the frame's rim stays clear
+      ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  // ---- style C: the voxel parts rendered small -------------------------------------------------------------------------
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E;
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); this.mesh = null; this.glowMesh = null; }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; (r === 'glow' || r === 'teal' ? glow : lit).push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    this.litKeys = lit; this.glowKeys = glow;
+    if (lit.length) { this.mesh = new T.InstancedMesh(cube, new T.MeshLambertMaterial({ color: 0xFFFFFF }), lit.length); this.group.add(this.mesh); }
+    if (glow.length) { this.glowMesh = new T.InstancedMesh(cube, new T.MeshBasicMaterial({ color: 0xFFFFFF }), glow.length); this.group.add(this.glowMesh); }
+    [[this.mesh, lit], [this.glowMesh, glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); pair[0].setMatrixAt(i, m); });
+      pair[0].instanceMatrix.needsUpdate = true;
+    });
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this, tint = MATERIALS[material].color, tierC = TIERS[tier];
+    function roleColor(role) { if (role === 'mat') return tint; if (role === 'glow') return tierC; if (role === 'teal') return TEAL; return role; }
+    function col(hexv, f) { var c = new T.Color(hexv); c.multiplyScalar(f); return c; }
+    if (this.mesh) { this.litKeys.forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); self.mesh.setColorAt(i, col(roleColor(self.cubes[k]), h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68))); }); this.mesh.instanceColor.needsUpdate = true; }
+    if (this.glowMesh) { this.glowKeys.forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); self.glowMesh.setColorAt(i, col(roleColor(self.cubes[k]), h < 0.6 ? 1.0 : 0.8)); }); this.glowMesh.instanceColor.needsUpdate = true; }
+  };
+  VoxelPart.prototype.bounds = function () {
+    var b = new T.Box3();
+    Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); });
+    return b;
+  };
+  /** The refined pick's pistol parts (parts_system_refined.html), each on its own. */
+  function voxelParts() {
+    var core = new VoxelPart('core');
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD).cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow').fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL).cut(-1, 7, -2, 0, 7, -1).fill(-1, 7, -2, 0, 7, -1, 'glow');
+    var barrel = new VoxelPart('focused_barrel');
+    barrel.fill(-2, 1, 13, 1, 4, 24, 'mat').fill(-1, 2, 25, 0, 3, 25, 'teal').fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23).fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);
+    barrel.fill(-3, 1, 16, -3, 4, 16, 'mat').fill(-3, 1, 18, -3, 4, 18, 'mat').fill(2, 1, 16, 2, 4, 16, 'mat').fill(2, 1, 18, 2, 4, 18, 'mat').fill(-1, 5, 15, 0, 5, 21, DARK);
+    var cell = new VoxelPart('energy_cell');
+    cell.fill(-2, -6, -8, 1, -1, -3, 'mat').fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal').fill(-2, -6, -8, 1, -6, -3, DARK).fill(-2, -1, -3, 1, -1, -3, GOLD);
+    var grip = new VoxelPart('standard_grip');
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, 'mat'); }
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7).fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK).fill(-2, -10, -14, 1, -10, -10, DARK);
+    var optic = new VoxelPart('scope');
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK).fill(-1, 8, -10, 0, 10, -4, 'mat').fill(-1, 8, -3, 0, 9, -3, 'teal').fill(-1, 11, -9, 0, 11, -9, GOLD).fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD);
+    return [core, barrel, cell, grip, optic].map(function (p) { return p.build(); });
+  }
+
+  var renderer = null, scene = null, camera = null, parts3d = [];
+  function setupC() {
+    renderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(1);
+    renderer.outputEncoding = T.sRGBEncoding;
+    scene = new T.Scene();
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.8); key.position.set(30, 50, 40); scene.add(key);
+    camera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+    parts3d = voxelParts();
+  }
+  /** Renders one part at the given pixel size from a three-quarter angle, framed to its bounds, and copies it into the canvas. */
+  function renderPart(canvas, part, size) {
+    scene.children.forEach(function (c) { if (c.userData.part) scene.remove(c); });
+    part.group.userData.part = true; scene.add(part.group);
+    var b = part.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    camera.left = -r; camera.right = r; camera.top = r; camera.bottom = -r; camera.updateProjectionMatrix();
+    camera.position.set(c.x + 40, c.y + 32, c.z + 40); camera.lookAt(c);
+    renderer.setSize(size, size, false);
+    renderer.render(scene, camera);
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(renderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+
+  // ---- the panels ------------------------------------------------------------------------------------------------------
+  var drawers = [];
+  function panel(key) {
+    var hot = document.querySelector('[data-hotbar="' + key + '"]'), big = document.querySelector('[data-big="' + key + '"]');
+    var names = key === 'c' ? ['core', 'focused_barrel', 'energy_cell', 'standard_grip', 'scope'] : ORDER;
+    names.forEach(function (name) {
+      var small = document.createElement('canvas'); small.width = 16; small.height = 16; small.style.width = '32px'; small.style.height = '32px'; small.title = LABEL(name); hot.appendChild(small);
+      var fig = document.createElement('figure'); var large = document.createElement('canvas'); large.width = 16; large.height = 16; fig.appendChild(large);
+      var cap = document.createElement('figcaption'); cap.textContent = LABEL(name); fig.appendChild(cap); big.appendChild(fig);
+      if (key === 'c') {
+        var large32 = document.createElement('canvas'); large32.width = 32; large32.height = 32; fig.insertBefore(large32, cap);
+        var cap2 = document.createElement('figcaption'); cap2.textContent = '16 above, 32 below'; fig.appendChild(cap2);
+        var part = parts3d.filter(function (p) { return p.name === name; })[0];
+        drawers.push(function () { renderPart(small, part, 16); renderPart(large, part, 16); renderPart(large32, part, 32); });
+      } else {
+        drawers.push(function () { drawSprite(small, name, key === 'b'); drawSprite(large, name, key === 'b'); });
+      }
+    });
+  }
+  function redraw() { parts3d.forEach(function (p) { p.paint(); }); drawers.forEach(function (d) { d(); }); }
+
+  function group(holder, items, current, onPick, swatch) {
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button';
+      if (swatch) { b.className = 'sw'; b.style.background = hex(it.color); b.title = it.name; b.setAttribute('aria-label', it.name); } else b.textContent = it;
+      b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); holder.appendChild(b);
+    });
+  }
+
+  setupC();
+  panel('a'); panel('b'); panel('c');
+  group(document.querySelector('[data-materials]'), MATERIALS, 0, function (i) { material = i; redraw(); }, true);
+  group(document.querySelector('[data-tiers]'), ['I', 'II', 'III', 'IV', 'V'], 1, function (i) { tier = i; redraw(); });
+  redraw();
+})();
+</script>

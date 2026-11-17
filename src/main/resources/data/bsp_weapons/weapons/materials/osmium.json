@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/osmium",
+  "band": 2,
+  "colour": "#8FA7BF",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 6
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 40
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/molybdenum",
+  "band": 3,
+  "colour": "#8A8F99",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 14
+      }
+    }
+  }
+}

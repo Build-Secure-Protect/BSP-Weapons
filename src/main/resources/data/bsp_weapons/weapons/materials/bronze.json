@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/bronze",
+  "band": 1,
+  "colour": "#B87333",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 40
+      }
+    }
+  }
+}

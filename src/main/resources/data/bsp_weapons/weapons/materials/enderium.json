@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/enderium",
+  "band": 4,
+  "colour": "#1F8A7A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "RANGE": {
+        "percent": 16
+      }
+    }
+  }
+}

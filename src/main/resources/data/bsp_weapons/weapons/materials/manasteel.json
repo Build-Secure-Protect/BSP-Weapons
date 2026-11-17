@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/manasteel",
+  "band": 2,
+  "colour": "#4AA8E8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -8
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "BARREL",
+  "modifiers": {
+    "RANGE": {
+      "percent": 20
+    },
+    "SPREAD": {
+      "percent": -30
+    }
+  }
+}

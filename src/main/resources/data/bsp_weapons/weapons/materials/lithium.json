@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/lithium",
+  "band": 2,
+  "colour": "#E8E8D0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/soulsteel",
+  "band": 4,
+  "colour": "#3A5A6B",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 12
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/blutonium",
+  "band": 4,
+  "colour": "#3A5AE8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 14
+      }
+    }
+  }
+}

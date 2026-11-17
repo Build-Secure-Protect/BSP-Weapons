@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/brass",
+  "band": 2,
+  "colour": "#D4A84B",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 6
+      },
+      "SPREAD": {
+        "percent": -4
+      }
+    }
+  }
+}

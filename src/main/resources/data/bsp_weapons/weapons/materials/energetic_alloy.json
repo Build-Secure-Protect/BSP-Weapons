@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/energetic_alloy",
+  "band": 3,
+  "colour": "#E88A2A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 14
+      }
+    }
+  }
+}

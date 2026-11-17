@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/silver",
+  "band": 2,
+  "colour": "#DDE6EE",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -8
+      }
+    },
+    "BARREL": {
+      "RANGE": {
+        "percent": 6
+      }
+    }
+  }
+}

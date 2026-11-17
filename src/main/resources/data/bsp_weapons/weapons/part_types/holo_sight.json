@@ -1,0 +1,11 @@
+{
+  "kind": "OPTIC",
+  "modifiers": {
+    "ZOOM": {
+      "flat": 1
+    },
+    "SPREAD": {
+      "percent": -10
+    }
+  }
+}

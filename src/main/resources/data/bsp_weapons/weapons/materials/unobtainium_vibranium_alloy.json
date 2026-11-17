@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/unobtainium_vibranium_alloy",
+  "band": 5,
+  "colour": "#8AE8E0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 14
+      },
+      "RECHARGE": {
+        "percent": -10
+      }
+    }
+  }
+}

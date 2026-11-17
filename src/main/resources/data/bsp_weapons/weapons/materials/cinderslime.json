@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/cinderslime",
+  "band": 3,
+  "colour": "#E06A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 14
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/pulsating_alloy",
+  "band": 3,
+  "colour": "#6ADA8A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -12
+      }
+    }
+  }
+}

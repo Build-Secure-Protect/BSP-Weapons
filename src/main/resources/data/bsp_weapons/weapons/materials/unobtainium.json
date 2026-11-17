@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/unobtainium",
+  "band": 5,
+  "colour": "#C86AE8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 14
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 400
+      }
+    }
+  }
+}

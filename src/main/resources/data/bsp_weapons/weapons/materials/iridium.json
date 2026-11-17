@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/iridium",
+  "band": 4,
+  "colour": "#E6E6F2",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 12
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 160
+      }
+    }
+  }
+}

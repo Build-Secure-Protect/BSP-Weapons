@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/signalum",
+  "band": 3,
+  "colour": "#E0552E",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 10
+      }
+    }
+  },
+  "trait": "redstone_pulse"
+}

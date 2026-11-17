@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/electrum",
+  "band": 2,
+  "colour": "#E8D27A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -10
+      }
+    }
+  }
+}

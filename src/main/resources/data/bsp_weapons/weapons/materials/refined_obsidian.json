@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/refined_obsidian",
+  "band": 4,
+  "colour": "#4A3B6B",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 10
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 200
+      }
+    }
+  }
+}

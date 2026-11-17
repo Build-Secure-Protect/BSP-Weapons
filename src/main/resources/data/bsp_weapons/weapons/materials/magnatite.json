@@ -1,0 +1,22 @@
+{
+  "tag": "forge:ingots/magnatite",
+  "band": 3,
+  "colour": "#4A5BB5",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "RANGE": {
+        "percent": 8
+      },
+      "PIERCING": {
+        "percent": 6
+      }
+    }
+  },
+  "trait": "magnetic"
+}

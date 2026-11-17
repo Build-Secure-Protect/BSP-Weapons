@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/lumium",
+  "band": 3,
+  "colour": "#F2E88A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 12
+      }
+    }
+  },
+  "trait": "lights_target"
+}

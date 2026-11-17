@@ -1,0 +1,24 @@
+{
+  "tag": "forge:ingots/netherite",
+  "band": 4,
+  "colour": "#4A3F44",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 10
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 200
+      }
+    }
+  },
+  "trait": "fireproof"
+}

@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/ridiculite",
+  "band": 5,
+  "colour": "#E83A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 10
+      }
+    }
+  }
+}

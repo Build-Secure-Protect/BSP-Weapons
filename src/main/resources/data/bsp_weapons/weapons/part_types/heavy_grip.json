@@ -1,0 +1,14 @@
+{
+  "kind": "GRIP",
+  "modifiers": {
+    "SPREAD": {
+      "percent": -20
+    },
+    "FIRE_RATE": {
+      "percent": -8
+    },
+    "DURABILITY": {
+      "flat": 120
+    }
+  }
+}

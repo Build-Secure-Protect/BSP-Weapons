@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/compressed_iron",
+  "band": 2,
+  "colour": "#9CA3AD",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 100
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "modifiers": {
+    "RICOCHETS": {
+      "flat": 1
+    }
+  },
+  "kinds": [
+    "ENERGY"
+  ]
+}

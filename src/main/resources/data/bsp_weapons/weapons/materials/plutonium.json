@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/plutonium",
+  "band": 4,
+  "colour": "#8AE83A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 14
+      }
+    }
+  },
+  "trait": "irradiates_strongly"
+}

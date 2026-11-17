@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/copper",
+  "band": 1,
+  "colour": "#C47A4A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -8
+      }
+    }
+  }
+}

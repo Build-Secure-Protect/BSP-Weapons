@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/nethersteel",
+  "band": 3,
+  "colour": "#6B3A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 16
+      },
+      "DAMAGE": {
+        "percent": 4
+      }
+    }
+  }
+}

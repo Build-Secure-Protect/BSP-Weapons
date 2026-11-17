@@ -1,0 +1,45 @@
+{
+  "band": 4,
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 26
+      },
+      "RANGE": {
+        "percent": 26
+      }
+    },
+    "CELL": {
+      "CAPACITY": {
+        "percent": 26
+      },
+      "RECHARGE": {
+        "percent": -15.6
+      }
+    },
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 13.0
+      },
+      "SPREAD": {
+        "percent": -15.6
+      }
+    },
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 13.0
+      },
+      "SPREAD": {
+        "percent": -10.4
+      }
+    },
+    "ANY": {
+      "DURABILITY": {
+        "flat": 260
+      },
+      "HEAT_CAP": {
+        "flat": 20
+      }
+    }
+  }
+}

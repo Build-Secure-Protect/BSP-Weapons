@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/steel",
+  "band": 2,
+  "colour": "#8C949F",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 4
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 80
+      }
+    }
+  }
+}

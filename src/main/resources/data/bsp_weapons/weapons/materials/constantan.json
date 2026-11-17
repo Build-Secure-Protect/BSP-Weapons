@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/constantan",
+  "band": 2,
+  "colour": "#C98A5E",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 12
+      }
+    },
+    "CELL": {
+      "HEAT_CAP": {
+        "flat": 8
+      }
+    }
+  }
+}

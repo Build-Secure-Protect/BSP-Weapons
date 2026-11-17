@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/redstone_alloy",
+  "band": 2,
+  "colour": "#C83A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 8
+      }
+    }
+  }
+}

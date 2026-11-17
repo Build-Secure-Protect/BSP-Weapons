@@ -1,0 +1,616 @@
+<title>Weapon Parts Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a header strip, then three equal concept columns (stacking to one on phones); each column is a 3D stage over its stat sheet. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14;
+    --panel: #10151C;
+    --slot: #0C0E12;
+    --dim: #2A2F3A;
+    --muted: #9AA3B5;
+    --text: #E6EBF2;
+    --teal: #19D3B0;
+    --violet: #B58CFF;
+    --gold: #FFD23A;
+    --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace;
+    --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header { max-width: 1240px; margin: 0 auto 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); letter-spacing: 0.5px; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 70ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--pixel); font-size: 18px; color: var(--muted); }
+  .legend b { color: var(--text); font-weight: 400; }
+  main { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .concept { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 30px; line-height: 1; margin: 0; }
+  .head h2 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 18px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.35; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.78); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label i { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 1px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .controls .group { display: flex; gap: 4px; align-items: center; }
+  .controls .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .sheet { padding: 10px 14px 6px; display: grid; gap: 6px; }
+  .sheet h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .formula { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .formula b { color: var(--gold); font-weight: 400; }
+  .bars { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; font-family: var(--pixel); font-size: 18px; }
+  .bars .n { color: var(--muted); }
+  .bars .t { height: 10px; background: var(--slot); border: 1px solid var(--dim); position: relative; }
+  .bars .t i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+  .bars .t i.extra { background: var(--gold); }
+  .bars .v { font-variant-numeric: tabular-nums; text-align: right; min-width: 4ch; }
+  .radar, .rings { width: 100%; height: auto; display: block; max-width: 100%; }
+  .radar text, .rings text { font-family: var(--pixel); font-size: 15px; fill: var(--muted); }
+  .rings text.v { fill: var(--text); font-size: 20px; text-anchor: middle; }
+  .parts { font-family: var(--pixel); font-size: 17px; color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; }
+  .parts b { color: var(--text); font-weight: 400; }
+  .blurb { margin: 0; padding: 6px 14px 14px; color: var(--muted); }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .notes { max-width: 1240px; margin: 18px auto 0; color: var(--muted); display: grid; gap: 6px; }
+  .notes h2 { font-family: var(--pixel); font-weight: 400; font-size: 26px; margin: 0; color: var(--violet); }
+  .notes ol { margin: 0; padding-left: 22px; }
+  @media (prefers-reduced-motion: reduce) { .stage { cursor: default; } }
+</style>
+
+<header>
+  <h1>WEAPON PARTS: THREE WAYS TO BUILD</h1>
+  <p>How a BSP-Weapons gun comes together from its parts. The same laser-pistol pattern in each concept: a Core sets the tier, a Barrel, Cell, Grip and Optic are made of the pack's metals, and the frame is how they join. Each model turns, pulls apart and closes again; drag to turn it yourself. The sheet under each shows the same numbers in that concept's own style.</p>
+  <div class="legend"><span><b>Material</b> tints the parts</span><span><b>Core I to V</b> changes the tier glow</span><span><b>Teal</b> energy</span><span><b>Gold</b> clamps and fittings</span><span><b>Violet</b> rarity</span></div>
+</header>
+
+<main>
+  <section class="concept" id="concept-a">
+    <div class="head"><h2><span>A</span>SPINE RAIL</h2><small>parts clamp onto one rail</small></div>
+    <div class="stage" data-concept="a"><div class="grid"></div></div>
+    <div class="controls" data-for="a"></div>
+    <div class="sheet">
+      <h3>SHEET: BARS</h3>
+      <div class="formula">Pistol base × <b>Core II</b> → + parts → × <b>Rare</b> → + chips</div>
+      <div class="bars" data-bars="a"></div>
+      <div class="parts" data-parts="a"></div>
+    </div>
+    <p class="blurb"><b>One rail, five clamps.</b> The frame is a grooved spine with notches; every part sits in a gold clamp ring at a fixed point: Core in a cradle on top, Barrel forward, Cell under, Grip behind, Optic on the rear mount. Swapping a part slides it off its clamp. Honest and readable at a glance: you can tell a Tier V core from across a room because it rides on top. Silhouette: industrial, Halo and Mass Effect.</p>
+  </section>
+
+  <section class="concept" id="concept-b">
+    <div class="head"><h2><span>B</span>SHELL CHASSIS</h2><small>parts seat inside a body</small></div>
+    <div class="stage" data-concept="b"><div class="grid"></div></div>
+    <div class="controls" data-for="b"></div>
+    <div class="sheet">
+      <h3>SHEET: RADAR</h3>
+      <div class="formula">Pistol base × <b>Core II</b> → + parts → × <b>Rare</b> → + chips</div>
+      <svg class="radar" viewBox="0 0 300 190" data-radar="b" role="img" aria-label="Radar of the six stats"></svg>
+      <div class="parts" data-parts="b"></div>
+    </div>
+    <p class="blurb"><b>A chassis with bays.</b> The frame is a chamfered body: the Barrel screws into a collar, the Cell drops into a bay underneath, the Grip plugs into a socket, the Optic slides along a dovetail, and the Core sits behind a side window under a hinged plate. Parts show as inlays, so the gun keeps one clean shape whatever is fitted. Silhouette: sleek, Destiny and Star Trek.</p>
+  </section>
+
+  <section class="concept" id="concept-c">
+    <div class="head"><h2><span>C</span>HARDLIGHT CLUSTER</h2><small>parts held by energy struts</small></div>
+    <div class="stage" data-concept="c"><div class="grid"></div></div>
+    <div class="controls" data-for="c"></div>
+    <div class="sheet">
+      <h3>SHEET: RINGS</h3>
+      <div class="formula">Pistol base × <b>Core II</b> → + parts → × <b>Rare</b> → + chips</div>
+      <svg class="rings" viewBox="0 0 300 120" data-rings="c" role="img" aria-label="Ring gauges of the six stats"></svg>
+      <div class="parts" data-parts="c"></div>
+    </div>
+    <p class="blurb"><b>No frame at all.</b> The pattern is a field: the Core floats in a gimbal and holds the Barrel, Cell, Grip and Optic on glowing struts. Parts hover a finger's width apart and the struts flicker; pull a part and its strut stretches, then snaps. The most alien of the three, and the one where the tier glow matters most, because the core is the centre of everything. Silhouette: exotic, Destiny and Cyberpunk.</p>
+  </section>
+</main>
+
+<section class="notes">
+  <h2>WHAT TO PICK</h2>
+  <ol>
+    <li>The build style (A, B or C), or a mix such as "B's body with A's clamps showing".</li>
+    <li>The sheet style (bars, radar or rings) for the assembler screen and the tooltip.</li>
+    <li>Whether the material tint should colour the whole part or only its trim, and whether the Core's tier glow should show through the frame as drawn here.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- colours ---------------------------------------------------------------------------------------------------
+  var C = { teal: 0x19D3B0, violet: 0xB58CFF, gold: 0xFFD23A, red: 0xFF6B5C, dim: 0x2A2F3A, muted: 0x9AA3B5,
+    steel: 0x3A4250, dark: 0x1A1F27, black: 0x0C0E12 };
+  var MATERIALS = [
+    { name: 'Tetrium', color: 0x7D97B0 },
+    { name: 'Magnatite', color: 0x4A5BB5 },
+    { name: 'Steel', color: 0x8C949F },
+    { name: 'Illyrium', color: 0xE8D77A }
+  ];
+  var TIERS = [0x9AA3B5, 0x19D3B0, 0x4DA3FF, 0xB58CFF, 0xFFD23A];
+
+  // ---- the sample sheet (one pistol: Core II, Tetrium barrel, Steel cell, Magnatite grip, Tetrium optic, Rare) ---------
+  var STATS = [
+    { n: 'Damage', v: 6.4, max: 20, parts: 4.0 },
+    { n: 'Range', v: 36, max: 160, parts: 24 },
+    { n: 'Fire rate', v: 3.0, max: 12, parts: 2.4 },
+    { n: 'Piercing', v: 8, max: 75, parts: 0 },
+    { n: 'Heat cap', v: 70, max: 200, parts: 50 },
+    { n: 'Durability', v: 480, max: 2000, parts: 300 }
+  ];
+  var PARTS = [
+    ['Pattern', 'Laser Pistol'], ['Core', 'Tier II'], ['Barrel', 'Focused, Tetrium'],
+    ['Cell', 'Energy, Steel'], ['Grip', 'Standard, Magnatite'], ['Optic', 'Iron sight, Tetrium'], ['Roll', 'Rare'], ['Chips', '1 slot, empty']
+  ];
+
+  // ---- small builders -----------------------------------------------------------------------------------------------
+  function mat(color, o) {
+    o = o || {};
+    var m = new T.MeshStandardMaterial({ color: color, metalness: o.metal == null ? 0.6 : o.metal, roughness: o.rough == null ? 0.45 : o.rough });
+    if (o.emissive != null) { m.emissive = new T.Color(o.emissive); m.emissiveIntensity = o.intensity == null ? 1 : o.intensity; }
+    if (o.opacity != null) { m.transparent = true; m.opacity = o.opacity; }
+    return m;
+  }
+  function put(mesh, p, r) {
+    if (p) mesh.position.set(p[0], p[1], p[2]);
+    if (r) mesh.rotation.set(r[0], r[1], r[2]);
+    return mesh;
+  }
+  function box(w, h, d, m, p, r) { return put(new T.Mesh(new T.BoxGeometry(w, h, d), m), p, r); }
+  function cyl(rt, rb, h, m, p, r, seg) { return put(new T.Mesh(new T.CylinderGeometry(rt, rb, h, seg || 24), m), p, r); }
+  function torus(rad, tube, m, p, r, arc) { return put(new T.Mesh(new T.TorusGeometry(rad, tube, 12, 36, arc || Math.PI * 2), m), p, r); }
+  function sphere(rad, m, p) { return put(new T.Mesh(new T.SphereGeometry(rad, 20, 14), m), p); }
+  var ALONG_Z = [Math.PI / 2, 0, 0];
+
+  /** A part: a group with a home position and an offset it moves to when the weapon is pulled apart. */
+  function Part(name, color, home, apart) {
+    this.name = name; this.color = color;
+    this.group = new T.Group();
+    this.home = new T.Vector3(home[0], home[1], home[2]);
+    this.apart = new T.Vector3(apart[0], apart[1], apart[2]);
+    this.group.position.copy(this.home);
+    this.spin = 0; // radians about z per unit of "apart", for screw-in parts
+  }
+  Part.prototype.set = function (e) {
+    this.group.position.copy(this.home).addScaledVector(this.apart, e);
+    if (this.spin) this.group.rotation.z = this.spin * e;
+  };
+
+  /** Each concept returns { root, parts, tint: [materials], glow: [materials], lights: [PointLight], update(e, time, dt) }. */
+  function conceptA() {
+    var root = new T.Group();
+    var tint = [], glow = [], parts = [];
+    var frameM = mat(C.steel), darkM = mat(C.dark, { rough: 0.7 }), goldM = mat(C.gold, { metal: 0.8, rough: 0.3 });
+    var tealM = mat(C.teal, { emissive: C.teal, intensity: 1.2, metal: 0, rough: 0.2 });
+    var coreM = mat(0x223038, { emissive: TIERS[1], intensity: 0.9, metal: 0.2, rough: 0.3 }); glow.push(coreM);
+
+    // frame: the rail
+    var frame = new Part('Frame', C.steel, [0, 0, 0], [0, 0, 0]);
+    frame.group.add(box(0.22, 0.18, 2.4, frameM));
+    frame.group.add(box(0.08, 0.02, 2.3, darkM, [0, 0.085, 0]));
+    frame.group.add(box(0.02, 0.06, 2.3, goldM, [0.12, 0.03, 0]));
+    frame.group.add(box(0.02, 0.06, 2.3, goldM, [-0.12, 0.03, 0]));
+    for (var i = 0; i < 6; i++) frame.group.add(box(0.26, 0.03, 0.04, darkM, [0, 0.075, -1 + i * 0.4]));
+    frame.group.add(box(0.26, 0.2, 0.08, darkM, [0, 0, -1.2]));
+    frame.group.add(cyl(0.05, 0.05, 0.24, goldM, [0, 0.1, -1.18], ALONG_Z));
+    parts.push(frame);
+
+    // core in a cradle on top, in the middle
+    var core = new Part('Core', TIERS[1], [0, 0.27, -0.1], [0, 0.85, 0]);
+    core.group.add(cyl(0.16, 0.16, 0.56, coreM, [0, 0, 0], ALONG_Z));
+    core.group.add(cyl(0.18, 0.18, 0.06, frameM, [0, 0, 0.3], ALONG_Z));
+    core.group.add(cyl(0.18, 0.18, 0.06, frameM, [0, 0, -0.3], ALONG_Z));
+    var ring = torus(0.19, 0.025, goldM, [0, 0, 0]); core.group.add(ring);
+    core.group.add(torus(0.2, 0.02, goldM, [0, -0.1, 0.2], [0, 0, Math.PI], Math.PI));
+    core.group.add(torus(0.2, 0.02, goldM, [0, -0.1, -0.2], [0, 0, Math.PI], Math.PI));
+    var coreLight = new T.PointLight(TIERS[1], 0.9, 2.2); core.group.add(coreLight);
+    parts.push(core);
+
+    // barrel forward
+    var barrelM = mat(MATERIALS[0].color); tint.push(barrelM);
+    var barrel = new Part('Barrel', MATERIALS[0].color, [0, 0.1, 1.25], [0, 0, 1.1]);
+    barrel.group.add(cyl(0.11, 0.11, 1.1, barrelM, [0, 0, 0], ALONG_Z));
+    barrel.group.add(cyl(0.05, 0.05, 1.14, tealM, [0, 0, 0], ALONG_Z));
+    barrel.group.add(cyl(0.15, 0.15, 0.5, darkM, [0, 0, -0.2], ALONG_Z));
+    for (var f = 0; f < 6; f++) {
+      var a = f * Math.PI / 3;
+      var fin = box(0.03, 0.08, 0.46, barrelM, [Math.cos(a) * 0.18, Math.sin(a) * 0.18, -0.2], [0, 0, a]);
+      barrel.group.add(fin);
+    }
+    barrel.group.add(torus(0.13, 0.025, goldM, [0, 0, 0.55]));
+    barrel.group.add(torus(0.16, 0.03, goldM, [0, 0, -0.5]));
+    parts.push(barrel);
+
+    // cell under the middle
+    var cellM = mat(MATERIALS[2].color); tint.push(cellM);
+    var cell = new Part('Cell', MATERIALS[2].color, [0, -0.33, -0.15], [0, -0.9, 0]);
+    cell.group.add(box(0.3, 0.36, 0.55, cellM, [0, 0.03, 0]));
+    cell.group.add(cyl(0.15, 0.15, 0.55, cellM, [0, -0.15, 0], ALONG_Z));
+    cell.group.add(box(0.012, 0.26, 0.45, tealM, [0.155, 0.02, 0]));
+    cell.group.add(box(0.012, 0.26, 0.45, tealM, [-0.155, 0.02, 0]));
+    cell.group.add(box(0.34, 0.04, 0.12, goldM, [0, 0.21, 0.18]));
+    cell.group.add(box(0.34, 0.04, 0.12, goldM, [0, 0.21, -0.18]));
+    parts.push(cell);
+
+    // grip behind
+    var gripM = mat(MATERIALS[1].color, { rough: 0.6, metal: 0.4 }); tint.push(gripM);
+    var grip = new Part('Grip', MATERIALS[1].color, [0, -0.32, -0.82], [0, -0.7, -0.5]);
+    var gripBody = box(0.2, 0.56, 0.26, gripM, [0, -0.05, -0.05], [0.32, 0, 0]); grip.group.add(gripBody);
+    for (var g = 0; g < 3; g++) grip.group.add(box(0.22, 0.03, 0.05, darkM, [0, -0.02 - g * 0.12, 0.1 - g * 0.04], [0.32, 0, 0]));
+    grip.group.add(torus(0.13, 0.018, darkM, [0, -0.02, 0.3], [0, Math.PI / 2, 0], Math.PI));
+    grip.group.add(box(0.06, 0.12, 0.03, goldM, [0, 0.0, 0.26]));
+    grip.group.add(box(0.26, 0.05, 0.3, goldM, [0, 0.23, -0.02]));
+    parts.push(grip);
+
+    // optic on the rear mount
+    var opticM = mat(MATERIALS[0].color); tint.push(opticM);
+    var optic = new Part('Optic', MATERIALS[0].color, [0, 0.4, -0.65], [0, 0.8, 0]);
+    optic.group.add(box(0.1, 0.12, 0.3, darkM, [0, -0.1, 0]));
+    optic.group.add(cyl(0.08, 0.08, 0.46, opticM, [0, 0.02, 0], ALONG_Z));
+    optic.group.add(cyl(0.07, 0.07, 0.02, tealM, [0, 0.02, 0.235], ALONG_Z));
+    optic.group.add(cyl(0.065, 0.065, 0.02, darkM, [0, 0.02, -0.235], ALONG_Z));
+    optic.group.add(torus(0.085, 0.015, goldM, [0, 0.02, 0.2]));
+    optic.group.add(cyl(0.03, 0.03, 0.06, goldM, [0, 0.11, -0.08]));
+    parts.push(optic);
+
+    parts.forEach(function (p) { root.add(p.group); });
+    return { root: root, parts: parts, tint: tint, glow: glow, lights: [coreLight],
+      update: function (e, time) { ring.rotation.z = time * 0.6; } };
+  }
+
+  function conceptB() {
+    var root = new T.Group();
+    var tint = [], glow = [], parts = [];
+    var frameM = mat(C.steel), bevelM = mat(0x4A5363), darkM = mat(C.dark, { rough: 0.7 }), goldM = mat(C.gold, { metal: 0.8, rough: 0.3 });
+    var tealM = mat(C.teal, { emissive: C.teal, intensity: 1.2, metal: 0, rough: 0.2 });
+    var glassM = mat(C.teal, { opacity: 0.22, metal: 0, rough: 0.1 });
+    var coreM = mat(0x223038, { emissive: TIERS[1], intensity: 1.1, metal: 0.2, rough: 0.3 }); glow.push(coreM);
+
+    // frame: the chassis
+    var frame = new Part('Frame', C.steel, [0, 0, 0], [0, 0, 0]);
+    frame.group.add(box(0.34, 0.4, 1.4, frameM, [0, 0, -0.1]));
+    frame.group.add(box(0.3, 0.44, 1.36, bevelM, [0, 0, -0.1]));
+    frame.group.add(box(0.38, 0.36, 1.32, bevelM, [0, 0, -0.1]));
+    frame.group.add(cyl(0.2, 0.2, 0.22, goldM, [0, 0.02, 0.68], ALONG_Z));
+    frame.group.add(cyl(0.12, 0.12, 0.26, darkM, [0, 0.02, 0.68], ALONG_Z));
+    frame.group.add(box(0.3, 0.16, 0.5, frameM, [0, 0.26, -0.55]));
+    frame.group.add(box(0.12, 0.03, 0.9, darkM, [0, 0.215, -0.35]));  // the dovetail groove
+    frame.group.add(box(0.26, 0.04, 0.6, darkM, [0, -0.2, -0.05]));     // the cell bay mouth
+    frame.group.add(box(0.22, 0.06, 0.28, darkM, [0, -0.2, -0.68]));    // the grip socket
+    frame.group.add(box(0.02, 0.18, 0.5, glassM, [0.19, 0, -0.1]));     // the side window
+    // the hinged side plate, pivoting at its bottom edge
+    var hinge = new T.Group(); hinge.position.set(0.2, -0.12, -0.1);
+    hinge.add(box(0.025, 0.26, 0.56, bevelM, [0, 0.13, 0]));
+    hinge.add(box(0.03, 0.04, 0.5, goldM, [0, 0.04, 0]));
+    frame.group.add(hinge);
+    parts.push(frame);
+
+    // core behind the window
+    var core = new Part('Core', TIERS[1], [0, 0, -0.1], [0.75, 0, 0]);
+    core.group.add(cyl(0.085, 0.085, 0.46, coreM, [0, 0, 0], ALONG_Z));
+    core.group.add(torus(0.1, 0.015, goldM, [0, 0, 0.12]));
+    core.group.add(torus(0.1, 0.015, goldM, [0, 0, -0.12]));
+    core.group.add(cyl(0.1, 0.1, 0.04, frameM, [0, 0, 0.25], ALONG_Z));
+    core.group.add(cyl(0.1, 0.1, 0.04, frameM, [0, 0, -0.25], ALONG_Z));
+    var coreLight = new T.PointLight(TIERS[1], 0.9, 2.0); core.group.add(coreLight);
+    parts.push(core);
+
+    // barrel screws into the collar
+    var barrelM = mat(MATERIALS[0].color); tint.push(barrelM);
+    var barrel = new Part('Barrel', MATERIALS[0].color, [0, 0.02, 1.2], [0, 0, 0.95]);
+    barrel.spin = Math.PI * 2;
+    barrel.group.add(cyl(0.1, 0.1, 1.0, barrelM, [0, 0, 0], ALONG_Z));
+    barrel.group.add(cyl(0.045, 0.045, 1.04, tealM, [0, 0, 0], ALONG_Z));
+    for (var t = 0; t < 4; t++) barrel.group.add(torus(0.105, 0.012, darkM, [0, 0, -0.42 + t * 0.06]));
+    barrel.group.add(cyl(0.14, 0.1, 0.16, barrelM, [0, 0, 0.45], ALONG_Z));
+    barrel.group.add(box(0.03, 0.14, 0.4, barrelM, [0, 0.12, 0.1]));
+    barrel.group.add(box(0.03, 0.14, 0.4, barrelM, [0, -0.12, 0.1]));
+    barrel.group.add(torus(0.12, 0.02, goldM, [0, 0, 0.52]));
+    parts.push(barrel);
+
+    // cell cartridge in the bay
+    var cellM = mat(MATERIALS[2].color); tint.push(cellM);
+    var cell = new Part('Cell', MATERIALS[2].color, [0, -0.3, -0.05], [0, -0.85, 0]);
+    cell.group.add(box(0.22, 0.26, 0.5, cellM));
+    cell.group.add(cyl(0.11, 0.11, 0.22, cellM, [0, 0, 0.25], [0, 0, Math.PI / 2]));
+    cell.group.add(cyl(0.11, 0.11, 0.22, cellM, [0, 0, -0.25], [0, 0, Math.PI / 2]));
+    cell.group.add(box(0.23, 0.03, 0.4, tealM, [0, 0.06, 0]));
+    cell.group.add(box(0.23, 0.03, 0.4, tealM, [0, -0.06, 0]));
+    cell.group.add(box(0.1, 0.05, 0.1, goldM, [0, -0.15, 0]));
+    parts.push(cell);
+
+    // grip in its socket
+    var gripM = mat(MATERIALS[1].color, { rough: 0.6, metal: 0.4 }); tint.push(gripM);
+    var grip = new Part('Grip', MATERIALS[1].color, [0, -0.42, -0.72], [0, -0.7, -0.45]);
+    grip.group.add(box(0.18, 0.5, 0.24, gripM, [0, -0.08, -0.04], [0.3, 0, 0]));
+    for (var g = 0; g < 3; g++) grip.group.add(box(0.2, 0.025, 0.05, darkM, [0, -0.04 - g * 0.12, 0.09 - g * 0.04], [0.3, 0, 0]));
+    grip.group.add(box(0.14, 0.08, 0.2, goldM, [0, 0.2, 0]));
+    grip.group.add(torus(0.12, 0.016, darkM, [0, -0.02, 0.28], [0, Math.PI / 2, 0], Math.PI));
+    parts.push(grip);
+
+    // optic on the dovetail
+    var opticM = mat(MATERIALS[0].color); tint.push(opticM);
+    var optic = new Part('Optic', MATERIALS[0].color, [0, 0.32, -0.4], [0, 0.75, 0]);
+    optic.group.add(box(0.1, 0.05, 0.42, goldM, [0, -0.06, 0]));
+    optic.group.add(box(0.12, 0.12, 0.4, opticM, [0, 0.03, 0]));
+    optic.group.add(cyl(0.05, 0.05, 0.02, tealM, [0, 0.05, 0.205], ALONG_Z));
+    optic.group.add(box(0.02, 0.1, 0.02, darkM, [0, 0.14, -0.15]));
+    optic.group.add(box(0.1, 0.02, 0.02, darkM, [0, 0.14, -0.15]));
+    parts.push(optic);
+
+    parts.forEach(function (p) { root.add(p.group); });
+    return { root: root, parts: parts, tint: tint, glow: glow, lights: [coreLight],
+      update: function (e) { hinge.rotation.z = -1.35 * Math.min(1, e * 1.6); } };
+  }
+
+  function conceptC() {
+    var root = new T.Group();
+    var tint = [], glow = [], parts = [];
+    var frameM = mat(C.steel), darkM = mat(C.dark, { rough: 0.7 }), goldM = mat(C.gold, { metal: 0.8, rough: 0.3 });
+    var tealM = mat(C.teal, { emissive: C.teal, intensity: 1.2, metal: 0, rough: 0.2 });
+    var strutM = mat(C.teal, { emissive: C.teal, intensity: 1.4, metal: 0, rough: 0.2, opacity: 0.8 });
+    var coreM = mat(0x223038, { emissive: TIERS[1], intensity: 1.4, metal: 0.2, rough: 0.3 }); glow.push(coreM);
+
+    // the core in its gimbal: the only fixed thing
+    var core = new Part('Core', TIERS[1], [0, 0, 0], [0, 0, 0]);
+    core.group.add(new T.Mesh(new T.IcosahedronGeometry(0.2, 0), coreM));
+    var ringA = torus(0.3, 0.018, goldM); core.group.add(ringA);
+    var ringB = torus(0.37, 0.018, frameM, [0, 0, 0], [Math.PI / 2, 0, 0]); core.group.add(ringB);
+    var nodes = new T.Group();
+    for (var n = 0; n < 4; n++) { var a = n * Math.PI / 2; nodes.add(sphere(0.035, goldM, [Math.cos(a) * 0.3, Math.sin(a) * 0.3, 0])); }
+    ringA.add(nodes);
+    var coreLight = new T.PointLight(TIERS[1], 1.3, 2.6); core.group.add(coreLight);
+    parts.push(core);
+
+    // barrel: a hex prism
+    var barrelM = mat(MATERIALS[0].color); tint.push(barrelM);
+    var barrel = new Part('Barrel', MATERIALS[0].color, [0, 0, 1.0], [0, 0, 0.8]);
+    barrel.group.add(cyl(0.12, 0.12, 1.0, barrelM, [0, 0, 0], ALONG_Z, 6));
+    barrel.group.add(cyl(0.05, 0.05, 1.04, tealM, [0, 0, 0], ALONG_Z));
+    barrel.group.add(cyl(0.16, 0.16, 0.08, goldM, [0, 0, 0.5], ALONG_Z, 6));
+    barrel.group.add(cyl(0.15, 0.15, 0.08, darkM, [0, 0, -0.45], ALONG_Z, 6));
+    for (var s = 0; s < 3; s++) barrel.group.add(box(0.26, 0.02, 0.02, darkM, [0, 0, -0.1 + s * 0.14], [0, 0, 0]));
+    parts.push(barrel);
+
+    // cell: a capsule, upright
+    var cellM = mat(MATERIALS[2].color); tint.push(cellM);
+    var cell = new Part('Cell', MATERIALS[2].color, [0, -0.55, -0.05], [0, -0.7, 0]);
+    cell.group.add(cyl(0.12, 0.12, 0.3, cellM));
+    cell.group.add(sphere(0.12, cellM, [0, 0.15, 0]));
+    cell.group.add(sphere(0.12, cellM, [0, -0.15, 0]));
+    cell.group.add(torus(0.125, 0.02, tealM, [0, 0, 0], [Math.PI / 2, 0, 0]));
+    cell.group.add(cyl(0.04, 0.04, 0.1, goldM, [0, 0.3, 0]));
+    parts.push(cell);
+
+    // grip: a tilted block with grooves
+    var gripM = mat(MATERIALS[1].color, { rough: 0.6, metal: 0.4 }); tint.push(gripM);
+    var grip = new Part('Grip', MATERIALS[1].color, [0, -0.5, -0.75], [0, -0.5, -0.5]);
+    grip.group.add(box(0.18, 0.5, 0.22, gripM, [0, 0, 0], [0.3, 0, 0]));
+    for (var g = 0; g < 3; g++) grip.group.add(box(0.2, 0.025, 0.05, darkM, [0, 0.12 - g * 0.12, 0.12 - g * 0.04], [0.3, 0, 0]));
+    grip.group.add(box(0.1, 0.06, 0.1, goldM, [0, 0.28, -0.08]));
+    parts.push(grip);
+
+    // optic: a ring with a lens
+    var opticM = mat(MATERIALS[0].color); tint.push(opticM);
+    var optic = new Part('Optic', MATERIALS[0].color, [0, 0.5, -0.3], [0, 0.7, 0]);
+    optic.group.add(torus(0.12, 0.03, opticM));
+    optic.group.add(cyl(0.1, 0.1, 0.02, tealM, [0, 0, 0], ALONG_Z));
+    optic.group.add(box(0.03, 0.08, 0.03, goldM, [0, -0.16, 0]));
+    optic.group.add(box(0.26, 0.02, 0.02, darkM, [0, 0, 0]));
+    parts.push(optic);
+
+    // struts from the core to each floating part, refitted every frame
+    var struts = [];
+    [barrel, cell, grip, optic].forEach(function (p) {
+      var s = cyl(0.012, 0.012, 1, strutM);
+      struts.push({ mesh: s, part: p });
+      root.add(s);
+    });
+    parts.forEach(function (p) { root.add(p.group); });
+    var up = new T.Vector3(0, 1, 0);
+    return { root: root, parts: parts, tint: tint, glow: glow, lights: [coreLight],
+      update: function (e, time) {
+        ringA.rotation.x = time * 0.7; ringA.rotation.y = time * 0.3;
+        ringB.rotation.y = time * 0.5;
+        var flicker = 0.9 + 0.5 * Math.abs(Math.sin(time * 9.0) * Math.sin(time * 2.3));
+        strutM.emissiveIntensity = flicker;
+        struts.forEach(function (st) {
+          var to = st.part.group.position;
+          var len = to.length();
+          st.mesh.position.copy(to).multiplyScalar(0.5);
+          st.mesh.scale.set(1, Math.max(0.01, len), 1);
+          st.mesh.quaternion.setFromUnitVectors(up, to.clone().normalize());
+        });
+      } };
+  }
+
+  // ---- the stages ------------------------------------------------------------------------------------------------
+  var stages = [];
+  function makeStage(el, build) {
+    var renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.appendChild(renderer.domElement);
+    var scene = new T.Scene();
+    var camera = new T.PerspectiveCamera(32, 4 / 3, 0.1, 50);
+    camera.position.set(3.1, 1.5, 3.9); camera.lookAt(0, 0, 0);
+    scene.add(new T.HemisphereLight(0x8FA3BF, 0x0B0F14, 0.7));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.9); key.position.set(3, 4, 2); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.25); fill.position.set(-3, 1, -2); scene.add(fill);
+    var concept = build();
+    scene.add(concept.root);
+    var labels = [];
+    concept.parts.forEach(function (p) {
+      var d = document.createElement('div'); d.className = 'label';
+      var i = document.createElement('i'); i.style.background = '#' + ('000000' + p.color.toString(16)).slice(-6); d.appendChild(i);
+      d.appendChild(document.createTextNode(p.name));
+      el.appendChild(d);
+      labels.push({ part: p, el: d, sw: i });
+    });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, concept: concept, labels: labels,
+      mode: reduced ? 'apart' : 'cycle', yaw: 0, dragging: false, lastX: 0, tier: 1, material: 0 };
+    // drag to turn
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() {
+      var r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return;
+      renderer.setSize(r.width, r.height, false);
+      camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+    }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+
+  function setMaterial(st, index) {
+    st.material = index;
+    var c = MATERIALS[index].color;
+    st.concept.tint.forEach(function (m) { m.color.setHex(c); });
+    st.labels.forEach(function (l) { if (l.part.name !== 'Core' && l.part.name !== 'Frame') l.sw.style.background = '#' + ('000000' + c.toString(16)).slice(-6); });
+  }
+  function setTier(st, tier) {
+    st.tier = tier;
+    var c = TIERS[tier];
+    st.concept.glow.forEach(function (m) { m.emissive.setHex(c); });
+    st.concept.lights.forEach(function (l) { l.color.setHex(c); });
+    st.labels.forEach(function (l) { if (l.part.name === 'Core') { l.sw.style.background = '#' + ('000000' + c.toString(16)).slice(-6); l.el.lastChild.nodeValue = 'Core ' + ['I', 'II', 'III', 'IV', 'V'][tier]; } });
+  }
+
+  function controlsFor(st, holder) {
+    function group(label, items, current, onPick, swatch) {
+      var g = document.createElement('div'); g.className = 'group';
+      var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+      var buttons = [];
+      items.forEach(function (it, i) {
+        var b = document.createElement('button'); b.type = 'button';
+        if (swatch) { b.className = 'sw'; b.style.background = '#' + ('000000' + it.color.toString(16)).slice(-6); b.title = it.name; b.setAttribute('aria-label', it.name); }
+        else b.textContent = it;
+        b.setAttribute('aria-pressed', String(i === current));
+        b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+        buttons.push(b); g.appendChild(b);
+      });
+      holder.appendChild(g);
+    }
+    var modes = ['CYCLE', 'TOGETHER', 'APART'];
+    group('MOTION', modes, reduced ? 2 : 0, function (i) { st.mode = ['cycle', 'together', 'apart'][i]; });
+    group('MATERIAL', MATERIALS, 0, function (i) { setMaterial(st, i); }, true);
+    group('CORE', ['I', 'II', 'III', 'IV', 'V'], 1, function (i) { setTier(st, i); });
+  }
+
+  // ---- the sheets --------------------------------------------------------------------------------------------------
+  function fillParts(holder) {
+    PARTS.forEach(function (p) {
+      var a = document.createElement('span'); a.textContent = p[0];
+      var b = document.createElement('b'); b.textContent = p[1];
+      holder.appendChild(a); holder.appendChild(b);
+    });
+  }
+  function fillBars(holder) {
+    STATS.forEach(function (s) {
+      var n = document.createElement('span'); n.className = 'n'; n.textContent = s.n;
+      var t = document.createElement('span'); t.className = 't';
+      var base = document.createElement('i'); base.style.width = (100 * s.parts / s.max).toFixed(1) + '%';
+      var extra = document.createElement('i'); extra.className = 'extra'; extra.style.left = (100 * s.parts / s.max).toFixed(1) + '%'; extra.style.width = (100 * (s.v - s.parts) / s.max).toFixed(1) + '%';
+      t.appendChild(base); t.appendChild(extra);
+      var v = document.createElement('span'); v.className = 'v'; v.textContent = s.n === 'Piercing' ? s.v + '%' : (s.n === 'Fire rate' ? s.v.toFixed(1) + '/s' : String(s.v));
+      holder.appendChild(n); holder.appendChild(t); holder.appendChild(v);
+    });
+  }
+  function svgEl(name, attrs) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', name);
+    Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+  function fillRadar(svg) {
+    var cx = 150, cy = 98, R = 72, n = STATS.length;
+    function pt(i, f) { var a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * f, cy + Math.sin(a) * R * f]; }
+    [0.33, 0.66, 1].forEach(function (f) {
+      var pts = []; for (var i = 0; i < n; i++) pts.push(pt(i, f).join(','));
+      svg.appendChild(svgEl('polygon', { points: pts.join(' '), fill: 'none', stroke: '#2A2F3A', 'stroke-width': 1 }));
+    });
+    var partsPts = [], finalPts = [];
+    STATS.forEach(function (s, i) {
+      partsPts.push(pt(i, s.parts / s.max).join(',')); finalPts.push(pt(i, s.v / s.max).join(','));
+      var p = pt(i, 1.22); var t = svgEl('text', { x: p[0], y: p[1] + 5, 'text-anchor': 'middle' }); t.textContent = s.n.toUpperCase(); svg.appendChild(t);
+    });
+    svg.appendChild(svgEl('polygon', { points: finalPts.join(' '), fill: 'rgba(255,210,58,0.25)', stroke: '#FFD23A', 'stroke-width': 1.5 }));
+    svg.appendChild(svgEl('polygon', { points: partsPts.join(' '), fill: 'rgba(25,211,176,0.25)', stroke: '#19D3B0', 'stroke-width': 1.5 }));
+    var t2 = svgEl('text', { x: 8, y: 184 }); t2.textContent = 'TEAL: PARTS   GOLD: WITH CORE AND ROLL'; svg.appendChild(t2);
+  }
+  function fillRings(svg) {
+    var n = STATS.length, w = 300 / n;
+    STATS.forEach(function (s, i) {
+      var cx = w * i + w / 2, cy = 46, r = 18, circ = 2 * Math.PI * r;
+      svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: '#2A2F3A', 'stroke-width': 5 }));
+      svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: '#FFD23A', 'stroke-width': 5, 'stroke-dasharray': (circ * s.v / s.max).toFixed(1) + ' ' + circ.toFixed(1), transform: 'rotate(-90 ' + cx + ' ' + cy + ')' }));
+      svg.appendChild(svgEl('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: '#19D3B0', 'stroke-width': 5, 'stroke-dasharray': (circ * s.parts / s.max).toFixed(1) + ' ' + circ.toFixed(1), transform: 'rotate(-90 ' + cx + ' ' + cy + ')' }));
+      var v = svgEl('text', { x: cx, y: cy + 6, 'class': 'v' }); v.textContent = s.n === 'Piercing' ? s.v + '%' : String(s.v); svg.appendChild(v);
+      var l = svgEl('text', { x: cx, y: 90, 'text-anchor': 'middle' }); l.textContent = s.n.toUpperCase(); svg.appendChild(l);
+    });
+    var t2 = svgEl('text', { x: 8, y: 112 }); t2.textContent = 'TEAL: PARTS   GOLD: WITH CORE AND ROLL'; svg.appendChild(t2);
+  }
+
+  // ---- wiring ------------------------------------------------------------------------------------------------------
+  var builders = { a: conceptA, b: conceptB, c: conceptC };
+  Array.prototype.forEach.call(document.querySelectorAll('.stage'), function (el) {
+    var key = el.getAttribute('data-concept');
+    var st = makeStage(el, builders[key]);
+    controlsFor(st, document.querySelector('.controls[data-for="' + key + '"]'));
+    setTier(st, 1);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-parts]'), fillParts);
+  fillBars(document.querySelector('[data-bars="a"]'));
+  fillRadar(document.querySelector('[data-radar="b"]'));
+  fillRings(document.querySelector('[data-rings="c"]'));
+
+  // ---- the loop ----------------------------------------------------------------------------------------------------
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  function cycleValue(time) {
+    var p = time % 7.5;
+    if (p < 2.5) return 0;
+    if (p < 3.5) return smooth(p - 2.5);
+    if (p < 5.5) return 1;
+    if (p < 6.5) return 1 - smooth(p - 5.5);
+    return 0;
+  }
+  var last = performance.now() / 1000;
+  var v = new T.Vector3();
+  function frame() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    stages.forEach(function (st) {
+      var e = st.mode === 'cycle' ? cycleValue(now) : (st.mode === 'apart' ? 1 : 0);
+      st.concept.parts.forEach(function (p) { p.set(e); });
+      st.concept.update(e, now, dt);
+      if (!st.dragging && !reduced) st.yaw += dt * 0.35;
+      st.concept.root.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        l.part.group.getWorldPosition(v); v.y += 0.22; v.project(st.camera);
+        var x = (v.x * 0.5 + 0.5) * r.width, y = (-v.y * 0.5 + 0.5) * r.height;
+        l.el.style.left = x.toFixed(0) + 'px'; l.el.style.top = y.toFixed(0) + 'px';
+        l.el.style.opacity = (v.z < 1 ? 1 : 0);
+      });
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>

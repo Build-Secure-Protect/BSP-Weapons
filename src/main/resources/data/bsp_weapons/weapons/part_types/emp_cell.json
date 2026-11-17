@@ -1,0 +1,11 @@
+{
+  "kind": "CELL",
+  "modifiers": {
+    "DAMAGE": {
+      "percent": -30
+    },
+    "CAPACITY": {
+      "percent": 10
+    }
+  }
+}

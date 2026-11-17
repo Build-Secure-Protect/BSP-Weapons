@@ -1,0 +1,11 @@
+{
+  "kind": "CELL",
+  "modifiers": {
+    "CAPACITY": {
+      "percent": 20
+    },
+    "RECHARGE": {
+      "percent": 15
+    }
+  }
+}

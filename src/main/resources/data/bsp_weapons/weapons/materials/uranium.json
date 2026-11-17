@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/uranium",
+  "band": 3,
+  "colour": "#7FB84A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 10
+      }
+    }
+  },
+  "trait": "irradiates"
+}

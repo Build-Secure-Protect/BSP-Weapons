@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/lapis",
+  "band": 1,
+  "colour": "#2A4AC8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 4
+      }
+    }
+  }
+}

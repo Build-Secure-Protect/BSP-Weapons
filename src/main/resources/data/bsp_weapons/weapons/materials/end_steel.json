@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/end_steel",
+  "band": 5,
+  "colour": "#D8D8A8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 12
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 300
+      }
+    }
+  }
+}

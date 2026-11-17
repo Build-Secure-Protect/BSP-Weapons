@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/dark_steel",
+  "band": 3,
+  "colour": "#3A3A44",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 160
+      }
+    },
+    "BARREL": {
+      "PIERCING": {
+        "percent": 6
+      }
+    }
+  }
+}

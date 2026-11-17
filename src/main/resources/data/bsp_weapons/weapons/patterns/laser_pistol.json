@@ -1,0 +1,24 @@
+{
+  "kind": "ENERGY",
+  "slots": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "base": {
+    "DAMAGE": 4.0,
+    "PIERCING": 0,
+    "RANGE": 24,
+    "FIRE_RATE": 2.5,
+    "CHARGE_TIME": 0,
+    "CAPACITY": 24,
+    "RECHARGE": 60,
+    "SPREAD": 2.0,
+    "ZOOM": 1,
+    "HEAT_CAP": 50,
+    "BLOCK_DAMAGE": 0,
+    "RICOCHETS": 0,
+    "DURABILITY": 300
+  }
+}

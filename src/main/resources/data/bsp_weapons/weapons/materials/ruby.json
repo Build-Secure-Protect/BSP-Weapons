@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/ruby",
+  "band": 3,
+  "colour": "#E83A4A",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 6
+      }
+    }
+  }
+}

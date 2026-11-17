@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/amethyst",
+  "band": 2,
+  "colour": "#B07AE8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 10
+      }
+    }
+  }
+}

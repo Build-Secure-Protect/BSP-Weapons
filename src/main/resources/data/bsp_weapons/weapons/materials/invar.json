@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/invar",
+  "band": 2,
+  "colour": "#AEB6A6",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 12
+      }
+    }
+  }
+}

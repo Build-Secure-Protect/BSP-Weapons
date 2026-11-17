@@ -1,0 +1,24 @@
+{
+  "tag": "forge:ingots/gold",
+  "band": 1,
+  "colour": "#F2D14A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 8
+      }
+    },
+    "BARREL": {
+      "DURABILITY": {
+        "flat": -40
+      }
+    }
+  },
+  "trait": "soft"
+}

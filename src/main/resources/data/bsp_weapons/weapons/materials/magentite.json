@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/magentite",
+  "band": 4,
+  "colour": "#E83AB8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -14
+      }
+    }
+  }
+}

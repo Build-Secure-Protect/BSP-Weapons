@@ -1,0 +1,18 @@
+{
+  "tag": "forge:gems/fluix",
+  "band": 3,
+  "colour": "#A05AE8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 8
+      },
+      "SPREAD": {
+        "percent": -6
+      }
+    }
+  }
+}

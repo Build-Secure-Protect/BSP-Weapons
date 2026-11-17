@@ -1,0 +1,9 @@
+{
+  "ingredient": "forge:ingots/allthemodium",
+  "odds": [
+    0,
+    0,
+    40,
+    60
+  ]
+}

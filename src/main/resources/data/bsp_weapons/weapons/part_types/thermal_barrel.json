@@ -1,0 +1,11 @@
+{
+  "kind": "BARREL",
+  "modifiers": {
+    "DAMAGE": {
+      "percent": 5
+    },
+    "HEAT_CAP": {
+      "flat": -10
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/mana_diamond",
+  "band": 4,
+  "colour": "#5AD8F0",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 14
+      }
+    }
+  }
+}

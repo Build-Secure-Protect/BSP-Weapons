@@ -1,0 +1,23 @@
+{
+  "tag": "forge:ingots/titaniumcarbide",
+  "band": 4,
+  "colour": "#5C6B74",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "PIERCING": {
+        "percent": 8
+      }
+    },
+    "GRIP": {
+      "DURABILITY": {
+        "flat": 240
+      }
+    }
+  }
+}

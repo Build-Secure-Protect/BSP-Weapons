@@ -1,0 +1,9 @@
+{
+  "ingredient": "forge:ingots/illyrium",
+  "odds": [
+    0,
+    0,
+    85,
+    15
+  ]
+}

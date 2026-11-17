@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/tetrium",
+  "band": 2,
+  "colour": "#7D97B0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 6
+      }
+    }
+  }
+}

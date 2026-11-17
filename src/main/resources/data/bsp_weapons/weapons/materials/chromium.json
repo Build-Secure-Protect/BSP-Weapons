@@ -1,0 +1,11 @@
+{
+  "tag": "forge:ingots/chromium",
+  "band": 2,
+  "colour": "#C4D0D8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ]
+}

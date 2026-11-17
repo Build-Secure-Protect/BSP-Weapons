@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/vibrant_alloy",
+  "band": 4,
+  "colour": "#A8D83A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 16
+      },
+      "RECHARGE": {
+        "percent": -10
+      }
+    }
+  }
+}

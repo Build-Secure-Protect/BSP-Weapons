@@ -1,0 +1,18 @@
+{
+  "tag": "forge:gems/dragonstone",
+  "band": 5,
+  "colour": "#E85AC8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 18
+      },
+      "SPREAD": {
+        "percent": -12
+      }
+    }
+  }
+}

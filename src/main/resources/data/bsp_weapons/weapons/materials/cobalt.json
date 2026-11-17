@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/cobalt",
+  "band": 3,
+  "colour": "#3A6FD8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 10
+      }
+    }
+  }
+}

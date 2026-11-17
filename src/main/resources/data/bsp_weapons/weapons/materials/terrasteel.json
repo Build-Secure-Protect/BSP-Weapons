@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/terrasteel",
+  "band": 4,
+  "colour": "#5AD86A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 12
+      }
+    }
+  }
+}

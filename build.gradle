@@ -1,0 +1,159 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_archive_name
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
+    copyIdeResources = true
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            // Other mods' mixins (GeckoLib's among them) carry obfuscated names: remap their reference maps in a dev run.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
+            property 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        server {
+            property 'forge.enabledGameTestNamespaces', mod_id
+            args '--nogui'
+        }
+
+        // ./gradlew runGameTestServer: runs every registered GameTest headlessly and exits.
+        gameTestServer {
+            property 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        data {
+            workingDirectory project.file('run-data')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    mavenCentral()
+    // The BSP mods have no published artifacts: their built jars are picked up from the sibling repos.
+    flatDir { dirs bsp_core_libs }
+    flatDir { dirs bsp_region_guard_libs }
+    flatDir { dirs bsp_rankup_libs }
+    flatDir { dirs bsp_inventorysync_libs }
+    // GeckoLib's own Maven.
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroup 'software.bernie.geckolib' }
+    }
+    // Mekanism's own Maven.
+    maven {
+        name = 'Mekanism'
+        url = 'https://modmaven.dev/'
+        content { includeGroup 'mekanism' }
+    }
+    // Dev-run-only jars, not shipped.
+    flatDir { dirs 'libs' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // BSP-Core: required. Dev runs load the full jar.
+    compileOnly fg.deobf("blank:bsp-core:${bsp_core_version}")
+    runtimeOnly fg.deobf("blank:bsp-core:${bsp_core_version}")
+
+    // Optional BSP mods: compile only; only their compat/ adapter touches them, and only when the mod is loaded.
+    // -PwithBsp on a run loads them too, so the GameTests exercise the adapters.
+    compileOnly fg.deobf("blank:bsp-region-guard:${bsp_region_guard_version}")
+    compileOnly fg.deobf("blank:bsp-rankup:${bsp_rankup_version}")
+    compileOnly fg.deobf("blank:bsp-inventorysync:${bsp_inventorysync_version}")
+    if (project.hasProperty('withBsp')) {
+        runtimeOnly fg.deobf("blank:bsp-region-guard:${bsp_region_guard_version}")
+        runtimeOnly fg.deobf("blank:bsp-rankup:${bsp_rankup_version}")
+        runtimeOnly fg.deobf("blank:bsp-inventorysync:${bsp_inventorysync_version}")
+    }
+
+    // GeckoLib: required (animated weapon models), so every run loads it.
+    implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
+
+    // Mekanism: optional, compile only (gas and infusion recipes for parts). -PwithMek on a run loads it.
+    compileOnly fg.deobf("mekanism:Mekanism:${mekanism_version}")
+    if (project.hasProperty('withMek')) {
+        runtimeOnly fg.deobf("mekanism:Mekanism:${mekanism_version}")
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
+            forge_version: forge_version, forge_version_range: forge_version_range,
+            loader_version_range: loader_version_range,
+            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors: mod_authors, mod_description: mod_description,
+            bsp_core_version_range: bsp_core_version_range,
+            bsp_region_guard_version_range: bsp_region_guard_version_range,
+            bsp_rankup_version_range: bsp_rankup_version_range,
+            bsp_inventorysync_version_range: bsp_inventorysync_version_range,
+            geckolib_version_range: geckolib_version_range,
+            mekanism_version_range: mekanism_version_range,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Vendor'    : mod_authors,
+                'Specification-Version'   : '1',
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Vendor'   : mod_authors,
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+        ])
+    }
+    finalizedBy 'reobfJar'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Every text key the client code looks up must exist in the language file (tools/gen_lang.py writes it).
+tasks.register('checkLang', Exec) {
+    group = 'verification'
+    description = 'Checks the client code against the language file (tools/check_lang.py).'
+    commandLine 'python3', 'tools/check_lang.py'
+    inputs.files(fileTree('src/main/java/com/mrgregles/bsp_weapons/client'), 'src/main/resources/assets/bsp_weapons/lang/en_us.json', 'tools/check_lang.py')
+    outputs.upToDateWhen { true }
+}
+tasks.named('check') {
+    dependsOn 'checkLang'
+}

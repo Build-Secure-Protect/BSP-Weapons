@@ -1,0 +1,10 @@
+{
+  "modifiers": {
+    "BLOCK_DAMAGE": {
+      "flat": 4
+    }
+  },
+  "kinds": [
+    "ENERGY"
+  ]
+}

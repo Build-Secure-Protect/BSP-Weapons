@@ -1,0 +1,12 @@
+{
+  "tag": "forge:ingots/soularium",
+  "band": 3,
+  "colour": "#7A5A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "trait": "mob_bane"
+}

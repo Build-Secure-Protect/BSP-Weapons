@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/elementium",
+  "band": 3,
+  "colour": "#E88AD8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "SPREAD": {
+        "percent": -10
+      }
+    }
+  }
+}

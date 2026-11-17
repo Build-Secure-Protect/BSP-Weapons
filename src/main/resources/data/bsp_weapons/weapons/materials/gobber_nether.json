@@ -1,0 +1,12 @@
+{
+  "tag": "forge:ingots/gobber_nether",
+  "band": 4,
+  "colour": "#E86A3A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "trait": "regenerating"
+}

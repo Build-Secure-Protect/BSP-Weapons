@@ -1,0 +1,11 @@
+{
+  "kind": "BARREL",
+  "modifiers": {
+    "FIRE_RATE": {
+      "percent": 25
+    },
+    "DAMAGE": {
+      "percent": -10
+    }
+  }
+}

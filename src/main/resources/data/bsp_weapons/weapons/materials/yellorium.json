@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/yellorium",
+  "band": 2,
+  "colour": "#D8D83A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 8
+      }
+    }
+  }
+}

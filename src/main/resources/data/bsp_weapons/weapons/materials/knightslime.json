@@ -1,0 +1,12 @@
+{
+  "tag": "forge:ingots/knightslime",
+  "band": 3,
+  "colour": "#E08AC8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "trait": "bouncy"
+}

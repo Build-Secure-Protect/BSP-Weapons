@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/titanium",
+  "band": 3,
+  "colour": "#A9B3B8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "SPREAD": {
+        "percent": -8
+      },
+      "DURABILITY": {
+        "flat": 100
+      }
+    }
+  }
+}

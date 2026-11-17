@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/charged_magnatite",
+  "band": 4,
+  "colour": "#6E7CFF",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 12
+      }
+    }
+  },
+  "trait": "charged"
+}

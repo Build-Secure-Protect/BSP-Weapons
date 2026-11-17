@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/certus_quartz",
+  "band": 2,
+  "colour": "#C8E8F0",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "SPREAD": {
+        "percent": -6
+      }
+    }
+  }
+}

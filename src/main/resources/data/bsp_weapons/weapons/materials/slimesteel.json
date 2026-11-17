@@ -1,0 +1,19 @@
+{
+  "tag": "forge:ingots/slimesteel",
+  "band": 2,
+  "colour": "#6EC8C8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "SPREAD": {
+        "percent": -6
+      }
+    }
+  },
+  "trait": "bouncy"
+}

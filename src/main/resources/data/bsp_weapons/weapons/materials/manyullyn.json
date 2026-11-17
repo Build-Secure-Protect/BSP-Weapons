@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/manyullyn",
+  "band": 4,
+  "colour": "#8A4FB0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 12
+      }
+    }
+  }
+}

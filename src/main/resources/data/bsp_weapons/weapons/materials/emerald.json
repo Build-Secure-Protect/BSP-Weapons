@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/emerald",
+  "band": 3,
+  "colour": "#3AD86A",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 8
+      }
+    }
+  }
+}

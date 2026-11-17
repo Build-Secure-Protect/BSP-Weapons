@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/graphite",
+  "band": 2,
+  "colour": "#4A4A4A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "HEAT_CAP": {
+        "flat": 12
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "tag": "forge:ingots/queens_slime",
+  "band": 3,
+  "colour": "#C8B04A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "trait": "bouncy"
+}

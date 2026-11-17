@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/amethyst_bronze",
+  "band": 3,
+  "colour": "#B97AC8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 8
+      }
+    }
+  }
+}

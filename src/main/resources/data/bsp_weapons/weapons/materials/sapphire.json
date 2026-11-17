@@ -1,0 +1,15 @@
+{
+  "tag": "forge:gems/sapphire",
+  "band": 3,
+  "colour": "#3A6AE8",
+  "kinds": [
+    "OPTIC"
+  ],
+  "modifiers": {
+    "OPTIC": {
+      "ZOOM": {
+        "percent": 12
+      }
+    }
+  }
+}

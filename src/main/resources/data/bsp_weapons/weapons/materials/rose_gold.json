@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/rose_gold",
+  "band": 2,
+  "colour": "#E8A0A0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "GRIP": {
+      "FIRE_RATE": {
+        "percent": 6
+      }
+    }
+  }
+}

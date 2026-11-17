@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/ludicrite",
+  "band": 5,
+  "colour": "#E8E83A",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "CAPACITY": {
+        "percent": 16
+      },
+      "RECHARGE": {
+        "percent": -12
+      }
+    }
+  }
+}

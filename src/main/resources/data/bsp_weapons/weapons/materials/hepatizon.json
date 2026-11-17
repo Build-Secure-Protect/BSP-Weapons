@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/hepatizon",
+  "band": 3,
+  "colour": "#6B4A6E",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 8
+      }
+    }
+  }
+}

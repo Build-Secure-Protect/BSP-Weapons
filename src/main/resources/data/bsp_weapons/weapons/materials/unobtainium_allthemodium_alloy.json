@@ -1,0 +1,21 @@
+{
+  "tag": "forge:ingots/unobtainium_allthemodium_alloy",
+  "band": 5,
+  "colour": "#E0A0E8",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "BARREL": {
+      "DAMAGE": {
+        "percent": 10
+      },
+      "PIERCING": {
+        "percent": 10
+      }
+    }
+  }
+}

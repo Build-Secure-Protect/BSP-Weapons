@@ -1,0 +1,18 @@
+{
+  "tag": "forge:ingots/superconductive",
+  "band": 4,
+  "colour": "#4AD6FF",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ],
+  "modifiers": {
+    "CELL": {
+      "RECHARGE": {
+        "percent": -18
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "tag": "forge:ingots/vanadium",
+  "band": 3,
+  "colour": "#9AA6A0",
+  "kinds": [
+    "BARREL",
+    "CELL",
+    "GRIP",
+    "OPTIC"
+  ]
+}
