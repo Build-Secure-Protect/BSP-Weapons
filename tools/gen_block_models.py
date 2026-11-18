@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gen_part_models import Part, GUNMETAL, GOLD, DARK, TEAL, RED, LIGHT, GLASS, ROLE_TEXTURE, face_uv  # noqa: E402
+from gen_part_models import Part, GUNMETAL, GOLD, DARK, TEAL, RED, LIGHT, VIOLET, GLASS, ROLE_TEXTURE, face_uv  # noqa: E402
 
 ASSETS = Path(__file__).resolve().parent.parent / "src/main/resources/assets/bsp_weapons"
 GLOW = "machine_glow"  # the display grid's brighter pixels, unlit: drawn with the teal texture here
@@ -63,6 +63,40 @@ def machine():
         b.fill(ax, 19, 2, ax + 1, 20, 3, GUNMETAL).fill(ax - 1, 21, 1, ax + 2, 21, 4, GOLD).cut(ax, 21, 2, ax + 1, 21, 3)
         b.fill(ax, 22, 2, ax + 1, 23, 3, GUNMETAL).fill(ax, 22, 4, ax + 1, 23, 9, GUNMETAL).fill(ax, 21, 9, ax + 1, 21, 9, GOLD)
         b.fill(ax, 15, 9, ax + 1, 20, 9, GUNMETAL).fill(ax, 14, 9, ax + 1, 14, 9, TEAL)
+    return b
+
+
+def enhancer():
+    """The Weapon Enhancer, the Spire (D84; tools/preview/enhancer_refined.html): 16 x 32 x 16 from the lower space, the ring
+    parked under the arm, the drum still, the gauge lit to eleven of sixteen. Drawn with the front at z 0 and mirrored at
+    the end so the front is the model's south face (+z) like the assembler's."""
+    b = Part("weapon_enhancer")
+    b.fill(0, 0, 0, 15, 6, 15, GUNMETAL).fill(0, 0, 0, 15, 0, 15, DARK).fill(0, 6, 0, 15, 6, 15, GOLD).fill(1, 6, 1, 14, 6, 14, LIGHT)   # the base, gold seam
+    b.fill(4, 2, 0, 11, 4, 0, DARK).fill(5, 3, 0, 10, 3, 0, DARK).fill(5, 3, 0, 8, 3, 0, GOLD)                                          # the charge window
+    for z in (2, 13):
+        b.fill(0, 1, z, 0, 4, z, DARK).fill(15, 1, z, 15, 4, z, DARK)                                                                  # vents
+    b.fill(0, 1, 5, 0, 5, 10, GOLD).fill(0, 2, 6, 0, 4, 9, DARK).fill(0, 3, 7, 0, 3, 8, VIOLET)                                          # the core hatch, left
+    b.fill(15, 1, 5, 15, 5, 10, GOLD).fill(15, 2, 6, 15, 4, 9, DARK).fill(15, 2, 6, 15, 2, 9, LIGHT)                                     # the repair hopper, right
+    b.fill(3, 7, 10, 12, 25, 15, GUNMETAL).fill(3, 7, 10, 12, 7, 15, LIGHT).fill(4, 8, 9, 11, 24, 9, DARK)                               # the spine and its face plate
+    for y in range(9, 25):
+        b.fill(6, y, 9, 9, y, 9, GOLD if y <= 19 else DARK)                                                                              # the energy gauge
+    b.fill(2, 9, 11, 2, 24, 11, GOLD).fill(13, 9, 11, 13, 24, 11, GOLD)                                                                  # gold stripes
+    for vy in range(10, 25, 4):
+        b.fill(2, vy, 13, 2, vy + 1, 13, DARK).fill(13, vy, 13, 13, vy + 1, 13, DARK)                                                    # side vents
+    b.fill(4, 25, 9, 11, 25, 9, GOLD)                                                                                                     # the lip over the plate
+    b.fill(3, 26, 2, 12, 27, 15, GUNMETAL).fill(3, 27, 2, 12, 27, 2, GOLD).fill(3, 26, 2, 12, 26, 2, LIGHT)                              # the top arm
+    b.fill(7, 23, 4, 8, 25, 5, GUNMETAL).fill(6, 21, 3, 9, 22, 6, GOLD).cut(7, 21, 4, 8, 22, 5)                                          # the clamp and its jaws
+    b.fill(5, 7, 2, 10, 8, 7, GOLD).cut(6, 7, 3, 9, 8, 6).fill(6, 7, 3, 9, 7, 6, DARK).fill(7, 7, 4, 8, 7, 5, TEAL)                      # the socket, teal seat lamp
+    b.fill(3, 24, 0, 12, 24, 9, GOLD).cut(4, 24, 1, 11, 24, 8).fill(7, 24, 0, 8, 24, 0, TEAL).fill(7, 24, 9, 8, 24, 9, TEAL).fill(3, 24, 4, 3, 24, 5, TEAL).fill(12, 24, 4, 12, 24, 5, TEAL)  # the ring, parked
+    b.fill(5, 28, 2, 10, 30, 7, GUNMETAL)                                                                                                 # the drum
+    for q in ((5, 2), (10, 2), (5, 7), (10, 7)):
+        b.cut(q[0], 28, q[1], q[0], 30, q[1])
+    b.fill(6, 31, 3, 9, 31, 6, GOLD).fill(7, 31, 4, 8, 31, 5, DARK)                                                                       # its cap
+    b.cut(7, 28, 2, 8, 30, 2).fill(7, 28, 2, 8, 28, 2, GUNMETAL).fill(7, 29, 2, 8, 29, 2, GOLD).fill(7, 30, 2, 7, 30, 2, GOLD)            # front bay: a Piercing shard
+    b.cut(10, 28, 4, 10, 30, 5).fill(10, 28, 4, 10, 28, 5, GUNMETAL).fill(10, 29, 4, 10, 29, 5, RED).fill(10, 30, 5, 10, 30, 5, RED)      # right bay: Overcharge
+    b.cut(5, 28, 4, 5, 30, 5).fill(5, 28, 4, 5, 28, 5, GUNMETAL).fill(5, 29, 4, 5, 29, 5, TEAL).fill(5, 30, 4, 5, 30, 4, TEAL)            # left bay: Coolant
+    b.cut(7, 28, 7, 8, 30, 7).fill(7, 28, 7, 8, 28, 7, DARK)                                                                             # back bay: empty
+    b.cubes = {(x, y, 15 - z): r for (x, y, z), r in b.cubes.items()}
     return b
 
 
@@ -118,6 +152,31 @@ def main():
         },
     }, indent=2) + "\n")
     print(f"weapon_assembler: {len(m.cubes)} voxels -> {n} cubes; blockstates 2; item model 1")
+    e = enhancer()
+    data, ne = block_model(e, False)
+    (models / "weapon_enhancer.json").write_text(json.dumps(data, indent=2) + "\n")
+    (models / "weapon_enhancer_top.json").write_text(json.dumps({"textures": {"particle": "bsp_weapons:item/part_gunmetal"}, "elements": []}, indent=2) + "\n")
+    variants = {}
+    for facing, y in turns.items():
+        v = {"model": "bsp_weapons:block/weapon_enhancer"}
+        if y:
+            v["y"] = y
+        variants[f"facing={facing}"] = v
+    (states / "weapon_enhancer.json").write_text(json.dumps({"variants": variants}, indent=2) + "\n")
+    (states / "weapon_enhancer_top.json").write_text(json.dumps({"variants": {"": {"model": "bsp_weapons:block/weapon_enhancer_top"}}}, indent=2) + "\n")
+    (item_models / "weapon_enhancer.json").write_text(json.dumps({
+        "parent": "bsp_weapons:block/weapon_enhancer",
+        "display": {
+            "gui": {"rotation": [30, 225, 0], "translation": [0, -3, 0], "scale": [0.28, 0.28, 0.28]},
+            "ground": {"scale": [0.15, 0.15, 0.15], "translation": [0, 2, 0]},
+            "fixed": {"rotation": [0, 180, 0], "scale": [0.28, 0.28, 0.28], "translation": [0, -3, 0]},
+            "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
+            "thirdperson_lefthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
+            "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, -1, 0], "scale": [0.2, 0.2, 0.2]},
+            "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, -1, 0], "scale": [0.2, 0.2, 0.2]},
+        },
+    }, indent=2) + "\n")
+    print(f"weapon_enhancer: {len(e.cubes)} voxels -> {ne} cubes; blockstates 2; item model 1")
 
 
 if __name__ == "__main__":

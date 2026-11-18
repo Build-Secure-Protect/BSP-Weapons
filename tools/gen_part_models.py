@@ -199,6 +199,21 @@ def energy_round():
     return Part("energy_round").fill(0, 0, 0, 1, 1, 6, GUNMETAL).fill(0, 0, 7, 1, 1, 8, TEAL).fill(0, 0, 2, 1, 1, 2, GOLD).fill(0, 0, 0, 1, 1, 0, DARK)
 
 
+def augment_chip():
+    """D86: the Shard Key. A gunmetal clasp on a dark base, two gold teeth below, a gold band, a keyway, a gold index pin, and
+    the crystal tapering in four tiers: its body tinted by the augment (tint 0), its corner edges the brighter glow (tint 1)."""
+    c = Part("augment_chip").fill(0, 1, 0, 7, 3, 3, GUNMETAL).fill(0, 1, 0, 7, 1, 3, DARK)
+    c.fill(1, 0, 1, 2, 0, 2, GOLD).fill(5, 0, 1, 6, 0, 2, GOLD)
+    c.cut(3, 1, 0, 4, 2, 0).fill(3, 1, 1, 4, 2, 1, DARK)
+    c.fill(7, 2, 0, 7, 3, 0, GOLD).fill(6, 2, 0, 6, 2, 0, GOLD)
+    c.fill(0, 4, 0, 7, 4, 3, GOLD).cut(1, 4, 1, 6, 4, 2).fill(1, 4, 1, 6, 4, 2, MAT)
+    c.fill(1, 5, 0, 6, 6, 3, MAT).fill(2, 7, 1, 5, 10, 2, MAT).fill(2, 11, 1, 5, 12, 2, MAT).fill(3, 13, 1, 4, 13, 2, MAT).fill(3, 14, 1, 3, 14, 1, MAT)
+    c.fill(1, 5, 0, 1, 6, 0, GLOW).fill(6, 5, 3, 6, 6, 3, GLOW).fill(6, 5, 0, 6, 5, 0, GLOW).fill(1, 6, 3, 1, 6, 3, GLOW)
+    c.fill(2, 7, 1, 2, 10, 1, GLOW).fill(5, 8, 2, 5, 10, 2, GLOW).fill(5, 7, 1, 5, 7, 1, GLOW)
+    c.fill(2, 11, 2, 2, 12, 2, GLOW).fill(5, 11, 1, 5, 12, 1, GLOW).fill(4, 13, 1, 4, 13, 1, GLOW).fill(3, 14, 1, 3, 14, 1, GLOW)
+    return c
+
+
 def weapon(name, part_list):
     """An assembled weapon: the parts merged into one model, each slot's metal tinted on its own index, the core glow on 4."""
     w = Part(name)
@@ -329,9 +344,9 @@ def main():
     textures_dir = ASSETS / "textures/item"
     for d in (models_dir, textures_dir):
         d.mkdir(parents=True, exist_ok=True)
-    # remove only what this script writes (gen_block_models.py writes models/item/weapon_assembler.json)
+    # remove only what this script writes (gen_block_models.py writes the machines' item models)
     for old in list(models_dir.glob("*.json")) + list(textures_dir.glob("part_*.png")):
-        if old.name != "weapon_assembler.json":
+        if old.name not in ("weapon_assembler.json", "weapon_enhancer.json"):
             old.unlink()
     for name, (colour, shades) in TEXTURES.items():
         (textures_dir / f"{name}.png").write_bytes(texture(colour, shades))
@@ -339,7 +354,7 @@ def main():
     print(f"textures: {len(TEXTURES) + 1}")
     all_parts = parts()
     by_name = {p.name: p for p in all_parts}
-    for part in all_parts + [engram(), catalyst(), energy_round()]:
+    for part in all_parts + [engram(), catalyst(), energy_round(), augment_chip()]:
         data, n = model(part)
         (models_dir / f"{part.name}.json").write_text(json.dumps(data, indent=2) + "\n")
         print(f"{part.name}: {len(part.cubes)} voxels -> {n} cubes, gui scale {data['display']['gui']['scale'][0]}")

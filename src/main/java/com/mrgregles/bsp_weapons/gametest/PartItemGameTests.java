@@ -125,6 +125,11 @@ public class PartItemGameTests {
         h.assertTrue(b != null && b.tag().equals(a.tag()) && b.band() == a.band() && b.colour() == a.colour() && b.kinds().equals(a.kinds()) && b.trait().equals(a.trait()), "Magnatite arrives whole");
         h.assertTrue(Math.abs(b.own(PartKind.BARREL).percentOf(Stat.RANGE) - a.own(PartKind.BARREL).percentOf(Stat.RANGE)) < 1e-4, "its own barrel modifiers arrive");
         h.assertTrue(Math.abs(back.bands().get(2).forKind(PartKind.CELL).percentOf(Stat.CAPACITY) - WeaponData.band(2).forKind(PartKind.CELL).percentOf(Stat.CAPACITY)) < 1e-4, "band 2's cell capacity arrives");
+        h.assertTrue(back.augments().size() == WeaponData.augments().size() && back.augments().size() >= 9, "every augment arrives: " + back.augments().size());
+        com.mrgregles.bsp_weapons.parts.Augment piercing = back.augments().get(id("piercing")), breacher = back.augments().get(id("breacher"));
+        h.assertTrue(piercing != null && piercing.colour() == 0xFFD23A && piercing.durability() == 10 && piercing.available(), "Piercing arrives whole: " + piercing);
+        h.assertTrue(Math.abs(piercing.modifiers().flatOf(Stat.PIERCING) - 10) < 1e-6 && Math.abs(piercing.modifiers().percentOf(Stat.PIERCING) - 15) < 1e-6, "its modifiers arrive");
+        h.assertTrue(breacher != null && !breacher.available() && breacher.kinds().equals(java.util.Set.of(com.mrgregles.bsp_weapons.parts.WeaponKind.ENERGY)), "Breacher arrives unavailable and energy-only");
         h.assertTrue(bytes < 64 * 1024, "the packet stays small: " + bytes + " bytes");
         h.succeed();
     }

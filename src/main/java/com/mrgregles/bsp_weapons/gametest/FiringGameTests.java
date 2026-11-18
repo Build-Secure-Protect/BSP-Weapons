@@ -46,11 +46,15 @@ public class FiringGameTests {
     }
 
     private static ItemStack pistol(int tier, String cell) {
+        return pistol(tier, cell, List.of());
+    }
+
+    private static ItemStack pistol(int tier, String cell, List<com.mrgregles.bsp_weapons.parts.FittedChip> chips) {
         WeaponSpec spec = new WeaponSpec(id("laser_pistol"), tier, List.of(
                 new PartSpec(PartKind.BARREL, id("focused_barrel"), id("tetrium"), Rarity.NORMAL),
                 new PartSpec(PartKind.CELL, id(cell), id("steel"), Rarity.NORMAL),
                 new PartSpec(PartKind.GRIP, id("standard_grip"), id("magnatite"), Rarity.NORMAL),
-                new PartSpec(PartKind.OPTIC, id("iron_sight"), id("tetrium"), Rarity.NORMAL)), Rarity.NORMAL, List.of());
+                new PartSpec(PartKind.OPTIC, id("iron_sight"), id("tetrium"), Rarity.NORMAL)), Rarity.NORMAL, chips);
         return ModItems.weapon(id("laser_pistol")).of(spec);
     }
 
@@ -143,6 +147,26 @@ public class FiringGameTests {
             h.assertTrue(near.getHealth() < nearHealth, "the near zombie was hurt: " + near.getHealth() + " of " + nearHealth);
             h.assertTrue(far.getHealth() == farHealth, "the wall keeps the far zombie safe");
             h.assertTrue(bolts(h).stream().noneMatch(b -> b.getOwner() == p), "the lance is gone after the hit");
+        });
+    }
+
+    @GameTest(template = EMPTY, batch = "firing_push", timeoutTicks = 200)
+    public void a_knockback_chip_throws_the_target_back_along_the_shot(GameTestHelper h) {
+        // two lanes on one floor: a plain pistol at z 4, a Knockback pistol at z 8; the zombies keep their AI so they can be moved, but cannot walk
+        for (int x = 1; x <= 22; x++) for (int z = 2; z <= 10; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+        ServerPlayer plainShooter = shooter(h, new BlockPos(2, 2, 4)), chipShooter = shooter(h, new BlockPos(2, 2, 8));
+        Zombie plain = h.spawn(EntityType.ZOMBIE, new BlockPos(8, 2, 4)), pushed = h.spawn(EntityType.ZOMBIE, new BlockPos(8, 2, 8));
+        for (Zombie z : List.of(plain, pushed)) z.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 400, 10, false, false));
+        double plainStart = plain.getX(), pushedStart = pushed.getX();
+        ItemStack gun = pistol(2), chipped = pistol(3, "energy_cell", List.of(new com.mrgregles.bsp_weapons.parts.FittedChip(id("knockback"), Rarity.NORMAL, 10)));
+        h.assertTrue(Firing.pushOf(WeaponItem.specOf(gun)) == 0 && Math.abs(Firing.pushOf(WeaponItem.specOf(chipped)) - WeaponsConfig.PUSH_SCALE.get()) < 1e-9, "the chip gives a block of push, scaled by the config");
+        h.assertTrue(Firing.tryFire(h.getLevel(), plainShooter, gun) == Firing.Refusal.NONE && Firing.tryFire(h.getLevel(), chipShooter, chipped) == Firing.Refusal.NONE, "both fired");
+        h.runAfterDelay(60, () -> {
+            double plainMoved = plain.getX() - plainStart, pushedMoved = pushed.getX() - pushedStart;
+            h.assertTrue(plain.getHealth() < plain.getMaxHealth() && pushed.getHealth() < pushed.getMaxHealth(), "both zombies were hurt");
+            h.assertTrue(pushedMoved > 0.5, "the Knockback zombie was thrown back along the shot: " + pushedMoved);
+            h.assertTrue(pushedMoved > plainMoved + 0.3, "and further than the plain hit moved its zombie: " + pushedMoved + " vs " + plainMoved);
+            h.succeed();
         });
     }
 

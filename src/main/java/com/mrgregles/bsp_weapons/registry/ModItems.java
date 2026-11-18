@@ -1,7 +1,10 @@
 package com.mrgregles.bsp_weapons.registry;
 
 import com.mrgregles.bsp_weapons.BspWeapons;
+import com.mrgregles.bsp_weapons.data.WeaponData;
+import com.mrgregles.bsp_weapons.item.AugmentChipItem;
 import com.mrgregles.bsp_weapons.item.CatalystItem;
+import com.mrgregles.bsp_weapons.parts.Augment;
 import com.mrgregles.bsp_weapons.item.CoreItem;
 import com.mrgregles.bsp_weapons.item.EngramItem;
 import com.mrgregles.bsp_weapons.item.PartItem;
@@ -23,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** The mod's items: one part item per part type, the Weapon Core, and the BSP-Weapons creative tab. */
+/** The mod's items: one part item per part type, the Weapon Core, the Augment Chip, and the BSP-Weapons creative tab. */
 public final class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BspWeapons.MODID);
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, BspWeapons.MODID);
@@ -50,7 +53,10 @@ public final class ModItems {
             lines.add(Component.translatable("tooltip." + BspWeapons.MODID + ".energy_round").withStyle(net.minecraft.ChatFormatting.GRAY));
         }
     });
+    /** The one chip item, named and tinted by the augment in its tag (D71, D86). */
+    public static final RegistryObject<AugmentChipItem> AUGMENT_CHIP = ITEMS.register("augment_chip", () -> new AugmentChipItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<BlockItem> WEAPON_ASSEMBLER = ITEMS.register("weapon_assembler", () -> new BlockItem(ModBlocks.WEAPON_ASSEMBLER.get(), new Item.Properties()));
+    public static final RegistryObject<BlockItem> WEAPON_ENHANCER = ITEMS.register("weapon_enhancer", () -> new BlockItem(ModBlocks.WEAPON_ENHANCER.get(), new Item.Properties()));
     public static final RegistryObject<CreativeModeTab> TAB;
 
     static {
@@ -80,9 +86,13 @@ public final class ModItems {
                 .icon(() -> WEAPON_CORE.get().of(2))
                 .displayItems((parameters, output) -> {
                     output.accept(WEAPON_ASSEMBLER.get());
+                    output.accept(WEAPON_ENHANCER.get());
                     for (RegistryObject<EngramItem> e : ENGRAMS) output.accept(e.get());
                     for (RegistryObject<CatalystItem> c : CATALYST_ITEMS) output.accept(c.get());
                     output.accept(ENERGY_ROUND.get());
+                    // one chip per available augment (D73), Normal roll, in id order
+                    WeaponData.augments().values().stream().filter(Augment::available).sorted(java.util.Comparator.comparing(a -> a.id().toString()))
+                            .forEach(a -> output.accept(AUGMENT_CHIP.get().of(a.id(), Rarity.NORMAL)));
                     for (int tier = 1; tier <= CoreItem.ROMAN.length; tier++) output.accept(WEAPON_CORE.get().of(tier));
                     ResourceLocation iron = new ResourceLocation(BspWeapons.MODID, "iron");
                     for (RegistryObject<PartItem> p : PARTS) output.accept(p.get().of(iron, Rarity.NORMAL));

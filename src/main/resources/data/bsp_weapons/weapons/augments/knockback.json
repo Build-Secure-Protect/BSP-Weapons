@@ -3,5 +3,8 @@
     "DAMAGE": {
       "percent": -5
     }
-  }
+  },
+  "colour": "#FF9A3A",
+  "durability": 10,
+  "push": 1.0
 }

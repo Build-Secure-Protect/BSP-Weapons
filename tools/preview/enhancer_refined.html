@@ -1,0 +1,608 @@
+<title>Enhancer Refined</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; the Spire (voxel, turning, working, labelled, a player beside it for scale) with its build notes; the Board screen at 2x with a 320 x 240 fit check and its notes; the Shard Key turning beside its icons and tooltip; the points to confirm. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .two { max-width: 1240px; margin: 0 auto 16px; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+  .one { max-width: 1240px; margin: 0 auto 16px; }
+  @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; flex-wrap: wrap; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; color: var(--violet); }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage.wide { aspect-ratio: 2 / 1; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 16px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b, .details b { color: var(--text); font-weight: 500; }
+  .details { padding: 10px 14px 14px; display: grid; gap: 8px; align-content: start; color: var(--muted); }
+  .details h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 6px 0 0; color: var(--teal); }
+  .details ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; }
+  .screen { padding: 10px 14px 0; display: grid; gap: 8px; }
+  .screen canvas { width: 100%; height: auto; max-width: 100%; image-rendering: pixelated; border: 1px solid var(--dim); }
+  .fit { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fit canvas { width: 320px; height: 240px; max-width: 100%; }
+  .fit span { font-family: var(--pixel); font-size: 16px; color: var(--muted); max-width: 22ch; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .tooltip { image-rendering: pixelated; width: 300px; max-width: 100%; height: auto; }
+  .points ol { margin: 0; padding-left: 22px; display: grid; gap: 5px; color: var(--muted); }
+  .points li::marker { color: var(--gold); font-family: var(--pixel); }
+</style>
+
+<header>
+  <h1>THE WEAPON ENHANCER, REFINED</h1>
+  <p>The picks of 18 November: the Spire for the block (D84), the Board for the screen (D85), the Shard Key for the chip (D86), the chips' share in violet with a red cost mark (D87). The Spire is drawn at full detail, one block wide and two high, with a player beside it for scale and its three operations animated: FIT seats a chip, UPGRADE swaps the Core, REPAIR melts an ingot in. The Board gains a chosen socket and a FULL state. The Shard Key is grown to 8 by 14 by 4 voxels, shown for all seven augments, with its tooltip at every rarity. Drag any stage to turn it.</p>
+</header>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE MACHINE: SPIRE</h2><small>16 x 32 x 16 voxels, one block wide, two high</small></div>
+    <div class="stage" data-view="machine"><div class="grid"></div></div>
+    <div class="controls" data-for="machine"></div>
+    <p class="blurb"><b>The base:</b> a vented gunmetal block with a gold seam, the charge window on its front, the core hatch with a violet lamp on its left and the repair hopper with an ingot on its right. <b>The socket:</b> a gold collar on the base the weapon stands in, barrel up, over a teal seat lamp. <b>The spine:</b> rises at the back with the energy gauge in sixteen gold segments, gold stripes and vents up its sides. <b>The arm and clamp:</b> reach over the weapon from the top of the spine and hold the muzzle. <b>The ring:</b> gold with four teal eyes, parked under the arm when idle, running down and up the weapon while working. <b>The drum:</b> on top, four bays holding Shard Keys in their augment colours, one bay empty, turning while working.</p>
+  </section>
+  <section class="card">
+    <div class="details">
+      <h3>HOW IT IS BUILT</h3>
+      <ul>
+        <li><b>Two block spaces, one above the other.</b> The lower holds the block entity, the inventory and the screen; the upper is a companion block that opens the same screen, as the assembler's second half does. Breaking either drops the machine as one item. It faces the player who placed it.</li>
+        <li><b>Heights.</b> Base 0 to 6, socket 7 to 8, the weapon stands 9 to 21, the ring travels 9 to 21, clamp 21 to 25, arm 26 to 27, drum 28 to 31. The drum, the clamp and the top of the spine sit in the upper space.</li>
+        <li><b>Idle.</b> The gauge shows the charge, the ring waits under the arm, the drum is still, the seat lamp breathes teal.</li>
+        <li><b>Working, about three seconds.</b> The ring runs the length of the weapon, the drum turns, and the item flies into the weapon's heart: a Shard Key from the drum on FIT, the new Core from the left hatch on UPGRADE while the old one leaves for the hatch, an ingot from the right hopper on REPAIR that bursts into gold sparks. The seat lamp flashes when the item lands. The charge (D75) is drawn when the operation starts.</li>
+        <li><b>The sides are the look of the slots.</b> The hatch is the CORE slot, the hopper the REPAIR slot, the drum the chip sockets; items go in through the screen, not by hand.</li>
+        <li><b>Light and sound.</b> Light level 7 like a lit furnace; a hum while working, a chime when done, a short buzz when the machine refuses (a Breacher or Ricochet chip, a full weapon, no charge).</li>
+      </ul>
+      <h3>WHAT THE OWNER PICKED</h3>
+      <ul>
+        <li>"1. B the Spire": the standing weapon, the travelling ring, the drum on top, the gauge up the spine, grown from the set 7 sketch.</li>
+        <li>"2. B Board": the weapon large on its rail with the sockets wired to it.</li>
+        <li>"3. C Shard Key": the crystal in a clasp, now with a gold band, a keyway and two gold teeth.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE SCREEN: BOARD</h2><small>D85, 256 x 200 at 2x</small></div>
+    <div class="screen">
+      <canvas data-screen width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window</span></div>
+    </div>
+    <div class="controls" data-tabs></div>
+    <p class="blurb"><b>As picked, with the rules drawn in.</b> The sockets show Shard Keys with their durability pips above; the chosen socket has a teal frame and REMOVE takes its chip. FIT takes the chip from the CHIP IN slot into the first free socket and is greyed when every socket is full. CORE sits under the rail's heart and lights UPGRADE when a higher Core is in it; REPAIR sits under the grip and lights when an ingot of a fitted material is in it. The gauge on the right is the charge. The bars show the parts' share in teal, the Core and roll's in gold, the chips' in violet, and a red mark where a chip costs a stat (D87). The weapon stands still, side on, so the traces always reach its frame.</p>
+  </section>
+  <section class="card">
+    <div class="details">
+      <h3>WHAT THE STATES SHOW</h3>
+      <ul>
+        <li><b>LOADED.</b> A Laser Pistol with a Core III, roll S, three sockets, two chips fitted (Piercing Rare 9/10, Overcharge Normal 7/10), a Core IV waiting in CORE and an ingot in REPAIR. Socket 1 chosen.</li>
+        <li><b>FULL.</b> A third chip (Coolant Epic 10/10) fitted; FIT greyed; the Coolant lifts HEAT CAP back above the Overcharge's cost.</li>
+        <li><b>NO POWER.</b> The gauge empty, every key greyed, the status in red.</li>
+        <li><b>EMPTY.</b> No weapon: the rail bare, the sockets faint, the bars empty.</li>
+      </ul>
+      <h3>WHAT A LINE MEANS</h3>
+      <ul>
+        <li><b>Chip rows.</b> Name in the augment's colour, then durability pips, the fraction and the rarity in violet (D81).</li>
+        <li><b>The status.</b> Two lines: what the lit key will cost, and what the chosen socket holds or why a key is grey.</li>
+        <li><b>Core line.</b> "Core III  S  3 slots" under the weapon's name; after UPGRADE it reads "Core IV  S  3 slots" (tier IV gives 2 slots, the S roll a third; tier V gives 4).</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE CHIP: SHARD KEY</h2><small>D86, 8 x 14 x 4 voxels</small></div>
+    <div class="stage wide" data-stage="chip"><div class="grid"></div></div>
+    <div class="controls" data-tints><span class="k">AUGMENT</span></div>
+    <p class="blurb"><b>One item, tinted.</b> A gunmetal clasp with a dark base, two gold teeth below it that are the contacts, a gold band where the crystal meets the clasp, a keyway cut into the front and a gold index pin on the right. The crystal is the augment's colour, four tiers tapering to a single voxel tip, its corner edges glowing. Nothing on the model changes with rarity (D79); the tooltip carries it.</p>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>ICONS: 16 PX FOR EACH AUGMENT, 32 PX FOR THE CHOSEN ONE</h3>
+      <div class="strip" data-strip="chip"></div>
+      <h3>TOOLTIP</h3>
+      <div class="controls" data-rarity style="padding:0;border:0"><span class="k">RARITY</span></div>
+      <canvas class="tooltip" data-tooltip width="300" height="192"></canvas>
+      <p class="blurb" style="padding:0"><b>Reads:</b> the chip's name; the rarity line in violet as a part's (D81); each effect scaled by the rarity multiplier, teal where it adds and red where it costs; durability with pips in the augment's colour (D83); what it fits. Breacher and Ricochet keep their JSON but no icon or tooltip is shown here: they are not in the creative tab (D73).</p>
+    </div>
+  </section>
+</div>
+
+<div class="one">
+  <section class="card points">
+    <div class="head"><h2>POINTS TO CONFIRM</h2><small>R15 to R23; "yes" takes every default as drawn</small></div>
+    <div class="details">
+      <ol start="15">
+        <li><b>R15 Footprint.</b> One block wide and two high, the block entity in the lower space and a companion block above, as drawn. Or: one block only, with the spire's top as a model overhang into the space above.</li>
+        <li><b>R16 The weapon's stance.</b> Barrel up in the socket with the clamp on the muzzle, as drawn. Or: barrel down, grip up.</li>
+        <li><b>R17 The ring.</b> Parked under the arm when idle, running the weapon's length while working, as drawn. Or: parked at the socket. Or: always drifting slowly.</li>
+        <li><b>R18 The drum.</b> Its four bays show the chips the weapon carries (the first three) and an empty bay, turning while working, as drawn. Or: the bays show nothing until a chip is fitted. Or: the drum always turns slowly.</li>
+        <li><b>R19 Three animations.</b> FIT, UPGRADE and REPAIR each have their own item flying in from where its slot is on the block, as drawn. Or: one animation for all three, the ring alone.</li>
+        <li><b>R20 The screen's weapon.</b> Stands still, side on, so the sockets' traces reach its frame, as drawn. Or: turns like the assembler's, the traces ending at the sockets' edge.</li>
+        <li><b>R21 Choosing a socket.</b> Clicking a socket chooses it (teal frame) and REMOVE takes that chip; FIT fills the first free socket, as drawn. Or: REMOVE always takes the last chip fitted and sockets cannot be chosen.</li>
+        <li><b>R22 Chip size in hand.</b> 8 by 14 by 4 voxels, about half the pistol's height, as drawn. Or: 6 by 10 by 3, a pocket item.</li>
+        <li><b>R23 The refusal.</b> A refused operation (a Breacher chip, a full weapon, a wrong ingot, no charge) buzzes and names the reason on the status line, nothing flies, no charge is drawn, as the notes say. Or: the charge is drawn anyway.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, STONE = 0x4A4F58, LIGHT = 0x5A6270, MAT = 0x7D97B0, RED = 0xFF6B5C, OFF = 0x1C2230, STEEL = 0x8C949F, VIOLET = 0xB58CFF, LAMP = 0xFFD23A;
+  var AUGMENTS = [['Piercing', 0xFFD23A], ['Quick-draw', 0x19D3B0], ['Stabiliser', 0x4DA3FF], ['Overcharge', 0xFF6B5C], ['Coolant', 0x8AE8FF], ['Extended Cell', 0xB58CFF], ['Knockback', 0xFF9A3A]];
+  var tint = 0;
+  function tintColour() { return AUGMENTS[tint][1]; }
+  function hex(n) { return '#' + ('000000' + n.toString(16)).slice(-6); }
+
+  // ---- voxels. Roles: a colour (lit), 'teal' / 'glow' (teal, full bright), 'red', 'violet', 'lamp' (gold), 'tint' (augment colour, full bright), 'tintLit' (augment colour, lit), 'g:RRGGBB' (any colour, full bright), 'glass'. ----
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function isGlow(r) { return r === 'teal' || r === 'glow' || r === 'tint' || r === 'red' || r === 'violet' || r === 'lamp' || (typeof r === 'string' && r.slice(0, 2) === 'g:'); }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === 'glass') glass.push(k); else if (isGlow(r)) glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); });
+      im.instanceMatrix.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.lit = lit; this.glow = glow;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }));
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    this.glassMesh = mesh(glass, new T.MeshBasicMaterial({ color: 0x8AE8DC, transparent: true, opacity: 0.42, depthWrite: false }));
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this, tc = tintColour();
+    function colour(r) {
+      if (r === 'teal' || r === 'glow') return TEAL; if (r === 'tint' || r === 'tintLit') return tc; if (r === 'red') return RED; if (r === 'violet') return VIOLET; if (r === 'lamp') return LAMP;
+      if (typeof r === 'string' && r.slice(0, 2) === 'g:') return parseInt(r.slice(2), 16); return r;
+    }
+    [[this.mesh, this.lit], [this.glowMesh, this.glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(colour(self.cubes[k])); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); pair[0].setColorAt(i, c); });
+      pair[0].instanceColor.needsUpdate = true;
+    });
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+  /** A built part centred on the origin, its bottom at y = 0, so it can be scaled and flown. */
+  function centred(part) { part.build(); var b = part.bounds(), c = b.getCenter(new T.Vector3()); var g = new T.Group(); part.group.position.set(-c.x, -c.y, -c.z); g.add(part.group); return g; }
+
+  /** The Spine Rail pistol (the refined pick), whole. */
+  function pistol() {
+    var frame = new VoxelPart('Frame');
+    frame.fill(-2, 0, -10, 1, 3, 12, GUNMETAL).cut(-1, 3, -10, 0, 3, 12);
+    for (var z = -8; z <= 12; z += 4) frame.cut(-2, 3, z, 1, 3, z);
+    frame.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD).fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD);
+    frame.fill(-2, -2, -4, 1, -1, -1, DARK).cut(-1, -2, -3, 0, -1, -2).fill(-1, -2, -3, 0, -1, -3, GOLD);
+    var core = new VoxelPart('Core');
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD).cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow').fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL).cut(-1, 7, -2, 0, 7, -1).fill(-1, 7, -2, 0, 7, -1, 'glow');
+    var barrel = new VoxelPart('Barrel');
+    barrel.fill(-2, 1, 13, 1, 4, 24, MAT).fill(-1, 2, 25, 0, 3, 25, 'teal').fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23).fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);
+    barrel.fill(-3, 1, 16, -3, 4, 16, MAT).fill(-3, 1, 18, -3, 4, 18, MAT).fill(2, 1, 16, 2, 4, 16, MAT).fill(2, 1, 18, 2, 4, 18, MAT).fill(-1, 5, 15, 0, 5, 21, DARK);
+    var cell = new VoxelPart('Cell');
+    cell.fill(-2, -6, -8, 1, -1, -3, MAT).fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal').fill(-2, -6, -8, 1, -6, -3, DARK).fill(-2, -1, -3, 1, -1, -3, GOLD);
+    var grip = new VoxelPart('Grip');
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, MAT); }
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7).fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK).fill(-2, -10, -14, 1, -10, -10, DARK);
+    var optic = new VoxelPart('Optic');
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK).fill(-1, 8, -10, 0, 10, -4, MAT).fill(-1, 8, -3, 0, 9, -3, 'teal').fill(-1, 11, -9, 0, 11, -9, GOLD).fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD);
+    var root = new T.Group();
+    [frame, core, barrel, cell, grip, optic].forEach(function (p) { p.build(); root.add(p.group); });
+    root.position.set(0.5, 0, -6.5);
+    return root;
+  }
+
+  /** The Shard Key: 8 x 14 x 4 (plus two gold teeth below), the crystal in the augment's colour. */
+  function shardKey() {
+    var c = new VoxelPart('Shard Key');
+    c.fill(0, 0, 0, 7, 2, 3, GUNMETAL).fill(0, 0, 0, 7, 0, 3, DARK);                              // the clasp, dark base
+    c.fill(1, -1, 1, 2, -1, 2, GOLD).fill(5, -1, 1, 6, -1, 2, GOLD);                               // two gold teeth, the contacts
+    c.cut(3, 0, 0, 4, 1, 0).fill(3, 0, 1, 4, 1, 1, DARK);                                         // the keyway on the front
+    c.fill(7, 1, 0, 7, 2, 0, GOLD).fill(6, 1, 0, 6, 1, 0, GOLD);                                   // the gold index pin, right front
+    c.fill(0, 3, 0, 7, 3, 3, GOLD).cut(1, 3, 1, 6, 3, 2);                                           // the gold band
+    c.fill(1, 3, 1, 6, 3, 2, 'tintLit');                                                            // crystal root inside the band
+    c.fill(1, 4, 0, 6, 5, 3, 'tintLit').fill(2, 6, 1, 5, 9, 2, 'tintLit').fill(2, 10, 1, 5, 11, 2, 'tintLit').fill(3, 12, 1, 4, 12, 2, 'tintLit').fill(3, 13, 1, 3, 13, 1, 'tintLit');
+    c.fill(1, 4, 0, 1, 5, 0, 'tint').fill(6, 4, 3, 6, 5, 3, 'tint').fill(6, 4, 0, 6, 4, 0, 'tint').fill(1, 5, 3, 1, 5, 3, 'tint');   // glowing edges, first tier
+    c.fill(2, 6, 1, 2, 9, 1, 'tint').fill(5, 7, 2, 5, 9, 2, 'tint').fill(5, 6, 1, 5, 6, 1, 'tint');                                  // second
+    c.fill(2, 10, 2, 2, 11, 2, 'tint').fill(5, 10, 1, 5, 11, 1, 'tint').fill(4, 12, 1, 4, 12, 1, 'tint').fill(3, 13, 1, 3, 13, 1, 'tint'); // third, the tip
+    return c;
+  }
+  /** A Weapon Core as an item: a gold cage round a lit heart. */
+  function coreItem(heart) {
+    var c = new VoxelPart('core');
+    c.fill(0, 0, 0, 2, 2, 2, GOLD).cut(1, 0, 0, 1, 0, 0).cut(1, 2, 0, 1, 2, 0).cut(1, 0, 2, 1, 0, 2).cut(1, 2, 2, 1, 2, 2).cut(0, 0, 1, 0, 0, 1).cut(0, 2, 1, 0, 2, 1).cut(2, 0, 1, 2, 0, 1).cut(2, 2, 1, 2, 2, 1);
+    c.cut(1, 1, 1, 1, 1, 1).fill(1, 1, 1, 1, 1, 1, heart).cut(0, 1, 1, 0, 1, 1).cut(2, 1, 1, 2, 1, 1).cut(1, 1, 0, 1, 1, 0).cut(1, 1, 2, 1, 1, 2).cut(1, 0, 1, 1, 0, 1).cut(1, 2, 1, 1, 2, 1);
+    c.fill(0, 1, 1, 0, 1, 1, heart).fill(2, 1, 1, 2, 1, 1, heart).fill(1, 1, 0, 1, 1, 0, heart).fill(1, 1, 2, 1, 1, 2, heart).fill(1, 0, 1, 1, 0, 1, heart).fill(1, 2, 1, 1, 2, 1, heart);
+    return c;
+  }
+  function ingotItem() { var c = new VoxelPart('ingot'); c.fill(0, 0, 0, 3, 0, 1, STEEL).fill(1, 1, 0, 2, 1, 1, STEEL).fill(0, 0, 0, 3, 0, 0, 0xA7AEB8); return c; }
+
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  /** The item's journey while working: waits 1 s, flies in over 1.5 s, is in (hidden) for 2.5 s, then the cycle repeats. */
+  function phase(now) { var t = now % 6; if (t < 1) return 0; if (t < 2.5) return smooth((t - 1) / 1.5); if (t < 5) return 1; return 0; }
+  function fly(obj, from, to, e, arc) {
+    obj.position.set(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e + Math.sin(Math.PI * e) * (arc || 5), from.z + (to.z - from.z) * e);
+    var s = e < 0.85 ? 1 : Math.max(0.001, 1 - (e - 0.85) / 0.15);
+    obj.scale.setScalar(s * (obj.userData.scale || 1)); obj.visible = e > 0.001 && e < 0.999;
+  }
+  function Sparks(parent, n, colour) {
+    this.items = []; this.m = new T.Matrix4();
+    this.mesh = new T.InstancedMesh(new T.BoxGeometry(0.6, 0.6, 0.6), new T.MeshBasicMaterial({ color: colour }), n);
+    for (var i = 0; i < n; i++) this.items.push({ p: new T.Vector3(), v: new T.Vector3(), life: 0 });
+    parent.add(this.mesh); this.tick(0);
+  }
+  Sparks.prototype.burst = function (x, y, z) { this.items.forEach(function (it) { it.p.set(x + (Math.random() - 0.5) * 3, y, z + (Math.random() - 0.5) * 3); it.v.set((Math.random() - 0.5) * 14, 5 + Math.random() * 9, (Math.random() - 0.5) * 14); it.life = 0.45 + Math.random() * 0.4; }); };
+  Sparks.prototype.tick = function (dt) {
+    var self = this;
+    this.items.forEach(function (it, i) {
+      if (it.life > 0) { it.life -= dt; it.v.y -= 32 * dt; it.p.addScaledVector(it.v, dt); self.m.makeTranslation(it.p.x, it.p.y, it.p.z); } else self.m.makeScale(0.001, 0.001, 0.001);
+      self.mesh.setMatrixAt(i, self.m);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
+  };
+  function floor(x0, z0, x1, z1) { var f = new VoxelPart('floor'); f.fill(x0, -1, z0, x1, -1, z1, STONE); return f.build(); }
+
+  /** A blocky player, 8 x 30 x 4 (1.9 blocks), standing at x, z, facing +z. */
+  function player(x, z) {
+    var p = new VoxelPart('player'), SKIN = 0xC9956B, HAIR = 0x3B2A1E, SHIRT = 0x1F5F6A, TROUSERS = 0x2A3550, BOOT = 0x1A1D24;
+    p.fill(0, 0, 0, 3, 10, 3, TROUSERS).fill(4, 0, 0, 7, 10, 3, TROUSERS).fill(0, 0, 0, 7, 1, 3, BOOT);
+    p.fill(0, 11, 0, 7, 21, 3, SHIRT).fill(3, 11, 3, 4, 21, 3, 0x19D3B0 & 0x7F7F7F).fill(-4, 11, 0, -1, 21, 3, SHIRT).fill(-4, 11, 0, -1, 14, 3, SKIN).fill(8, 11, 0, 11, 21, 3, SHIRT).fill(8, 11, 0, 11, 14, 3, SKIN);
+    p.fill(0, 22, -2, 7, 29, 5, SKIN).fill(0, 29, -2, 7, 29, 5, HAIR).fill(0, 27, -2, 7, 28, -2, HAIR).fill(0, 26, 5, 7, 28, 5, HAIR).fill(1, 26, 5, 2, 26, 5, 0xFFFFFF).fill(5, 26, 5, 6, 26, 5, 0xFFFFFF).fill(2, 26, 5, 2, 26, 5, 0x2A3550).fill(5, 26, 5, 5, 26, 5, 0x2A3550);
+    p.build(); p.group.position.set(x, 0, z); return p.group;
+  }
+
+  // ---- the Spire ---------------------------------------------------------------------------------------------------------------------------
+  function spire() {
+    var b = new VoxelPart('spire');
+    b.fill(0, 0, 0, 15, 6, 15, GUNMETAL).fill(0, 0, 0, 15, 0, 15, DARK).fill(0, 6, 0, 15, 6, 15, GOLD).fill(1, 6, 1, 14, 6, 14, LIGHT);        // the base, gold seam
+    b.fill(4, 2, 0, 11, 4, 0, DARK).fill(5, 3, 0, 10, 3, 0, OFF).fill(5, 3, 0, 8, 3, 0, 'lamp');                                               // the charge window on the front, lit to the charge
+    [2, 13].forEach(function (z) { b.fill(0, 1, z, 0, 4, z, DARK); b.fill(15, 1, z, 15, 4, z, DARK); });                                      // vents
+    b.fill(0, 1, 5, 0, 5, 10, GOLD).fill(0, 2, 6, 0, 4, 9, DARK).fill(0, 3, 7, 0, 3, 8, 'violet');                                             // the core hatch, left, violet lamp
+    b.fill(15, 1, 5, 15, 5, 10, GOLD).fill(15, 2, 6, 15, 4, 9, DARK).fill(15, 2, 6, 15, 2, 9, STEEL).fill(15, 2, 7, 15, 2, 8, 0xA7AEB8);        // the repair hopper, right, an ingot in it
+    b.fill(3, 7, 10, 12, 25, 15, GUNMETAL).fill(3, 7, 10, 12, 7, 15, LIGHT).fill(4, 8, 9, 11, 24, 9, DARK);                                    // the spine and its face plate
+    for (var y = 9; y <= 24; y++) b.fill(6, y, 9, 9, y, 9, y <= 19 ? 'lamp' : OFF);                                                            // the energy gauge, eleven of sixteen lit
+    b.fill(2, 9, 11, 2, 24, 11, GOLD).fill(13, 9, 11, 13, 24, 11, GOLD);                                                                        // gold stripes
+    for (var vy = 10; vy <= 24; vy += 4) { b.fill(2, vy, 13, 2, vy + 1, 13, DARK); b.fill(13, vy, 13, 13, vy + 1, 13, DARK); }                   // side vents
+    b.fill(4, 25, 9, 11, 25, 9, GOLD);                                                                                                           // a gold lip over the plate
+    b.fill(3, 26, 2, 12, 27, 15, GUNMETAL).fill(3, 27, 2, 12, 27, 2, GOLD).fill(3, 26, 2, 12, 26, 2, LIGHT);                                    // the top arm
+    b.fill(7, 23, 4, 8, 25, 5, GUNMETAL).fill(6, 21, 3, 9, 22, 6, GOLD).cut(7, 21, 4, 8, 22, 5);                                                // the clamp and its jaws
+    b.fill(5, 7, 2, 10, 8, 7, GOLD).cut(6, 7, 3, 9, 8, 6).fill(6, 7, 3, 9, 7, 6, DARK).fill(7, 7, 4, 8, 7, 5, 'teal');                            // the socket, teal seat lamp
+    var g = new T.Group(); g.add(b.build().group);
+    var ring = new VoxelPart('ring'); ring.fill(3, 0, 0, 12, 0, 9, GOLD).cut(4, 0, 1, 11, 0, 8).fill(7, 0, 0, 8, 0, 0, 'teal').fill(7, 0, 9, 8, 0, 9, 'teal').fill(3, 0, 4, 3, 0, 5, 'teal').fill(12, 0, 4, 12, 0, 5, 'teal'); ring.build(); g.add(ring.group);
+    var drumPivot = new T.Group(); drumPivot.position.set(7.5, 28, 4.5); g.add(drumPivot);
+    var drum = new VoxelPart('drum');
+    drum.fill(-3, 0, -3, 2, 2, 2, GUNMETAL); [[-3, -3], [2, -3], [-3, 2], [2, 2]].forEach(function (q) { drum.cut(q[0], 0, q[1], q[0], 2, q[1]); });
+    drum.fill(-2, 3, -2, 1, 3, 1, GOLD).fill(-1, 3, -1, 0, 3, 0, DARK);
+    function bay(x0, z0, x1, z1, tx, tz, colour) { drum.cut(x0, 0, z0, x1, 2, z1); if (colour) { drum.fill(x0, 0, z0, x1, 0, z1, GUNMETAL).fill(x0, 1, z0, x1, 1, z1, 'g:' + ('000000' + colour.toString(16)).slice(-6)).fill(tx, 2, tz, tx, 2, tz, 'g:' + ('000000' + colour.toString(16)).slice(-6)); } else drum.fill(x0, 0, z0, x1, 0, z1, OFF); }
+    bay(-1, -3, 0, -3, 0, -3, AUGMENTS[0][1]); bay(2, -1, 2, 0, 2, 0, AUGMENTS[3][1]); bay(-3, -1, -3, 0, -3, -1, AUGMENTS[4][1]); bay(-1, 2, 0, 2, null, null, null);
+    drum.build(); drumPivot.add(drum.group);
+    var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(7.5, 15, 4.5); gun.rotation.x = -Math.PI / 2; gun.add(pistol()); g.add(gun);
+    var heart = { x: 7.5, y: 13.5, z: 4.5 };
+    var shard = centred(shardKey()); shard.userData.scale = 0.45; g.add(shard);
+    var newCore = centred(coreItem('g:' + 'B58CFF')); newCore.userData.scale = 0.8; g.add(newCore);
+    var oldCore = centred(coreItem(0x4DA3FF)); oldCore.userData.scale = 0.8; g.add(oldCore);
+    var ingot = centred(ingotItem()); ingot.userData.scale = 0.9; g.add(ingot);
+    var sparks = new Sparks(g, 28, GOLD), flash = new Sparks(g, 12, TEAL);
+    var lamp = new T.PointLight(TEAL, 0.7, 20); lamp.position.set(8, 16, 2); g.add(lamp);
+    g.add(player(-16, 4));
+    var landed = false;
+    return {
+      group: g, cam: { pos: [54, 44, 62], look: [2, 15, 8] }, floor: [-26, -14, 31, 31], yaw: 3.4,
+      labels: [['Spire', [-2, 22, 14]], ['Chip drum', [8, 33, 4.5]], ['Ring', [-2.5, 15, 4.5]], ['Energy gauge', [8, 11, 7]], ['Socket', [8, 5, -1]], ['Clamp', [13, 23, 2]], ['Core hatch', [-1.5, 3.5, 7.5]], ['Repair hopper', [17, 3.5, 7.5]], ['Charge window', [8, 1, -1]], ['Player, 1.9 blocks', [-12, 32, 6]]],
+      animate: function (now, dt, st, e) {
+        var working = st.working, op = st.op;
+        ring.group.position.y = working ? 15 + 6 * Math.sin(now * 1.3) : 24;
+        if (working && !reduced) drumPivot.rotation.y += dt * 0.8;
+        var ee = working ? e : 0;
+        fly(shard, { x: 7.5, y: 29.5, z: 1.5 }, heart, op === 0 ? ee : 0, 4); shard.rotation.y = now * 2;
+        fly(newCore, { x: 0.5, y: 3.5, z: 7.5 }, heart, op === 1 ? ee : 0, 10); newCore.rotation.y = now * 3;
+        fly(oldCore, heart, { x: 0.5, y: 3.5, z: 7.5 }, op === 1 ? ee : 0, 10); oldCore.rotation.y = -now * 3;
+        fly(ingot, { x: 14.5, y: 3.5, z: 7.5 }, heart, op === 2 ? ee : 0, 10); ingot.rotation.y = now * 2;
+        if (ee >= 0.999 && !landed) { landed = true; if (op === 2) sparks.burst(heart.x, heart.y, heart.z); flash.burst(heart.x, heart.y + 1, heart.z); }
+        if (ee < 0.5) landed = false;
+        sparks.tick(dt); flash.tick(dt);
+        lamp.intensity = working ? (ee >= 1 ? 1.0 + 0.5 * Math.abs(Math.sin(now * 6)) : 0.7) : 0.3 + 0.1 * Math.sin(now * 2);
+      }
+    };
+  }
+  var stages = [];
+  function makeStage(el, build, camFov) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var m = build();
+    var camera = new T.PerspectiveCamera(camFov || 30, 4 / 3, 0.1, 500);
+    camera.position.set(m.cam.pos[0], m.cam.pos[1], m.cam.pos[2]); camera.lookAt(m.cam.look[0], m.cam.look[1], m.cam.look[2]);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var pivot = new T.Group(); pivot.position.set(m.cam.look[0], 0, m.cam.look[2]); scene.add(pivot);
+    m.group.position.set(-m.cam.look[0], 0, -m.cam.look[2]); pivot.add(m.group);
+    if (m.floor) { var f = floor(m.floor[0], m.floor[1], m.floor[2], m.floor[3]); f.group.position.copy(m.group.position); pivot.add(f.group); }
+    var labels = [];
+    (m.labels || []).forEach(function (l) { var d = document.createElement('div'); d.className = 'label'; d.textContent = l[0]; el.appendChild(d); labels.push({ el: d, at: new T.Vector3(l[1][0], l[1][1], l[1][2]) }); });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pivot: pivot, machine: m, labels: labels, labelsOn: true, yaw: (m.yaw === undefined ? 0.5 : m.yaw), dragging: false, lastX: 0, working: !reduced, op: 0, spin: m.spin || 0.22 };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  var machineStage = makeStage(document.querySelector('[data-view="machine"]'), spire);
+  (function () {
+    var holder = document.querySelector('.controls[data-for="machine"]');
+    group(holder, 'OPERATION', ['FIT', 'UPGRADE', 'REPAIR'], 0, function (i) { machineStage.op = i; });
+    group(holder, 'STATE', ['WORKING', 'IDLE'], reduced ? 1 : 0, function (i) { machineStage.working = i === 0; });
+    group(holder, 'LABELS', ['ON', 'OFF'], 0, function (i) { machineStage.labelsOn = i === 0; });
+  })();
+
+  // ---- the Board screen: 256 x 200 at the game's pixel size, shown at 2x and inside 320 x 240 ----------------------------------------------
+  var C = { panel: '#10151C', slot: '#0C0E12', dim: '#2A2F3A', muted: '#9AA3B5', text: '#E6EBF2', teal: '#19D3B0', violet: '#B58CFF', gold: '#FFD23A', red: '#FF6B5C', board: '#0B0F14', faint: '#3A4150' };
+  var STATES = ['LOADED', 'FULL', 'NO POWER', 'EMPTY'];
+  var state = 'LOADED';
+  var PIERCING = { name: 'Piercing', rarity: 'Rare', dura: 9, max: 10, tint: '#FFD23A' }, OVERCHARGE = { name: 'Overcharge', rarity: 'Normal', dura: 7, max: 10, tint: '#FF6B5C' }, COOLANT = { name: 'Coolant', rarity: 'Epic', dura: 10, max: 10, tint: '#8AE8FF' };
+  // name, final, scale, the parts' share, after core and roll
+  function stats(full) { return [['DAMAGE', 7.7, 20, 4.0, 6.4], ['PIERCING', 26, 75, 0, 8], ['RANGE', 36, 160, 24, 36], ['FIRE RATE', 3.0, 12, 2.4, 3.0], ['HEAT CAP', full ? 80 : 56, 200, 50, 70], ['DURABILITY', 480, 2000, 300, 480]]; }
+  function sit() { var s = state; return { loaded: s !== 'EMPTY', power: s !== 'NO POWER', full: s === 'FULL', frac: s === 'NO POWER' ? 0 : 0.65, chips: s === 'EMPTY' ? [null, null, null] : (s === 'FULL' ? [PIERCING, OVERCHARGE, COOLANT] : [PIERCING, OVERCHARGE, null]) }; }
+
+  function px(ctx) { ctx.imageSmoothingEnabled = false; ctx.textBaseline = 'top'; }
+  function text(ctx, s, x, y, colour, size) { ctx.fillStyle = colour || C.text; ctx.font = (size || 16) + 'px VT323, monospace'; ctx.fillText(s, x, y); }
+  function rect(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); }
+  function frame(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x, y, 1, h); ctx.fillRect(x + w - 1, y, 1, h); }
+  /** The Shard Key as a 10 x 12 pixel glyph: two gold teeth, a gunmetal clasp with a gold band, the tapering crystal. */
+  function shardGlyph(ctx, x, y, tint, lit) {
+    rect(ctx, x + 2, y + 11, 2, 1, '#D9B23A'); rect(ctx, x + 6, y + 11, 2, 1, '#D9B23A');
+    rect(ctx, x + 1, y + 8, 8, 3, '#2E343D'); rect(ctx, x + 1, y + 10, 8, 1, '#14181E'); rect(ctx, x + 1, y + 7, 8, 1, '#D9B23A');
+    rect(ctx, x + 2, y + 5, 6, 2, tint); rect(ctx, x + 3, y + 2, 4, 3, tint); rect(ctx, x + 4, y + 0, 2, 2, tint);
+    if (lit) { rect(ctx, x + 2, y + 5, 1, 2, '#FFFFFF'); rect(ctx, x + 3, y + 2, 1, 3, 'rgba(255,255,255,0.6)'); }
+    else { rect(ctx, x + 4, y + 2, 2, 5, 'rgba(0,0,0,0.25)'); }
+  }
+  function slot(ctx, x, y, label, kind, filled) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, filled ? C.dim : '#1A1F27');
+    if (filled) {
+      if (kind === 'core') { rect(ctx, x + 4, y + 4, 10, 10, '#D9B23A'); rect(ctx, x + 6, y + 6, 6, 6, '#B58CFF'); rect(ctx, x + 8, y + 4, 2, 10, '#B58CFF'); rect(ctx, x + 4, y + 8, 10, 2, '#B58CFF'); }
+      else if (kind === 'ingot') { rect(ctx, x + 3, y + 9, 12, 4, '#8C949F'); rect(ctx, x + 5, y + 7, 8, 2, '#8C949F'); rect(ctx, x + 3, y + 9, 12, 1, '#A7AEB8'); rect(ctx, x + 3, y + 12, 12, 1, '#4A4F58'); }
+      else if (kind === 'weapon') { rect(ctx, x + 3, y + 7, 12, 3, '#2E343D'); rect(ctx, x + 4, y + 8, 10, 1, '#D9B23A'); rect(ctx, x + 6, y + 5, 3, 2, '#19D3B0'); rect(ctx, x + 5, y + 10, 3, 5, '#7D97B0'); rect(ctx, x + 12, y + 6, 4, 2, '#7D97B0'); }
+      else if (kind === 'chip') shardGlyph(ctx, x + 4, y + 3, filled.tint, false);
+    }
+    if (label) text(ctx, label, x, y + 19, filled ? C.muted : C.faint, 10);
+  }
+  function pips(ctx, x, y, dura, max, tint) { for (var i = 0; i < max; i++) rect(ctx, x + i * 2, y, 1, 2, i < dura ? tint : C.dim); }
+  /** A chip socket: pips above, the Shard Key glyph inside, a teal frame when chosen. */
+  function socket(ctx, x, y, chip, chosen, loaded) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, chosen ? C.teal : (loaded ? C.dim : '#1A1F27'));
+    if (chip) { shardGlyph(ctx, x + 4, y + 3, chip.tint, true); pips(ctx, x, y - 4, chip.dura, chip.max, chip.tint); }
+    else if (loaded) rect(ctx, x + 3, y + 8, 12, 1, C.faint);
+  }
+  function button(ctx, x, y, w, label, on) { var colour = on ? C.teal : C.faint; rect(ctx, x, y, w, 14, C.slot); frame(ctx, x, y, w, 14, colour); text(ctx, label, x + 4, y + 1, colour, 14); }
+  function gaugeV(ctx, x, y, w, h, frac) {
+    rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim);
+    var fh = Math.round((h - 2) * frac); rect(ctx, x + 1, y + h - 1 - fh, w - 2, fh, frac > 0 ? C.gold : C.slot);
+    for (var yy = y + 8; yy < y + h - 1; yy += 8) rect(ctx, x + 1, yy, w - 2, 1, C.slot);
+    text(ctx, 'FE', x - 1, y + h + 1, frac > 0 ? C.gold : C.red, 11);
+  }
+  /** The pistol from the side in pixels, as the assembler pages draw it. */
+  function pistolSide(ctx, x, y, s) {
+    function r(a, b, w, h, c) { rect(ctx, x + a * s, y + b * s, w * s, h * s, c); }
+    r(4, 10, 30, 4, '#2E343D'); r(4, 10, 30, 1, '#4A5363'); r(5, 11, 28, 1, '#D9B23A');
+    r(14, 6, 6, 4, '#19D3B0'); r(13, 6, 1, 4, '#D9B23A'); r(20, 6, 1, 4, '#D9B23A');
+    r(30, 9, 12, 4, '#7D97B0'); r(41, 10, 2, 2, '#19D3B0'); r(29, 8, 1, 6, '#D9B23A');
+    r(14, 14, 7, 6, '#8C949F'); r(14, 16, 7, 2, '#19D3B0'); r(14, 14, 7, 1, '#D9B23A');
+    r(6, 14, 5, 3, '#4A5BB5'); r(5, 17, 5, 3, '#4A5BB5'); r(4, 20, 5, 3, '#4A5BB5'); r(10, 14, 1, 1, '#D9B23A');
+    r(7, 2, 9, 4, '#7D97B0'); r(15, 3, 1, 2, '#19D3B0'); r(9, 6, 3, 4, '#14181E');
+  }
+  /** The sheet as bars: teal the parts' share, gold what core and roll add, violet what the chips add, a red mark where a chip costs (D87). */
+  function bars(ctx, x, y, w, rowH, st) {
+    var colW = Math.floor(w / 2) + 2;
+    stats(st.full).forEach(function (s, i) {
+      var col = Math.floor(i / 3), yy = y + (i % 3) * rowH, cx = x + col * colW, lab = 46, num = 26;
+      text(ctx, s[0], cx, yy - 1, C.muted, 10);
+      var bx = cx + lab, bw = colW - lab - num - 6, bh = 5;
+      rect(ctx, bx, yy + 2, bw, bh, C.slot); frame(ctx, bx, yy + 2, bw, bh, C.dim);
+      if (!st.loaded) return;
+      function at(v) { return bx + 1 + Math.round((bw - 2) * v / s[2]); }
+      rect(ctx, bx + 1, yy + 3, at(s[3]) - bx - 1, bh - 2, C.teal);
+      rect(ctx, at(s[3]), yy + 3, at(s[4]) - at(s[3]), bh - 2, C.gold);
+      if (s[1] >= s[4]) rect(ctx, at(s[4]), yy + 3, at(s[1]) - at(s[4]), bh - 2, C.violet);
+      else { rect(ctx, at(s[1]), yy + 3, at(s[4]) - at(s[1]), bh - 2, C.slot); rect(ctx, at(s[1]), yy + 3, 1, bh - 2, C.red); rect(ctx, at(s[1]), yy + 1, at(s[4]) - at(s[1]), 1, C.red); }
+      text(ctx, String(s[1]) + (s[0] === 'PIERCING' ? '%' : ''), bx + bw + 3, yy - 1, C.text, 10);
+    });
+  }
+  function chipRows(ctx, x, y, rowH, st) {
+    var n = st.chips.filter(Boolean).length;
+    text(ctx, st.loaded ? 'CHIPS ' + n + ' / 3' : 'CHIPS', x, y, C.text, 13);
+    st.chips.forEach(function (c, i) {
+      var yy = y + 14 + i * rowH;
+      if (!st.loaded) { text(ctx, '-', x, yy, C.faint, 12); return; }
+      if (!c) { text(ctx, 'empty socket', x, yy, C.faint, 12); return; }
+      text(ctx, c.name, x, yy, c.tint, 12);
+      pips(ctx, x, yy + 12, c.dura, c.max, c.tint); text(ctx, c.dura + '/' + c.max, x + 23, yy + 9, C.muted, 10); text(ctx, c.rarity, x + 48, yy + 9, C.violet, 10);
+    });
+  }
+  function board(ctx) {
+    var st = sit();
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim);
+    text(ctx, 'WEAPON ENHANCER', 6, 4, C.gold, 18); rect(ctx, 6, 20, 244, 1, C.dim);
+    rect(ctx, 24, 70, 122, 4, '#2E343D'); rect(ctx, 24, 70, 122, 1, '#4A5363'); rect(ctx, 26, 72, 118, 1, '#D9B23A'); // the rail
+    slot(ctx, 6, 63, 'WEAPON', 'weapon', st.loaded);
+    if (st.loaded) pistolSide(ctx, 66, 48, 1.6); else text(ctx, 'no weapon', 70, 56, C.faint, 12);
+    [76, 104, 132].forEach(function (x, i) {
+      var c = st.chips[i];
+      text(ctx, String(i + 1), x - 6, 26, C.faint, 11);
+      socket(ctx, x, 26, c, st.loaded && i === 0, st.loaded);
+      rect(ctx, x + 9, 44, 1, 14, c ? C.teal : C.faint); rect(ctx, x + 8, 57, 3, 1, c ? C.teal : C.faint);
+    });
+    slot(ctx, 96, 92, 'CORE', 'core', st.loaded); rect(ctx, 105, 75, 1, 17, st.loaded ? C.gold : C.faint);
+    slot(ctx, 58, 92, 'REPAIR', 'ingot', st.loaded); rect(ctx, 67, 75, 1, 17, st.loaded ? C.muted : C.faint);
+    slot(ctx, 20, 92, 'CHIP IN', 'chip', st.loaded && !st.full ? COOLANT : null);
+    text(ctx, st.loaded ? 'Laser Pistol' : 'no weapon', 154, 28, st.loaded ? C.text : C.faint, 13); if (st.loaded) text(ctx, 'Core III  S  3 slots', 154, 40, C.violet, 11);
+    chipRows(ctx, 154, 54, 18, st);
+    gaugeV(ctx, 242, 28, 8, 90, st.frac);
+    var on = st.loaded && st.power;
+    button(ctx, 22, 128, 32, 'FIT', on && !st.full); button(ctx, 60, 128, 52, 'REMOVE', on); button(ctx, 118, 128, 60, 'UPGRADE', on); button(ctx, 184, 128, 52, 'REPAIR', on);
+    if (state === 'NO POWER') { text(ctx, 'NO POWER: 0 / 10 000 FE', 22, 144, C.red, 11); text(ctx, 'The keys wait for charge.', 22, 152, C.muted, 10); }
+    else if (state === 'EMPTY') text(ctx, 'Put a weapon in the WEAPON slot.', 22, 144, C.muted, 11);
+    else if (state === 'FULL') { text(ctx, 'Sockets full: REMOVE a chip before FIT.', 22, 144, C.muted, 11); text(ctx, 'Socket 1 chosen: REMOVE takes the Piercing chip.', 22, 152, C.muted, 10); }
+    else { text(ctx, 'FIT: 400 FE and 1 point of the Coolant chip.', 22, 144, C.muted, 11); text(ctx, 'Socket 1 chosen: REMOVE takes the Piercing chip.', 22, 152, C.muted, 10); }
+    bars(ctx, 22, 164, 226, 11, st);
+  }
+  function drawScreens() {
+    var big = document.querySelector('[data-screen]'), fit = document.querySelector('[data-fit]');
+    var ctx = big.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 256, 200); board(ctx);
+    var f = fit.getContext('2d'); px(f); f.setTransform(1, 0, 0, 1, 0, 0); rect(f, 0, 0, 320, 240, '#07090C'); f.save(); f.translate(32, 20); board(f); f.restore();
+    frame(f, 0, 0, 320, 240, C.violet); text(f, '320 x 240', 262, 226, C.violet, 12);
+  }
+  drawScreens();
+  group(document.querySelector('.controls[data-tabs]'), 'STATE', STATES, 0, function (i) { state = STATES[i]; drawScreens(); });
+
+  // ---- the Shard Key: turning, its icons, its tooltip --------------------------------------------------------------------------------------
+  var chipPart = shardKey();
+  var chipStage = makeStage(document.querySelector('[data-stage="chip"]'), function () {
+    var g = new T.Group(), holder = new T.Group(); g.add(holder);
+    chipPart.build(); var b = chipPart.bounds(), c = b.getCenter(new T.Vector3());
+    chipPart.group.position.set(-c.x, -b.min.y, -c.z); holder.add(chipPart.group);
+    return { group: g, cam: { pos: [0, 16, 42], look: [0, 7, 0] }, floor: null, labels: [['Shard Key, 8 x 14 x 4', [0, 20, 0]], ['Gold teeth', [-7, 0, 0]], ['Clasp and band', [7, 3, 0]], ['Crystal', [7, 11, 0]]], spin: 0.5, holder: holder, animate: function () {} };
+  }, 26);
+
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+  var iconKey = new T.DirectionalLight(0xFFF3DC, 0.8); iconKey.position.set(30, 50, 40); iconScene.add(iconKey);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModel = shardKey(); iconModel.build(); iconScene.add(iconModel.group);
+  function renderIcon(canvas, size) {
+    var b = iconModel.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.62 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 28, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  var iconJobs = [], bigIcon;
+  (function strip() {
+    var holder = document.querySelector('[data-strip="chip"]');
+    AUGMENTS.forEach(function (a, j) {
+      var cv = document.createElement('canvas'); cv.width = 16; cv.height = 16; cv.style.width = '48px'; cv.style.height = '48px'; cv.title = a[0] + ' Chip'; holder.appendChild(cv);
+      iconJobs.push(function () { var keep = tint; tint = j; iconModel.paint(); renderIcon(cv, 16); tint = keep; iconModel.paint(); });
+    });
+    bigIcon = document.createElement('canvas'); bigIcon.width = 32; bigIcon.height = 32; bigIcon.style.width = '96px'; bigIcon.style.height = '96px'; holder.appendChild(bigIcon);
+    iconJobs.push(function () { renderIcon(bigIcon, 32); });
+  })();
+  function redrawIcons() { iconJobs.forEach(function (j) { j(); }); }
+  redrawIcons();
+
+  var RARITIES = [['Normal', 1.00], ['Rare', 1.05], ['Epic', 1.10], ['S', 1.15]], rarity = 1;
+  // each effect: [stat, amount, 'flat' | '%'] or a sentence
+  var EFFECTS = [[['Armour piercing', 10, 'flat'], ['Armour piercing', 15, '%']], [['Fire rate', 15, '%']], [['Spread', -30, '%']], [['Damage', 20, '%'], ['Heat capacity', -20, '%']], [['Heat capacity', 35, '%']], [['Capacity', 30, '%']], [['Damage', -5, '%'], 'Hits throw the target back']];
+  function fmt(e, mult) {
+    if (typeof e === 'string') return [e, false];
+    var v = e[1] * mult, s;
+    if (e[2] === '%') s = String(Math.round(v)) + '%'; else s = (Math.round(v * 10) / 10).toString();
+    return [(v >= 0 ? '+' : '') + s + ' ' + e[0], v < 0];
+  }
+  function drawTooltip() {
+    var cv = document.querySelector('[data-tooltip]'), ctx = cv.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 150, 96);
+    var a = AUGMENTS[tint], r = RARITIES[rarity], lines = EFFECTS[tint].map(function (e) { return fmt(e, r[1]); });
+    rect(ctx, 0, 0, 150, 96, '#100A1E'); frame(ctx, 0, 0, 150, 96, '#28007F'); frame(ctx, 1, 1, 148, 94, C.violet);
+    shardGlyph(ctx, 134, 6, hex(a[1]), true);
+    text(ctx, a[0] + ' Chip', 6, 5, C.text, 14);
+    text(ctx, r[0] + '  Augment Chip' + (rarity > 0 ? '  x' + r[1].toFixed(2) : ''), 6, 18, C.violet, 12);
+    lines.forEach(function (l, i) { text(ctx, l[0], 6, 31 + i * 10, l[1] ? C.red : C.teal, 11); });
+    var y = 31 + lines.length * 10 + 4;
+    text(ctx, 'Durability 9 / 10', 6, y, C.muted, 11); pips(ctx, 88, y + 4, 9, 10, hex(a[1]));
+    text(ctx, 'Fits any weapon', 6, y + 12, C.faint, 10); text(ctx, '1 point per fit, upgrade, repair', 6, y + 21, C.faint, 10);
+  }
+  drawTooltip();
+  group(document.querySelector('[data-rarity]'), '', RARITIES.map(function (r) { return r[0]; }), rarity, function (i) { rarity = i; drawTooltip(); });
+  (function tints() {
+    var holder = document.querySelector('[data-tints]');
+    AUGMENTS.forEach(function (a, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = hex(a[1]); b.title = a[0]; b.setAttribute('aria-label', a[0]); b.setAttribute('aria-pressed', String(i === 0));
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call(holder.querySelectorAll('button'), function (x, j) { x.setAttribute('aria-pressed', String(j === i)); });
+        tint = i; chipPart.paint(); iconModel.paint(); redrawIcons(); drawTooltip(); name.textContent = a[0] + ' Chip';
+      });
+      holder.appendChild(b);
+    });
+    var name = document.createElement('span'); name.className = 'k'; name.style.marginLeft = '8px'; name.textContent = AUGMENTS[0][0] + ' Chip'; holder.appendChild(name);
+  })();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { drawScreens(); drawTooltip(); });
+
+  // ---- the loop ---------------------------------------------------------------------------------------------------------------------------
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    var e = phase(now);
+    stages.forEach(function (st) {
+      st.machine.animate(now, dt, st, e);
+      if (!st.dragging && !reduced) st.yaw += dt * st.spin;
+      st.pivot.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        l.el.style.display = st.labelsOn ? '' : 'none'; if (!st.labelsOn) return;
+        v.copy(l.at); st.machine.group.localToWorld(v); v.project(st.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+      });
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

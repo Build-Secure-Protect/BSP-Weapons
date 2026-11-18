@@ -152,6 +152,16 @@ public final class Firing {
     }
 
     /** Fires if it can: spawns the lance along the shooter's look, books the shot on the weapon. Returns the refusal, NONE on a shot. */
+    /** The blocks the weapon's chips throw a target back (D74): each chip's push, scaled by its own roll (D81) and the config. */
+    public static double pushOf(WeaponSpec spec) {
+        double push = 0;
+        for (com.mrgregles.bsp_weapons.parts.FittedChip c : spec.augments()) {
+            com.mrgregles.bsp_weapons.parts.Augment a = com.mrgregles.bsp_weapons.data.WeaponData.augment(c.augment());
+            if (a != null) push += a.push() * WeaponsConfig.rarityPartMultiplier(c.rarity());
+        }
+        return push * WeaponsConfig.PUSH_SCALE.get();
+    }
+
     public static Refusal tryFire(ServerLevel level, LivingEntity shooter, ItemStack stack) {
         long now = level.getGameTime();
         Refusal why = check(stack, now, shooter);
@@ -166,6 +176,7 @@ public final class Firing {
         if (spread > 0) {
             look = look.add((level.random.nextDouble() - 0.5) * spread, (level.random.nextDouble() - 0.5) * spread, (level.random.nextDouble() - 0.5) * spread).normalize();
         }
+        bolt.push(pushOf(spec));
         bolt.fly(look.scale(WeaponsConfig.BOLT_SPEED.get()));
         level.addFreshEntity(bolt);
         t.putLong(LAST_SHOT, now);

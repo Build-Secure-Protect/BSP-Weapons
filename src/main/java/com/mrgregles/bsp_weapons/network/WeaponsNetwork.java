@@ -9,9 +9,9 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-/** The mod's channel. Protocol 1: the part data to the client. Players need the same protocol as the server. */
+/** The mod's channel. Protocol 2: the part data to the client (2 adds the augments). Players need the same protocol as the server. */
 public final class WeaponsNetwork {
-    public static final String PROTOCOL = "1";
+    public static final String PROTOCOL = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(BspWeapons.MODID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
     private WeaponsNetwork() {
@@ -22,6 +22,8 @@ public final class WeaponsNetwork {
                 .encoder(WeaponDataPacket::encode).decoder(WeaponDataPacket::decode).consumerNetworkThread(WeaponDataPacket::handle).add();
         CHANNEL.messageBuilder(AssemblerActionPacket.class, 1, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(AssemblerActionPacket::encode).decoder(AssemblerActionPacket::decode).consumerNetworkThread(AssemblerActionPacket::handle).add();
+        CHANNEL.messageBuilder(EnhancerActionPacket.class, 2, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(EnhancerActionPacket::encode).decoder(EnhancerActionPacket::decode).consumerNetworkThread(EnhancerActionPacket::handle).add();
     }
 
     /** On a join (one player) or a reload (everyone): the part data the client draws and reads. */

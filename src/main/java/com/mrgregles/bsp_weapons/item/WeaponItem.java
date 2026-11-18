@@ -69,6 +69,11 @@ public class WeaponItem extends Item {
         return new com.mrgregles.bsp_weapons.weapon.WeaponEnergy(stack);
     }
 
+    /** Writes a new spec onto an existing weapon, keeping its charge, heat and everything else in the tag (the enhancer's way of changing a weapon). */
+    public static void setSpec(ItemStack stack, WeaponSpec spec) {
+        stack.getOrCreateTag().put(WeaponSpec.TAG, spec.toTag());
+    }
+
     /** The weapon's spec, or null for a stack that is not a weapon or has no spec. */
     @Nullable
     public static WeaponSpec specOf(ItemStack stack) {
@@ -114,6 +119,16 @@ public class WeaponItem extends Item {
         }
         lines.add(Component.translatable("tooltip." + BspWeapons.MODID + ".weapon", Component.translatable("rarity." + BspWeapons.MODID + "." + spec.roll().id()), CoreItem.roman(spec.coreTier())).withStyle(ChatFormatting.LIGHT_PURPLE));
         Sheet sheet = SheetCalculator.compute(spec);
+        // the chips (D79): how many of the sockets are used, then each chip in its augment's colour with its roll and points
+        lines.add(Component.translatable("tooltip." + BspWeapons.MODID + ".weapon_chips", spec.augments().size(), SheetCalculator.augmentSlots(spec)).withStyle(ChatFormatting.GRAY));
+        for (com.mrgregles.bsp_weapons.parts.FittedChip c : spec.augments()) {
+            com.mrgregles.bsp_weapons.parts.Augment a = WeaponData.augment(c.augment());
+            Component name = a == null ? Component.translatable("tooltip." + BspWeapons.MODID + ".chip_unknown") : Component.translatable(a.nameKey());
+            int colour = a == null ? PartItem.UNKNOWN_COLOUR : a.colour();
+            lines.add(Component.literal("  ").append(name).append(" · ").append(Component.translatable("rarity." + BspWeapons.MODID + "." + c.rarity().id()))
+                    .append(" · " + c.durability() + " / " + (a == null ? "?" : String.valueOf(a.durability())))
+                    .withStyle(style -> style.withColor(net.minecraft.network.chat.TextColor.fromRgb(colour))));
+        }
         if (!com.mrgregles.bsp_weapons.weapon.WeaponEnergy.holdsEnergy(stack)) {
             lines.add(Component.translatable("tooltip." + BspWeapons.MODID + ".rounds", Firing.charge(stack), Math.round(sheet.get(Stat.CAPACITY))).withStyle(ChatFormatting.AQUA));
         }

@@ -14,9 +14,11 @@ public final class WeaponsConfig {
     public static final ForgeConfigSpec.BooleanValue S_EXTRA_AUGMENT_SLOT;
     public static final ForgeConfigSpec.DoubleValue PIERCING_CAP;
     public static final ForgeConfigSpec.DoubleValue RANGE_CAP;
-    public static final ForgeConfigSpec.DoubleValue SHOT_HEAT, HEAT_COOL_SECONDS, BOLT_SPEED;
+    public static final ForgeConfigSpec.DoubleValue SHOT_HEAT, HEAT_COOL_SECONDS, BOLT_SPEED, PUSH_SCALE;
     public static final ForgeConfigSpec.IntValue OVERHEAT_LOCK_TICKS, OVERHEAT_DURABILITY, WEAR_PER_SHOT, ENERGY_PER_SHOT;
     public static final ForgeConfigSpec.BooleanValue ASSEMBLED_FULL;
+    public static final ForgeConfigSpec.IntValue ENHANCER_CAPACITY, ENHANCER_MAX_RECEIVE, FIT_CHARGE, UPGRADE_CHARGE, REPAIR_CHARGE;
+    public static final ForgeConfigSpec.DoubleValue REPAIR_SHARE;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -40,8 +42,17 @@ public final class WeaponsConfig {
         OVERHEAT_DURABILITY = b.comment("Durability an overheat costs, on top of the wear per shot.").defineInRange("overheatDurability", 5, 0, 1000);
         WEAR_PER_SHOT = b.comment("Durability each shot costs (Unbreaking applies).").defineInRange("wearPerShot", 1, 0, 100);
         BOLT_SPEED = b.comment("Blocks a tick an energy weapon's lance travels (D65).").defineInRange("boltSpeed", 2.4, 0.1, 10.0);
+        PUSH_SCALE = b.comment("Multiplies the blocks a chip's push throws the target back (D74; the Knockback chip's data says one block).").defineInRange("pushScale", 1.0, 0.0, 10.0);
         ENERGY_PER_SHOT = b.comment("Forge Energy one shot costs a weapon with an energy cell; its store is Capacity shots' worth (D10).").defineInRange("energyPerShot", 250, 1, 1000000);
         ASSEMBLED_FULL = b.comment("A weapon leaves the assembler with a full charge (true) or empty, to be charged first (false).").define("assembledFull", true);
+        b.pop();
+        b.push("enhancer");
+        ENHANCER_CAPACITY = b.comment("Forge Energy the Weapon Enhancer stores (D75).").defineInRange("enhancerCapacity", 20000, 1, 100000000);
+        ENHANCER_MAX_RECEIVE = b.comment("Forge Energy the Weapon Enhancer takes a tick from a cable or charger.").defineInRange("enhancerMaxReceive", 1000, 1, 100000000);
+        FIT_CHARGE = b.comment("Forge Energy a fit or a swap burns (D75).").defineInRange("fitCharge", 400, 0, 100000000);
+        UPGRADE_CHARGE = b.comment("Forge Energy a Core upgrade burns (D75, D76).").defineInRange("upgradeCharge", 2000, 0, 100000000);
+        REPAIR_CHARGE = b.comment("Forge Energy a repair burns (D75, D77).").defineInRange("repairCharge", 1000, 0, 100000000);
+        REPAIR_SHARE = b.comment("The share of a weapon's durability one ingot or gem restores (D77).").defineInRange("repairShare", 0.25, 0.01, 1.0);
         b.pop();
         SPEC = b.build();
     }

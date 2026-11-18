@@ -5,6 +5,10 @@ import com.mrgregles.bsp_weapons.assembler.WeaponAssemblerBlock;
 import com.mrgregles.bsp_weapons.assembler.WeaponAssemblerBlockEntity;
 import com.mrgregles.bsp_weapons.assembler.WeaponAssemblerMenu;
 import com.mrgregles.bsp_weapons.assembler.WeaponAssemblerPartBlock;
+import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerBlock;
+import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerBlockEntity;
+import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerMenu;
+import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerTopBlock;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -29,11 +33,18 @@ public final class ModBlocks {
     }
 
     public static final RegistryObject<WeaponAssemblerBlock> WEAPON_ASSEMBLER = BLOCKS.register("weapon_assembler", () -> new WeaponAssemblerBlock(machine()));
-    public static final RegistryObject<WeaponAssemblerPartBlock> WEAPON_ASSEMBLER_PART = BLOCKS.register("weapon_assembler_part", () -> new WeaponAssemblerPartBlock(machine()));
+    public static final RegistryObject<WeaponAssemblerPartBlock> WEAPON_ASSEMBLER_PART = BLOCKS.register("weapon_assembler_part", () -> new WeaponAssemblerPartBlock(machine().noLootTable()));
     public static final RegistryObject<BlockEntityType<WeaponAssemblerBlockEntity>> WEAPON_ASSEMBLER_ENTITY = BLOCK_ENTITIES.register("weapon_assembler",
             () -> BlockEntityType.Builder.of(WeaponAssemblerBlockEntity::new, WEAPON_ASSEMBLER.get()).build(null));
     public static final RegistryObject<MenuType<WeaponAssemblerMenu>> WEAPON_ASSEMBLER_MENU = MENUS.register("weapon_assembler",
             () -> IForgeMenuType.create((windowId, inventory, data) -> new WeaponAssemblerMenu(windowId, inventory, data.readBlockPos())));
+
+    public static final RegistryObject<WeaponEnhancerBlock> WEAPON_ENHANCER = BLOCKS.register("weapon_enhancer", () -> new WeaponEnhancerBlock(machine()));
+    public static final RegistryObject<WeaponEnhancerTopBlock> WEAPON_ENHANCER_TOP = BLOCKS.register("weapon_enhancer_top", () -> new WeaponEnhancerTopBlock(machine().noLootTable()));
+    public static final RegistryObject<BlockEntityType<WeaponEnhancerBlockEntity>> WEAPON_ENHANCER_ENTITY = BLOCK_ENTITIES.register("weapon_enhancer",
+            () -> BlockEntityType.Builder.of(WeaponEnhancerBlockEntity::new, WEAPON_ENHANCER.get()).build(null));
+    public static final RegistryObject<MenuType<WeaponEnhancerMenu>> WEAPON_ENHANCER_MENU = MENUS.register("weapon_enhancer",
+            () -> IForgeMenuType.create((windowId, inventory, data) -> new WeaponEnhancerMenu(windowId, inventory, data.readBlockPos())));
 
     private ModBlocks() {
     }

@@ -76,7 +76,7 @@ public final class Modifiers {
         return m;
     }
 
-    static double finite(double v, String where) {
+    public static double finite(double v, String where) {
         if (Double.isNaN(v) || Double.isInfinite(v)) throw new IllegalArgumentException("'" + where + "' is not a number");
         return v;
     }

@@ -3,5 +3,7 @@
     "SPREAD": {
       "percent": -30
     }
-  }
+  },
+  "colour": "#4DA3FF",
+  "durability": 10
 }

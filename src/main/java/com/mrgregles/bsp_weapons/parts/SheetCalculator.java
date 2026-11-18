@@ -6,7 +6,8 @@ import com.mrgregles.bsp_weapons.data.WeaponData;
 /**
  * Works a weapon's sheet out from its spec, the layers in order (D7, D8, D9, D20, D29): the pattern's base sheet,
  * improved by the core tier; each part's type and material modifiers (the band's defaults plus the material's own),
- * each part's change scaled by its own roll; the weapon's roll; the chips; then the caps. Server side, every time it is
+ * each part's change scaled by its own roll; the weapon's roll; the chips, each scaled by its own roll (D81); then the
+ * caps. Server side, every time it is
  * needed; nothing is read back from the item but the spec.
  */
 public final class SheetCalculator {
@@ -25,9 +26,11 @@ public final class SheetCalculator {
             sheet.blendTowards(after, WeaponsConfig.rarityPartMultiplier(part.rarity()));
         }
         sheet.improve(WeaponsConfig.rarityWeaponMultiplier(spec.roll()));
-        for (var id : spec.augments()) {
-            Augment a = WeaponData.augment(id);
-            if (a != null) a.modifiers().apply(sheet);
+        for (FittedChip chip : spec.augments()) {
+            Augment a = WeaponData.augment(chip.augment());
+            if (a == null || a.modifiers().isEmpty()) continue;
+            Sheet after = a.modifiers().apply(new Sheet(sheet));
+            sheet.blendTowards(after, WeaponsConfig.rarityPartMultiplier(chip.rarity()));
         }
         return clamp(sheet);
     }

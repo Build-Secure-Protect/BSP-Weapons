@@ -1,5 +1,6 @@
 package com.mrgregles.bsp_weapons.client;
 
+import com.mrgregles.bsp_weapons.item.AugmentChipItem;
 import com.mrgregles.bsp_weapons.item.CatalystItem;
 import com.mrgregles.bsp_weapons.item.CoreItem;
 import com.mrgregles.bsp_weapons.item.PartItem;
@@ -42,11 +43,14 @@ public final class ClientSetup {
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> MenuScreens.register(ModBlocks.WEAPON_ASSEMBLER_MENU.get(), WeaponAssemblerScreen::new));
+        event.enqueueWork(() -> {
+            MenuScreens.register(ModBlocks.WEAPON_ASSEMBLER_MENU.get(), WeaponAssemblerScreen::new);
+            MenuScreens.register(ModBlocks.WEAPON_ENHANCER_MENU.get(), WeaponEnhancerScreen::new);
+        });
         WeaponItem.CLIENT_TIME = () -> { var level = net.minecraft.client.Minecraft.getInstance().level; return level == null ? 0 : level.getGameTime(); };
     }
 
-    /** Tint index 0 is the material on a part, tint index 1 the tier glow on a core; other faces have their own textures. */
+    /** Tint index 0 is the material on a part, tint index 1 the tier glow on a core, 0 and 1 the crystal and its edges on a chip; other faces have their own textures. */
     private static void onItemColours(RegisterColorHandlersEvent.Item event) {
         for (RegistryObject<PartItem> p : ModItems.PARTS) {
             event.register((stack, tint) -> tint == 0 ? PartItem.colourOf(stack) : 0xFFFFFF, p.get());
@@ -54,5 +58,6 @@ public final class ClientSetup {
         event.register((stack, tint) -> tint == 1 ? CoreItem.colourOf(stack) : 0xFFFFFF, ModItems.WEAPON_CORE.get());
         for (var w : ModItems.WEAPON_ITEMS) event.register(ClientSetup::weaponTint, w.get());
         for (var c : ModItems.CATALYST_ITEMS) event.register((stack, tint) -> tint == 2 ? CatalystItem.colourOf(stack) : 0xFFFFFF, c.get());
+        event.register((stack, tint) -> tint == 0 || tint == 1 ? AugmentChipItem.colourOf(stack) : 0xFFFFFF, ModItems.AUGMENT_CHIP.get());
     }
 }

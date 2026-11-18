@@ -174,7 +174,7 @@ public class AssemblerGameTests {
         h.assertTrue(WeaponItem.colourOf(gun, 4) == CoreItem.TIER_COLOURS[1], "tint 4 is the Tier II glow");
         java.util.List<net.minecraft.network.chat.Component> lines = new java.util.ArrayList<>();
         gun.getItem().appendHoverText(gun, null, lines, net.minecraft.world.item.TooltipFlag.Default.NORMAL);
-        h.assertTrue(lines.size() == 2 + WeaponItem.SHOWN.length + 4, "a rarity line, the energy line, the shown stats and four part lines: " + lines.size());
+        h.assertTrue(lines.size() == 3 + WeaponItem.SHOWN.length + 4, "a rarity line, the chips line, the energy line, the shown stats and four part lines: " + lines.size());
         h.assertTrue(WeaponItem.number(Stat.PIERCING, 8.4).equals("8%") && WeaponItem.number(Stat.DAMAGE, 6.44).equals("6.4") && WeaponItem.number(Stat.RANGE, 36.4).equals("36"), "numbers read plainly");
         h.assertTrue(WeaponItem.specOf(new ItemStack(ModItems.weapon(id("laser_pistol")))) == null, "a bare weapon item has no spec");
         h.succeed();

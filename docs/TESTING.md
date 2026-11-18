@@ -81,3 +81,70 @@ In game:
 - [ ] The Energy Round is in the BSP-Weapons creative tab as a small capsule icon (gunmetal, teal cap, gold band) and stacks to 64. No recipe yet (the parts machine, WP-7).
 - [ ] Assemble a Laser Pistol with a Magazine: its tooltip reads "Rounds 29 / 29" (the magazine's +20 % capacity) and no FE line; fire it empty with rounds in your inventory: RELOADING shows, and after the Recharge the count is full and the rounds are gone from the inventory. With three rounds carried it loads three.
 - [ ] With no rounds carried, the empty weapon shows NO ROUNDS in red and does nothing on right-click; pick up rounds and the next right-click starts the reload.
+
+## 2026-11-18: WP-6b, augment chips (unreleased)
+
+Headless: 8 GameTests in the `enhancement` batch: the augment data carries a colour, points and whether a chip is available (seven are; Breacher and Ricochet are not); a chip remembers its augment, roll and points in three tag keys, is named and tinted by the augment, a bare chip is unknown, grey and plain; the chip tooltip shows the roll with its multiplier, each effect scaled (Overcharge at S reads +23 % damage, -23 % heat capacity), the points and what it fits, and a Breacher chip says it cannot be fitted yet; a chip's roll scales only its own effect by the part multipliers and its points change nothing; fitting spends a point and is refused for a stick, a bare chip, Breacher, a doubled augment, a chip with one point or none, a full weapon and an invalid weapon, while an S roll's extra socket takes one more; removing returns the chip with its points and swapping returns the old chip and seats the new one a point down in the same socket; wear takes a point from every chip and burns out the one at zero; the weapon tooltip counts the chips and lists each with its points. The `parts` and `part_items` batches now carry chips with rolls and points, clamp forged points, ignore the old string chip list, and check the augments arrive with the part data.
+
+Not tested in game or headless: no screen or block exists yet, so FIT, REMOVE and swap have only been called as code; a chip refused for the weapon's kind (no second kind of weapon exists); the look of the chip icon and the tints in the inventory.
+
+In game:
+- [ ] The BSP-Weapons creative tab shows seven Augment Chips after the Energy Round: Piercing (gold), Knockback (orange), Quick-draw (teal), Stabiliser (blue), Overcharge (red), Coolant (ice), Extended Cell (violet); no Breacher or Ricochet chip. Each icon is the Shard Key: a gunmetal clasp with gold teeth and band, a tapering crystal in the augment's colour with brighter edges, read at GUI scale 2 and 3.
+- [ ] A chip's tooltip reads "Piercing Chip", then "Normal · effect ×1" in violet, then "Armour piercing +10 +15%" in teal, "Points 10 / 10", "Fits any weapon", and the wear line in dark grey. `/give @s bsp_weapons:augment_chip{Augment:"bsp_weapons:overcharge",Rarity:"s",Durability:8}`: "S Tier · effect ×1.15", "Damage +23%" teal, "Heat capacity -23%" red, "Points 8 / 8".
+- [ ] `/give @s bsp_weapons:augment_chip{Augment:"bsp_weapons:breacher"}`: a copper crystal and "Cannot be fitted yet" in red. A bare `/give @s bsp_weapons:augment_chip`: grey, named "Augment Chip", one red line.
+- [ ] Hold a chip: it draws in the hand as the Shard Key; drop it: it lies on the ground as one.
+- [ ] A Laser Pistol's tooltip now shows "Chips 0 / 2" (a Tier III core) under its roll line; give one with a chip in its tag and the chip is listed in its colour with "9 / 10".
+- [ ] On a dedicated server, a client on the old jar is refused for the protocol (2); a matching client sees the chip names and colours after joining and after `/reload`.
+
+## 2026-11-18: WP-6c, the Weapon Enhancer block (unreleased)
+
+Headless: 6 GameTests in the `enhancer` batch: placing the machine puts its companion above facing the same way and breaking either removes both and drops exactly one machine, and a lower block with no room above cannot survive; the slots take a weapon, a chip, a Core and an ingot or gem and nothing else; FIT through the machine is refused without charge, a chip or a weapon and passes the rules' refusals through, and a fit takes one chip from the stack, burns the fit charge and keeps the weapon's own charge; REMOVE puts the chip in CHIP IN with its points for no charge and waits for CHIP IN to be emptied, and a swap needs the fit charge and one chip, seats the new chip a point down and returns the old one whole; the energy capability is on every side, intake only, takes at most the intake a tick, refuses when full, and the charge survives a save and reaches the update tag; the action packet round-trips. 47 required tests pass in all.
+
+Not tested in game or headless: the menu opening and the stand-in screen's keys (no menu or packet handling runs headless); the Spire model in the world and in hand; charging from a real cable; the drops of the machine's contents when broken.
+
+In game:
+- [ ] Place a Weapon Enhancer facing north: the Spire stands one block wide and two high with its charge window and socket toward you, the spine at the back, the drum on top. Try to place it with a block directly above the target space: nothing is placed. Break the upper or the lower block: both go and one Weapon Enhancer drops, with anything that was in it.
+- [ ] Right-click either block: a plain WEAPON ENHANCER panel opens with WEAPON, CHIP IN, CORE and REPAIR slots, "0 / 20,000 FE", and FIT and REMOVE keys (the Board comes with WP-6d). Shift-click a Laser Pistol into WEAPON and a chip into CHIP IN; a stick is refused by every slot; an iron ingot or a diamond goes into REPAIR only.
+- [ ] Press FIT with no charge: the action bar reads "Not enough charge: 0 of 400 FE." Connect a Mekanism cable, a Flux Plug or any FE source to any side of the lower block: the number climbs by up to 1,000 a tick and stops at 20,000. Press FIT: the chip is gone from CHIP IN, the weapon's tooltip lists it with "9 / 10", and the number drops by 400.
+- [ ] Press REMOVE: the chip comes back into CHIP IN with 9 points and the weapon's tooltip reads "Chips 0 / 2"; press it again with CHIP IN full: "Empty the CHIP IN slot first."
+- [ ] Leave the world and come back: the charge and the slots' contents are still there.
+- [ ] `serverconfig/bsp_weapons-server.toml` gains an `[enhancer]` section (enhancerCapacity, enhancerMaxReceive, fitCharge).
+
+## 2026-11-18: WP-6d, the Board screen (unreleased)
+
+Headless: 1 GameTest added to the `enhancer` batch (7 there now, 48 required in all): the checks the screen shows before a key is pressed name the same reasons as the moves (a doubled augment, CHIP IN full, no chip in the socket, no charge, no chip in CHIP IN) and move nothing. No screen code runs headless.
+
+Not tested in game or headless: everything drawn. In particular the weapon rendered side on with the item-frame transform (R20), whose orientation and size are a guess until seen; the half-size text's legibility at GUI scale 1 and 2; four sockets on a Tier V S-tier weapon.
+
+In game:
+- [ ] Open a Weapon Enhancer: the WEAPON ENHANCER panel, 256 x 232, the gold charge gauge beside the title with "0 / 20,000 FE" under it in red, the rail across, three faint sockets numbered 1 to 3 above it wired down to the rail, WEAPON at the rail's end, CHIP IN, REPAIR and CORE in a row under it, FIT and REMOVE grey, UPGRADE and REPAIR grey, the status "Put a weapon in the WEAPON slot.", the right column "no weapon" and empty bars.
+- [ ] Put a Laser Pistol (Tier III) in WEAPON: it draws side on over the rail, about 60 px long, barrel one way and grip down; the right column reads its name, "Core III  Normal  2 sockets" in violet, "CHIPS 0 / 2", two "empty socket" rows, and the bars fill teal and gold. The third socket stays faint. A Tier V S-tier pistol shows four sockets, closer together.
+- [ ] Put a Piercing chip in CHIP IN: FIT turns teal and the status reads "FIT: 400 FE and a point of the chip." in grey; with no charge it reads "Not enough charge: 0 of 400 FE." in red and FIT stays grey. Charge the machine and press FIT: the chip appears in socket 1 as its Shard Key icon with ten pips over it (nine lit), the chip row names it in gold with "9/10 Rare", the bars gain a violet share on ARMOUR PIERCING, the gauge drops.
+- [ ] Put an Overcharge chip in and FIT it: HEAT CAP shows a red mark and a red line where the chip costs; DAMAGE gains violet.
+- [ ] Click socket 1: it frames teal and the status reads "Socket 1 chosen: REMOVE takes Piercing."; press REMOVE: the chip is in CHIP IN with 9 points, the socket is empty again. Click a socket twice: it lets go.
+- [ ] With socket 2 chosen and a Coolant chip in CHIP IN, the FIT key reads SWAP; press it: Coolant sits in socket 2 and Overcharge is in CHIP IN with its points. With two chips in CHIP IN the status reads "Swap one chip at a time." in red.
+- [ ] Hover a socket with a chip: the chip's tooltip. Put a second Piercing chip in CHIP IN with one already fitted: "Piercing is already fitted." in red and FIT grey.
+- [ ] The whole panel fits a 320 x 240 window at GUI scale 1 and reads at scale 2.
+
+## 2026-11-18: WP-6e, core upgrade and repair (unreleased)
+
+Headless: 2 GameTests added to the `enhancer` batch (9 there now, 50 required in all): UPGRADE is refused with an empty CORE slot, a Core of the same tier, two Cores at once or too little charge, then gives the weapon the new tier and its sockets, wears every chip a point and burns out the one at zero with a notice naming it, leaves the old Core in the slot, burns the upgrade charge, and the returned Core cannot upgrade it again; REPAIR is refused with an empty REPAIR slot, an ingot of a material on no part, an unworn weapon or too little charge, then takes as many ingots as the wear needs (two for two steps and ten points), restores a step each, wears every chip, burns the repair charge, and the last step takes one ingot and stops at full.
+
+Not tested in game or headless: the two keys on the Board and the burnt-out notice on the action bar; a gem repairing an optic; the weapon's tooltip and bars after an upgrade (durability grows, the damage value stays).
+
+In game:
+- [ ] Put a worn Tier II Laser Pistol with a chip at 1 point in WEAPON and a Tier IV Weapon Core in CORE: UPGRADE turns teal and the status reads "UPGRADE: 2,000 FE and a point of every chip."; a second Tier II Core instead reads "The Core must be higher than Tier II." in red. Press UPGRADE: the tooltip reads Core IV with its sockets, the chip at 1 is gone and the action bar reads "<Augment> burnt out.", a Tier II Core sits in CORE, the gauge drops by 2,000.
+- [ ] Fire a pistol until its durability bar is well down. Put it in WEAPON and an ingot of one of its parts' materials in REPAIR (iron for an iron grip; a Tetrium ingot for a Tetrium barrel): REPAIR turns teal, "REPAIR: 1,000 FE and a point of every chip."; a copper ingot reads "Copper Ingot is not a material on this weapon." Press REPAIR with a stack of ingots: the bar fills by a quarter per ingot taken, the stack shrinks by the number used, the rest stays; at full the key greys with "The weapon is not worn."
+- [ ] `serverconfig/bsp_weapons-server.toml` `[enhancer]` now has upgradeCharge, repairCharge and repairShare.
+
+## 2026-11-18: WP-6f, Knockback's push (unreleased)
+
+Headless: 1 GameTest in the `firing_push` batch (51 required in all): a plain pistol and a Knockback pistol fire down two lanes at zombies that cannot walk; after three seconds both are hurt, the Knockback zombie has been thrown back along the shot more than half a block and further than the plain hit moved its zombie; `Firing.pushOf` gives the chip's block scaled by the config. The `enhancement` data test checks Knockback's push is one block and Piercing's none.
+
+Not tested in game or headless: how far "about a block" is on real ground against a walking mob and against a player; the push on a mob with knockback resistance; the Knockback chip's tooltip line.
+
+In game:
+- [ ] Fit a Knockback chip (Normal) to a Laser Pistol; its chip tooltip reads "Hits throw the target back about 1.0 blocks" in teal under "Damage -5%" in red. Shoot a zombie on flat ground: it slides back about a block further than a shot from a chipless pistol throws it. An S Knockback chip reads "about 1.2 blocks".
+- [ ] Shoot an iron golem: it barely moves (knockback resistance applies to the push as to any knockback).
+- [ ] `serverconfig/bsp_weapons-server.toml` `[firing]` gains `pushScale`; at 0 the Knockback chip throws nothing extra, at 3 a zombie flies several blocks.
+

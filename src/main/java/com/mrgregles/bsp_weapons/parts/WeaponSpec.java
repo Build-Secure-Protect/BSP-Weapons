@@ -2,7 +2,6 @@ package com.mrgregles.bsp_weapons.parts;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 
@@ -10,11 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Everything a weapon item remembers (D5, D8, D20, D29): its pattern, core tier, parts, the weapon's roll and its chips.
+ * Everything a weapon item remembers (D5, D8, D20, D29, D83): its pattern, core tier, parts, the weapon's roll and its chips
+ * (each with its own roll and points left).
  * The sheet is never stored: {@link SheetCalculator} works it out from this on the server each time, so a tag edited by a
  * client changes nothing.
  */
-public record WeaponSpec(ResourceLocation pattern, int coreTier, List<PartSpec> parts, Rarity roll, List<ResourceLocation> augments) {
+public record WeaponSpec(ResourceLocation pattern, int coreTier, List<PartSpec> parts, Rarity roll, List<FittedChip> augments) {
     public static final String TAG = "BspWeapon";
     public static final int MAX_PARTS = 16;
     public static final int MAX_AUGMENTS = 8;
@@ -39,7 +39,7 @@ public record WeaponSpec(ResourceLocation pattern, int coreTier, List<PartSpec> 
         t.put("Parts", ps);
         t.putString("Roll", roll.id());
         ListTag as = new ListTag();
-        for (ResourceLocation a : augments) as.add(StringTag.valueOf(a.toString()));
+        for (FittedChip a : augments) as.add(a.toTag());
         t.put("Chips", as);
         return t;
     }
@@ -50,12 +50,9 @@ public record WeaponSpec(ResourceLocation pattern, int coreTier, List<PartSpec> 
         List<PartSpec> parts = new ArrayList<>();
         ListTag ps = t.getList("Parts", Tag.TAG_COMPOUND);
         for (int i = 0; i < Math.min(ps.size(), MAX_PARTS); i++) parts.add(PartSpec.fromTag(ps.getCompound(i)));
-        List<ResourceLocation> augments = new ArrayList<>();
-        ListTag as = t.getList("Chips", Tag.TAG_STRING);
-        for (int i = 0; i < Math.min(as.size(), MAX_AUGMENTS); i++) {
-            ResourceLocation a = ResourceLocation.tryParse(as.getString(i));
-            augments.add(a == null ? new ResourceLocation("bsp_weapons", "unknown") : a);
-        }
+        List<FittedChip> augments = new ArrayList<>();
+        ListTag as = t.getList("Chips", Tag.TAG_COMPOUND);
+        for (int i = 0; i < Math.min(as.size(), MAX_AUGMENTS); i++) augments.add(FittedChip.fromTag(as.getCompound(i)));
         Rarity roll = Rarity.byId(t.getString("Roll"));
         return new WeaponSpec(pattern == null ? new ResourceLocation("bsp_weapons", "unknown") : pattern, t.getInt("Core"), parts,
                 roll == null ? Rarity.NORMAL : roll, augments);

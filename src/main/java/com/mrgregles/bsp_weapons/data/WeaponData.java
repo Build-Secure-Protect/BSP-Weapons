@@ -71,12 +71,13 @@ public final class WeaponData {
 
     /** The client's copy of the part data, from {@code WeaponDataPacket}; on a single-player client it matches what the server loaded. */
     public static void acceptSync(Map<ResourceLocation, WeaponMaterial> m, Map<Integer, BandDefaults> b, Map<ResourceLocation, PartType> t,
-                                  Map<ResourceLocation, Pattern> p, Map<ResourceLocation, Catalyst> c) {
+                                  Map<ResourceLocation, Pattern> p, Map<ResourceLocation, Catalyst> c, Map<ResourceLocation, Augment> a) {
         materials = Collections.unmodifiableMap(new HashMap<>(m));
         bands = Collections.unmodifiableMap(new HashMap<>(b));
         partTypes = Collections.unmodifiableMap(new HashMap<>(t));
         patterns = Collections.unmodifiableMap(new HashMap<>(p));
         catalysts = Collections.unmodifiableMap(new HashMap<>(c));
+        augments = Collections.unmodifiableMap(new HashMap<>(a));
     }
 
     public static Pattern pattern(ResourceLocation id) { return patterns.get(id); }
@@ -163,7 +164,13 @@ public final class WeaponData {
             if (k == null) throw new IllegalArgumentException("unknown weapon kind '" + e.getAsString() + "'");
             kinds.add(k);
         }
-        return new Augment(id, m, kinds, ids(o, "classes"));
+        int colour = o.has("colour") ? Integer.parseInt(string(o, "colour").replace("#", ""), 16) : Augment.DEFAULT_COLOUR;
+        int durability = o.has("durability") ? o.get("durability").getAsInt() : Augment.DEFAULT_DURABILITY;
+        if (durability < 1 || durability > 255) throw new IllegalArgumentException("durability must be 1 to 255, not " + durability);
+        boolean available = !o.has("available") || o.get("available").getAsBoolean();
+        double push = o.has("push") ? Modifiers.finite(o.get("push").getAsDouble(), "push") : 0;
+        if (push < 0 || push > 64) throw new IllegalArgumentException("push must be 0 to 64 blocks, not " + push);
+        return new Augment(id, m, kinds, ids(o, "classes"), colour, durability, available, push);
     }
 
     static Catalyst readCatalyst(ResourceLocation id, JsonObject o) {

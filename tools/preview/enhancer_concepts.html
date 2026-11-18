@@ -1,0 +1,708 @@
+<title>Enhancer Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; a row of three machine concepts (voxel, turning, working, labelled); a row of three screen layouts at 2x with a 320 x 240 fit check; the chip item as a turntable of three concepts beside an icon strip and a tooltip; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  h2.section { font-family: var(--pixel); font-weight: 400; font-size: 30px; line-height: 1; margin: 18px auto 10px; color: var(--violet); max-width: 1240px; }
+  h2.section small { font-size: 18px; color: var(--muted); margin-left: 10px; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .two { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 1000px) { .row, .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; flex-wrap: wrap; }
+  .head h3 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head h3 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage.wide { aspect-ratio: 2 / 1; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 16px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label span { color: var(--gold); margin-right: 6px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); display: grid; gap: 6px; }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .screen { padding: 10px 14px 0; display: grid; gap: 8px; }
+  .screen canvas { width: 100%; height: auto; max-width: 100%; image-rendering: pixelated; border: 1px solid var(--dim); }
+  .fit { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fit canvas { width: 320px; height: 240px; max-width: 100%; }
+  .fit span { font-family: var(--pixel); font-size: 16px; color: var(--muted); max-width: 22ch; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .strip .set { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .tooltip { image-rendering: pixelated; width: 280px; max-width: 100%; height: auto; }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>THE WEAPON ENHANCER AND THE CHIP</h1>
+  <p>The third machine: where a finished weapon takes augment chips (D9), has its Core upgraded in place (D22, D76) and is repaired (D28, D77), all on Forge Energy (D75). Three picks: the machine, the screen, the chip. Every model is pixels (D37). The machines are shown turning with a Laser Pistol loaded and a chip going in (WORKING); the screens are drawn at the game's pixel size and inside a 320 by 240 window; the chip is shown turning, as 16 and 32 pixel icons for each of the seven augments, and with its tooltip.</p>
+</header>
+
+<h2 class="section">THE MACHINE <small>set 7</small></h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>CRADLE</h3><small>one block; a scanner over the weapon</small></div>
+    <div class="stage" data-block="a"><div class="grid"></div></div>
+    <div class="controls" data-for="a"></div>
+    <p class="blurb"><b>A single gunmetal block</b> with a gold rim: the weapon lies in a gold cradle on top under a four-post gantry, and a teal scanner bar sweeps along it while the machine works. The chip rack is on the front (three sockets, lit when loaded), the energy gauge is a column of gold segments on the left side, the repair hopper with an ingot showing is on the right, a readout at the back. Fits anywhere the assembler does not. Mass Effect weapon bench.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>SPIRE</h3><small>one wide, two high; the weapon hung upright</small></div>
+    <div class="stage" data-block="b"><div class="grid"></div></div>
+    <div class="controls" data-for="b"></div>
+    <p class="blurb"><b>A tower on a powered base.</b> The weapon stands barrel-up in a gold socket, clamped from above, and a gold ring with teal eyes travels up and down it while the machine works. The chips wait in a drum at the top that turns to the next socket; the energy gauge is the tall column of gold up the spine; the base's front window glows with the stored charge. Reads from across a base. Destiny vault, Star Trek transporter.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>PRESS</h3><small>two wide, one and a half high; pairs with the assembler</small></div>
+    <div class="stage" data-block="c"><div class="grid"></div></div>
+    <div class="controls" data-for="c"></div>
+    <p class="blurb"><b>The assembler's sibling</b>, the same two-block base and gold seam. Left half: a steel bed with the weapon on it under a press head that comes down to seat the chip, gold sparks flying. Right half: a stepped console with the chip rack on the first step (two loaded, one empty), the energy readout on the back panel, a repair hopper sunk in the top step with an ingot in it, buttons and a lever. The two machines side by side make a workshop. Halo armoury, Cyberpunk ripperdoc chair.</p>
+  </section>
+</div>
+
+<h2 class="section">THE SCREEN</h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>RACK</h3><small>gauge left, weapon and chips centre, sheet below</small></div>
+    <div class="screen">
+      <canvas data-screen="a" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="a" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits</span></div>
+    </div>
+    <div class="controls" data-tabs="a"></div>
+    <p class="blurb"><b>Reads like a workbench.</b> The energy gauge up the left edge, the weapon turning in its box with its Core tier, roll and slot count, the fitted chips listed beside it with rarity and durability pips. Under them one row of slots: WEAPON, the chip rack (one slot per augment slot the weapon has, pips under each), CORE for the upgrade and REPAIR for the ingot. Keys FIT, REMOVE, UPGRADE, REPAIR, then the status line and the bars sheet with the chips' share in violet.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>BOARD</h3><small>sockets wired to the weapon</small></div>
+    <div class="screen">
+      <canvas data-screen="b" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="b" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits</span></div>
+    </div>
+    <div class="controls" data-tabs="b"></div>
+    <p class="blurb"><b>The weapon is the circuit board.</b> It lies large on the rail; the chip sockets sit above its frame, each wired to the gun by a teal trace, with pips above each socket. CORE sits at the heart under the rail and REPAIR under the grip, where the parts they touch are, as the assembler's Rail screen does (D52). The energy gauge is the column on the right. Teaches where the chips live, as the Rail taught the parts.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>LEDGER</h3><small>the sheet first, the chips as rows</small></div>
+    <div class="screen">
+      <canvas data-screen="c" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="c" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits</span></div>
+    </div>
+    <div class="controls" data-tabs="c"></div>
+    <p class="blurb"><b>For the min-maxer.</b> The energy as a band under the title; the six bars large on the left with teal, gold and violet shares and a red mark where a chip costs a stat (Overcharge's heat cap); the chips as rows on the right, each with its rarity, pips and its own REMOVE key; the slots in one row at the foot with FIT, UPGRADE and REPAIR beside them. The only layout that shows a chip's price next to its gain.</p>
+  </section>
+</div>
+
+<h2 class="section">THE CHIP <small>set 8</small></h2>
+<div class="two">
+  <section class="card">
+    <div class="head"><h3>AUGMENT CHIPS</h3><small>one item, tinted by its augment (D71)</small></div>
+    <div class="stage wide" data-stage="chips"><div class="grid"></div></div>
+    <div class="controls" data-tints><span class="k">AUGMENT</span></div>
+    <div class="blurb">
+      <div><b>A Wafer.</b> A flat square chip: a dark base with gold pins along two edges, a gunmetal body, a dark die on top with the augment's colour running through it as a stepped trace, one keyed corner and a gold index mark. Reads as a processor; sits flat in a slot.</div>
+      <div><b>B Cartridge.</b> A round stick (a plus in pixels) with two gold bands, a crystal window glowing in the augment's colour along the middle, a gold contact at one end and a dark cap at the other. Reads as a fuse you push into the frame; the window could dim as its durability goes.</div>
+      <div><b>C Shard Key.</b> A tapering crystal in the augment's colour set in a gunmetal clasp with gold teeth, its edges glowing. Reads as a gem keyed to the weapon, Tinkers'-adjacent, and tells the augments apart from furthest away.</div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>AS ICONS, ALL SEVEN</h3>
+      <div class="strip" data-strip="chips"></div>
+      <h3>THE TOOLTIP</h3>
+      <canvas class="tooltip" data-tooltip width="280" height="164"></canvas>
+      <p class="blurb" style="padding:0">Piercing, Quick-draw, Stabiliser, Overcharge, Coolant, Extended Cell, Knockback, each at 16 pixels for every look, then 32 for the chosen augment. The tooltip: name; the rarity and augment on a violet line (D81); the chip's own changes; its durability (D83); where it fits.</p>
+    </div>
+  </section>
+</div>
+
+<section class="notes">
+  <h2 class="section" style="margin-left:0">WHAT TO PICK</h2>
+  <ol>
+    <li><b>The machine</b> (A, B or C), or a mix such as "C's press with B's ring". A takes one block, B one block wide and two high, C two wide and one and a half high like the assembler.</li>
+    <li><b>The screen layout</b> (A, B or C), and whether the weapon preview should turn.</li>
+    <li><b>The chip</b> (A, B or C).</li>
+    <li><b>The chips' share on the bars.</b> As drawn, violet after the gold, with a red mark where a chip takes a stat away; or: chips fold into the gold and only the final number moves.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, STONE = 0x4A4F58, LIGHT = 0x5A6270, MAT = 0x7D97B0, RED = 0xFF6B5C, OFF = 0x1C2230, STEEL = 0x8C949F;
+  var AUGMENTS = [['Piercing', 0xFFD23A], ['Quick-draw', 0x19D3B0], ['Stabiliser', 0x4DA3FF], ['Overcharge', 0xFF6B5C], ['Coolant', 0x8AE8FF], ['Extended Cell', 0xB58CFF], ['Knockback', 0xFF9A3A]];
+  var tint = 0;
+  function tintColour() { return AUGMENTS[tint][1]; }
+
+  // ---- voxels (as the earlier pages; roles: a colour, 'teal', 'glow', 'red' (lit glows), 'tint' (glow in the augment colour), 'tintLit' (lit in the augment colour), 'glass') ----
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === 'glass') glass.push(k); else if (r === 'teal' || r === 'glow' || r === 'tint' || r === 'red') glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); });
+      im.instanceMatrix.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.lit = lit; this.glow = glow;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }));
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    this.glassMesh = mesh(glass, new T.MeshBasicMaterial({ color: 0x8AE8DC, transparent: true, opacity: 0.42, depthWrite: false }));
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this, tc = tintColour();
+    function colour(r) { if (r === 'teal' || r === 'glow') return TEAL; if (r === 'tint' || r === 'tintLit') return tc; if (r === 'red') return RED; return r; }
+    [[this.mesh, this.lit], [this.glowMesh, this.glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(colour(self.cubes[k])); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); pair[0].setColorAt(i, c); });
+      pair[0].instanceColor.needsUpdate = true;
+    });
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+
+  /** The Spine Rail pistol (the refined pick), whole, to lie in each machine. */
+  function pistol() {
+    var frame = new VoxelPart('Frame');
+    frame.fill(-2, 0, -10, 1, 3, 12, GUNMETAL).cut(-1, 3, -10, 0, 3, 12);
+    for (var z = -8; z <= 12; z += 4) frame.cut(-2, 3, z, 1, 3, z);
+    frame.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD).fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD);
+    frame.fill(-2, -2, -4, 1, -1, -1, DARK).cut(-1, -2, -3, 0, -1, -2).fill(-1, -2, -3, 0, -1, -3, GOLD);
+    var core = new VoxelPart('Core');
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD).cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow').fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL).cut(-1, 7, -2, 0, 7, -1).fill(-1, 7, -2, 0, 7, -1, 'glow');
+    var barrel = new VoxelPart('Barrel');
+    barrel.fill(-2, 1, 13, 1, 4, 24, MAT).fill(-1, 2, 25, 0, 3, 25, 'teal').fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23).fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);
+    barrel.fill(-3, 1, 16, -3, 4, 16, MAT).fill(-3, 1, 18, -3, 4, 18, MAT).fill(2, 1, 16, 2, 4, 16, MAT).fill(2, 1, 18, 2, 4, 18, MAT).fill(-1, 5, 15, 0, 5, 21, DARK);
+    var cell = new VoxelPart('Cell');
+    cell.fill(-2, -6, -8, 1, -1, -3, MAT).fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal').fill(-2, -6, -8, 1, -6, -3, DARK).fill(-2, -1, -3, 1, -1, -3, GOLD);
+    var grip = new VoxelPart('Grip');
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, MAT); }
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7).fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK).fill(-2, -10, -14, 1, -10, -10, DARK);
+    var optic = new VoxelPart('Optic');
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK).fill(-1, 8, -10, 0, 10, -4, MAT).fill(-1, 8, -3, 0, 9, -3, 'teal').fill(-1, 11, -9, 0, 11, -9, GOLD).fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD);
+    var root = new T.Group();
+    [frame, core, barrel, cell, grip, optic].forEach(function (p) { p.build(); root.add(p.group); });
+    root.position.set(0.5, 0, -6.5);
+    return root;
+  }
+  /** The small chip that flies from the rack into the weapon. */
+  function flyingChip() {
+    var c = new VoxelPart('chip');
+    c.fill(-1, 0, -1, 1, 0, 1, GUNMETAL).fill(0, 0, 0, 0, 0, 0, 'tint').fill(-1, 0, -2, -1, 0, -2, GOLD).fill(1, 0, -2, 1, 0, -2, GOLD).fill(-1, 0, 2, -1, 0, 2, GOLD).fill(1, 0, 2, 1, 0, 2, GOLD);
+    return c.build();
+  }
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  /** The chip's journey while working: waits at the rack, flies in over 1.5 s, is fitted (hidden) for 2.5 s, then the next one appears. */
+  function chipPhase(now) { var t = now % 6; if (t < 1) return 0; if (t < 2.5) return smooth((t - 1) / 1.5); if (t < 5) return 1; return 0; }
+  function flyChip(chip, from, to, e) {
+    chip.group.position.set(from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e + Math.sin(Math.PI * e) * 5, from.z + (to.z - from.z) * e);
+    var s = e < 0.85 ? 1 : Math.max(0.001, 1 - (e - 0.85) / 0.15);
+    chip.group.scale.setScalar(s); chip.group.visible = e < 0.999;
+  }
+  /** Gold sparks for the press: a small pool of cubes thrown up and pulled down. */
+  function Sparks(parent, n) {
+    this.items = []; this.m = new T.Matrix4();
+    this.mesh = new T.InstancedMesh(new T.BoxGeometry(0.6, 0.6, 0.6), new T.MeshBasicMaterial({ color: GOLD }), n);
+    for (var i = 0; i < n; i++) this.items.push({ p: new T.Vector3(), v: new T.Vector3(), life: 0 });
+    parent.add(this.mesh); this.tick(0);
+  }
+  Sparks.prototype.burst = function (x, y, z) { this.items.forEach(function (it) { it.p.set(x + (Math.random() - 0.5) * 4, y, z + (Math.random() - 0.5) * 4); it.v.set((Math.random() - 0.5) * 16, 6 + Math.random() * 9, (Math.random() - 0.5) * 16); it.life = 0.45 + Math.random() * 0.4; }); };
+  Sparks.prototype.tick = function (dt) {
+    var self = this;
+    this.items.forEach(function (it, i) {
+      if (it.life > 0) { it.life -= dt; it.v.y -= 32 * dt; it.p.addScaledVector(it.v, dt); self.m.makeTranslation(it.p.x, it.p.y, it.p.z); } else self.m.makeScale(0.001, 0.001, 0.001);
+      self.mesh.setMatrixAt(i, self.m);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
+  };
+
+  // ---- the three machines --------------------------------------------------------------------------------------------------------------
+  function floor(x0, z0, x1, z1) { var f = new VoxelPart('floor'); f.fill(x0, -1, z0, x1, -1, z1, STONE); return f.build(); }
+  function machineA() {
+    var b = new VoxelPart('cradle');
+    b.fill(0, 0, 0, 15, 9, 15, GUNMETAL).fill(0, 0, 0, 15, 0, 15, DARK).fill(0, 9, 0, 15, 9, 15, GOLD).fill(1, 9, 1, 14, 9, 14, LIGHT); // the block and its gold rim
+    b.fill(1, 2, -1, 14, 7, -1, DARK).fill(1, 2, -1, 14, 2, -1, GOLD).fill(1, 7, -1, 14, 7, -1, GOLD);                                  // the chip rack on the front
+    [3, 7, 11].forEach(function (x, i) { b.fill(x, 3, -1, x + 2, 6, -1, GUNMETAL).fill(x + 1, 4, -1, x + 1, 5, -1, i < 2 ? 'tint' : OFF); });
+    b.fill(-1, 2, 3, -1, 7, 12, DARK); for (var z = 4; z <= 11; z++) b.fill(-1, 3, z, -1, 6, z, z <= 9 ? GOLD : OFF);                      // the energy gauge, six of eight lit
+    for (var z2 = 2; z2 <= 13; z2 += 3) b.fill(16, 1, z2, 16, 3, z2, DARK);                                                                // vents on the right
+    b.fill(16, 4, 5, 16, 8, 10, DARK).fill(16, 8, 5, 16, 8, 10, GOLD).fill(16, 5, 6, 16, 7, 9, MAT);                                       // the repair hopper with an ingot in it
+    b.fill(4, 10, 2, 4, 11, 13, GOLD).fill(11, 10, 2, 11, 11, 13, GOLD);                                                                   // the cradle rails
+    [[4, 3], [11, 3], [4, 12], [11, 12]].forEach(function (c) { b.fill(c[0], 12, c[1], c[0], 13, c[1], GOLD); });                             // clamp posts
+    [[1, 0], [14, 0], [1, 15], [14, 15]].forEach(function (c) { b.fill(c[0], 10, c[1], c[0], 18, c[1], GUNMETAL); });                        // the gantry posts
+    b.fill(1, 18, 0, 1, 19, 15, GUNMETAL).fill(14, 18, 0, 14, 19, 15, GUNMETAL).fill(1, 19, 0, 1, 19, 15, GOLD).fill(14, 19, 0, 14, 19, 15, GOLD); // the beams
+    b.fill(2, 10, 16, 13, 16, 16, GUNMETAL).fill(3, 11, 16, 12, 15, 16, DARK).fill(4, 12, 16, 11, 12, 16, 'teal').fill(4, 14, 16, 9, 14, 16, GOLD); // the readout at the back
+    var g = new T.Group(); g.add(b.build().group);
+    var sc = new VoxelPart('scanner'); sc.fill(2, 17, 0, 13, 17, 0, GUNMETAL).fill(2, 16, 0, 13, 16, 0, 'teal').fill(1, 17, 0, 1, 17, 0, GOLD).fill(14, 17, 0, 14, 17, 0, GOLD); sc.build(); g.add(sc.group);
+    var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(7.5, 13.4, 7.5); gun.add(pistol()); g.add(gun);
+    var chip = flyingChip(); g.add(chip.group);
+    var lamp = new T.PointLight(TEAL, 0.6, 16); lamp.position.set(8, 16, 8); g.add(lamp);
+    return {
+      group: g, cam: { pos: [46, 34, 54], look: [8, 9, 8] }, floor: [-16, -16, 31, 31],
+      labels: [['Cradle', [8, 15, 1]], ['Scanner', [8, 21.5, 8]], ['Chip rack', [8, 0.5, -3]], ['Energy gauge', [-3.5, 5, 8]], ['Repair hopper', [19.5, 10, 8]], ['Readout', [8, 18, 18]]],
+      animate: function (now, dt, working, e) {
+        sc.group.position.z = working ? 7 + 6.5 * Math.sin(now * 1.6) : 0;
+        flyChip(chip, { x: 12, y: 4.5, z: -1.5 }, { x: 7.5, y: 14, z: 7.5 }, working ? e : 0);
+        lamp.intensity = working ? (e >= 1 ? 0.9 + 0.5 * Math.abs(Math.sin(now * 6)) : 0.6) : 0.3;
+      }
+    };
+  }
+  function machineB() {
+    var b = new VoxelPart('spire');
+    b.fill(0, 0, 0, 15, 6, 15, GUNMETAL).fill(0, 0, 0, 15, 0, 15, DARK).fill(0, 6, 0, 15, 6, 15, GOLD).fill(1, 6, 1, 14, 6, 14, LIGHT); // the base
+    b.fill(4, 2, -1, 11, 4, -1, DARK).fill(5, 3, -1, 10, 3, -1, GOLD).fill(6, 3, -1, 9, 3, -1, 'tint');                               // the charge window on the front
+    for (var z = 2; z <= 13; z += 3) { b.fill(-1, 1, z, -1, 4, z, DARK); b.fill(16, 1, z, 16, 4, z, DARK); }                            // vents
+    b.fill(3, 7, 10, 12, 26, 15, GUNMETAL).fill(3, 7, 10, 12, 7, 15, LIGHT).fill(4, 8, 9, 11, 25, 9, DARK);                            // the spine and its face plate
+    for (var y = 9; y <= 24; y++) b.fill(6, y, 9, 9, y, 9, y <= 19 ? GOLD : OFF);                                                       // the energy gauge, eleven of sixteen lit
+    b.fill(2, 9, 11, 2, 24, 11, GOLD).fill(13, 9, 11, 13, 24, 11, GOLD);                                                                // gold stripes on the spine's sides
+    for (var vy = 10; vy <= 24; vy += 4) { b.fill(2, vy, 13, 2, vy + 1, 13, DARK); b.fill(13, vy, 13, 13, vy + 1, 13, DARK); }           // side vents up the spine
+    b.fill(3, 27, 2, 12, 28, 15, GUNMETAL).fill(3, 28, 2, 12, 28, 2, GOLD).fill(3, 27, 2, 12, 27, 2, LIGHT);                            // the top arm
+    b.fill(7, 23, 4, 8, 26, 5, GUNMETAL).fill(6, 21, 3, 9, 22, 6, GOLD).cut(7, 21, 4, 8, 22, 5);                                        // the clamp hanging from it
+    b.fill(5, 7, 2, 10, 8, 7, GOLD).cut(6, 7, 3, 9, 8, 6).fill(6, 7, 3, 9, 7, 6, DARK);                                                 // the socket the weapon stands in
+    var g = new T.Group(); g.add(b.build().group);
+    var ring = new VoxelPart('ring'); ring.fill(3, 0, 0, 12, 0, 9, GOLD).cut(4, 0, 1, 11, 0, 8).fill(7, 0, 0, 8, 0, 0, 'teal').fill(7, 0, 9, 8, 0, 9, 'teal').fill(3, 0, 4, 3, 0, 5, 'teal').fill(12, 0, 4, 12, 0, 5, 'teal'); ring.build(); g.add(ring.group);
+    var drumPivot = new T.Group(); drumPivot.position.set(7.5, 29, 4.5); g.add(drumPivot);
+    var drum = new VoxelPart('drum');
+    drum.fill(-3, 0, -3, 2, 2, 2, GUNMETAL); [[-3, -3], [2, -3], [-3, 2], [2, 2]].forEach(function (q) { drum.cut(q[0], 0, q[1], q[0], 2, q[1]); });
+    drum.fill(-3, 1, -1, -3, 1, 0, 'tint').fill(2, 1, -1, 2, 1, 0, 'tint').fill(-1, 1, -3, 0, 1, -3, 'tint').fill(-1, 1, 2, 0, 1, 2, OFF).fill(-2, 3, -2, 1, 3, 1, GOLD).fill(-1, 4, -1, 0, 4, 0, DARK);
+    drum.build(); drumPivot.add(drum.group);
+    var gun = new T.Group(); gun.scale.setScalar(0.34); gun.position.set(7.5, 15, 4.5); gun.rotation.x = -Math.PI / 2; gun.add(pistol()); g.add(gun);
+    var chip = flyingChip(); g.add(chip.group);
+    var lamp = new T.PointLight(TEAL, 0.7, 20); lamp.position.set(8, 16, 2); g.add(lamp);
+    return {
+      group: g, cam: { pos: [44, 38, 50], look: [8, 15, 8] }, floor: [-16, -16, 31, 31],
+      labels: [['Spire', [-2, 20, 14]], ['Chip drum', [8, 34, 4.5]], ['Ring', [-2.5, 15, 4.5]], ['Energy gauge', [8, 11, 7]], ['Socket', [8, 5, -1]], ['Clamp', [13, 23, 2]]],
+      animate: function (now, dt, working, e) {
+        ring.group.position.y = working ? 15 + 6 * Math.sin(now * 1.3) : 24;
+        if (working && !reduced) drumPivot.rotation.y += dt * 0.8;
+        flyChip(chip, { x: 7.5, y: 28, z: 1 }, { x: 7.5, y: 15, z: 4.5 }, working ? e : 0);
+        lamp.intensity = working ? (e >= 1 ? 1.0 + 0.5 * Math.abs(Math.sin(now * 6)) : 0.7) : 0.3;
+      }
+    };
+  }
+  function machineC() {
+    var b = new VoxelPart('press');
+    b.fill(0, 0, 0, 31, 7, 15, GUNMETAL).fill(0, 0, 0, 31, 0, 15, DARK).fill(0, 7, 0, 31, 7, 15, GOLD).fill(1, 7, 1, 30, 7, 14, LIGHT); // the two-block base and its seam
+    for (var z = 2; z <= 13; z += 3) { b.fill(-1, 2, z, -1, 5, z, DARK); b.fill(32, 2, z, 32, 5, z, DARK); }
+    for (var x = 2; x <= 13; x += 3) b.fill(x, 2, -1, x, 5, -1, DARK);
+    b.fill(18, 2, -1, 29, 5, -1, DARK).fill(19, 3, -1, 28, 4, -1, LIGHT);                                                               // the service hatch
+    b.fill(2, 8, 2, 13, 9, 13, LIGHT).fill(2, 8, 2, 13, 8, 13, GUNMETAL).fill(4, 10, 3, 4, 10, 12, GOLD).fill(11, 10, 3, 11, 10, 12, GOLD); // the bed and its cradle
+    b.fill(0, 8, 12, 2, 20, 15, GUNMETAL).fill(13, 8, 12, 15, 20, 15, GUNMETAL);                                                        // the press posts
+    b.fill(0, 21, 1, 15, 23, 15, GUNMETAL).fill(0, 21, 1, 15, 21, 1, GOLD).fill(0, 23, 1, 15, 23, 1, GOLD);                              // the beam
+    b.fill(1, 22, 0, 14, 22, 0, DARK).fill(2, 22, 0, 5, 22, 0, 'teal').fill(10, 22, 0, 13, 22, 0, 'red');                                // its status strip
+    b.fill(16, 8, 0, 31, 10, 15, GUNMETAL).fill(16, 11, 4, 31, 12, 15, GUNMETAL).fill(16, 13, 8, 31, 14, 15, GUNMETAL);                // the stepped console
+    b.fill(17, 11, 4, 30, 11, 7, LIGHT).fill(17, 13, 8, 30, 13, 11, LIGHT).fill(17, 11, 0, 30, 11, 0, LIGHT);
+    for (var bx = 17; bx <= 29; bx += 2) b.fill(bx, 11, 1, bx, 11, 1, bx % 4 === 1 ? 0xE03A3A : GOLD);                                 // the button bank
+    b.fill(30, 11, 2, 30, 13, 2, GOLD).fill(30, 14, 2, 30, 14, 2, 0xE03A3A);                                                           // the lever
+    b.fill(17, 13, 4, 30, 13, 7, DARK).fill(17, 13, 4, 30, 13, 4, GOLD).fill(17, 13, 7, 30, 13, 7, GOLD);                                // the chip rack on the first step
+    [18, 22, 26].forEach(function (rx, i) { b.fill(rx, 13, 5, rx + 2, 13, 6, GUNMETAL).fill(rx + 1, 13, 5, rx + 1, 13, 6, i < 2 ? 'tint' : OFF); });
+    b.fill(16, 15, 12, 31, 19, 15, GUNMETAL).fill(16, 19, 12, 31, 19, 15, LIGHT).fill(17, 15, 11, 30, 18, 11, DARK);                   // the back panel
+    for (var gx = 18; gx <= 29; gx++) b.fill(gx, 16, 11, gx, 17, 11, gx <= 25 ? GOLD : OFF);                                            // the energy readout, eight of twelve lit
+    b.fill(18, 18, 11, 23, 18, 11, 'teal').fill(25, 18, 11, 29, 18, 11, 'tint');
+    b.fill(26, 15, 8, 30, 15, 11, GOLD).cut(27, 15, 9, 29, 15, 10).cut(27, 14, 9, 29, 14, 10).fill(27, 14, 9, 29, 14, 10, DARK).fill(28, 14, 9, 28, 14, 10, MAT); // the repair hopper with an ingot in it
+    b.fill(29, 20, 13, 31, 21, 15, DARK).fill(30, 20, 12, 30, 21, 12, 'teal');                                                         // the lamp housing
+    var g = new T.Group(); g.add(b.build().group);
+    var head = new VoxelPart('head');
+    head.fill(3, 0, 3, 12, 2, 12, GUNMETAL).fill(3, 0, 3, 12, 0, 12, GOLD).fill(3, 2, 3, 12, 2, 3, GOLD).fill(5, -1, 5, 10, -1, 10, GUNMETAL).fill(6, -1, 6, 9, -1, 9, 'tint').fill(6, 3, 6, 9, 4, 9, LIGHT);
+    head.build(); g.add(head.group);
+    var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(7.5, 12.4, 7.5); gun.add(pistol()); g.add(gun);
+    var chip = flyingChip(); g.add(chip.group);
+    var sparks = new Sparks(g, 14), wasDown = false;
+    var lamp = new T.PointLight(TEAL, 0.6, 18); lamp.position.set(8, 16, 7); g.add(lamp);
+    var lamp2 = new T.PointLight(GOLD, 0.4, 14); lamp2.position.set(24, 16, 6); g.add(lamp2);
+    function pressCurve(now) { var t = now % 6; if (t < 2.4) return 0; if (t < 2.8) return smooth((t - 2.4) / 0.4); if (t < 3.6) return 1; if (t < 4.6) return 1 - smooth((t - 3.6) / 1.0); return 0; }
+    return {
+      group: g, cam: { pos: [48, 30, 56], look: [16, 10, 8] }, floor: [-16, -16, 47, 31],
+      labels: [['Press', [8, 25.5, 1]], ['Bed', [8, 10.5, 0]], ['Chip rack', [24, 15.5, 2]], ['Energy readout', [24, 21.5, 10]], ['Repair hopper', [28.5, 17.5, 7]], ['Lever', [33, 16, 2]]],
+      animate: function (now, dt, working, e) {
+        var p = working ? pressCurve(now) : 0;
+        head.group.position.y = 19 - 3.3 * p;
+        var down = p > 0.98; if (down && !wasDown) sparks.burst(7.5, 15.8, 7.5); wasDown = down;
+        sparks.tick(dt);
+        flyChip(chip, { x: 27, y: 14.5, z: 5.5 }, { x: 7.5, y: 13.5, z: 7.5 }, working ? Math.min(e, 1) : 0);
+        lamp.intensity = working ? 0.6 + 0.7 * p : 0.3;
+      }
+    };
+  }
+
+  var stages = [];
+  function makeStage(el, build) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var m = build();
+    var camera = new T.PerspectiveCamera(30, 4 / 3, 0.1, 500);
+    camera.position.set(m.cam.pos[0], m.cam.pos[1], m.cam.pos[2]); camera.lookAt(m.cam.look[0], m.cam.look[1], m.cam.look[2]);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var pivot = new T.Group(); pivot.position.set(m.cam.look[0], 0, m.cam.look[2]); scene.add(pivot);
+    m.group.position.set(-m.cam.look[0], 0, -m.cam.look[2]); pivot.add(m.group);
+    var f = floor(m.floor[0], m.floor[1], m.floor[2], m.floor[3]); f.group.position.copy(m.group.position); pivot.add(f.group);
+    var labels = [];
+    m.labels.forEach(function (l) { var d = document.createElement('div'); d.className = 'label'; d.textContent = l[0]; el.appendChild(d); labels.push({ el: d, at: new T.Vector3(l[1][0], l[1][1], l[1][2]) }); });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pivot: pivot, machine: m, labels: labels, labelsOn: true, yaw: 0.5, dragging: false, lastX: 0, working: !reduced };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  var builders = { a: machineA, b: machineB, c: machineC };
+  ['a', 'b', 'c'].forEach(function (key) {
+    var st = makeStage(document.querySelector('[data-block="' + key + '"]'), builders[key]);
+    var holder = document.querySelector('.controls[data-for="' + key + '"]');
+    group(holder, 'STATE', ['WORKING', 'IDLE'], reduced ? 1 : 0, function (i) { st.working = i === 0; });
+    group(holder, 'LABELS', ['ON', 'OFF'], 0, function (i) { st.labelsOn = i === 0; });
+  });
+
+  // ---- the screens, drawn at the game's pixel size (256 x 200), shown at 2x and inside 320 x 240 -----------------------------------------
+  var C = { panel: '#10151C', slot: '#0C0E12', dim: '#2A2F3A', muted: '#9AA3B5', text: '#E6EBF2', teal: '#19D3B0', violet: '#B58CFF', gold: '#FFD23A', red: '#FF6B5C', board: '#0B0F14', faint: '#3A4150' };
+  var STATES = ['LOADED', 'NO POWER', 'EMPTY'];
+  var state = { a: 'LOADED', b: 'LOADED', c: 'LOADED' };
+  // name, final, scale, the parts' share, after core and roll
+  var STATS = [['DAMAGE', 7.7, 20, 4.0, 6.4], ['PIERCING', 26, 75, 0, 8], ['RANGE', 36, 160, 24, 36], ['FIRE RATE', 3.0, 12, 2.4, 3.0], ['HEAT CAP', 56, 200, 50, 70], ['DURABILITY', 480, 2000, 300, 480]];
+  var CHIPS = [{ name: 'Piercing', rarity: 'Rare', dura: 9, max: 10, tint: '#FFD23A' }, { name: 'Overcharge', rarity: 'Normal', dura: 7, max: 10, tint: '#FF6B5C' }, null];
+  function sit(key) { var s = state[key]; return { loaded: s !== 'EMPTY', power: s !== 'NO POWER', frac: s === 'NO POWER' ? 0 : 0.65 }; }
+
+  function px(ctx) { ctx.imageSmoothingEnabled = false; ctx.textBaseline = 'top'; }
+  function text(ctx, s, x, y, colour, size) { ctx.fillStyle = colour || C.text; ctx.font = (size || 16) + 'px VT323, monospace'; ctx.fillText(s, x, y); }
+  function rect(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); }
+  function frame(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x, y, 1, h); ctx.fillRect(x + w - 1, y, 1, h); }
+  function slot(ctx, x, y, label, filled, colour) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, filled ? C.dim : '#1A1F27');
+    if (filled) { rect(ctx, x + 4, y + 4, 10, 10, colour || '#7D97B0'); rect(ctx, x + 4, y + 11, 10, 3, 'rgba(0,0,0,0.3)'); }
+    if (label) text(ctx, label, x, y + 19, filled ? C.muted : C.faint, 10);
+  }
+  function pips(ctx, x, y, dura, max, tint) { for (var i = 0; i < max; i++) rect(ctx, x + i * 2, y, 1, 2, i < dura ? tint : C.dim); }
+  /** A chip slot: the chip drawn as a tinted wafer, its durability pips under it, then the label. */
+  function chipSlot(ctx, x, y, label, chip, pipsAbove) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, chip ? C.dim : '#1A1F27');
+    if (chip) { rect(ctx, x + 4, y + 5, 10, 8, '#2E343D'); rect(ctx, x + 6, y + 7, 6, 4, chip.tint); rect(ctx, x + 4, y + 13, 10, 1, '#D9B23A'); pips(ctx, x, pipsAbove ? y - 4 : y + 19, chip.dura, chip.max, chip.tint); }
+    else if (!pipsAbove) rect(ctx, x + 3, y + 8, 12, 1, C.faint);
+    if (label) text(ctx, label, x, y + 22, chip ? C.muted : C.faint, 10);
+  }
+  function button(ctx, x, y, w, label, on) { var colour = on ? C.teal : C.faint; rect(ctx, x, y, w, 14, C.slot); frame(ctx, x, y, w, 14, colour); text(ctx, label, x + 4, y + 1, colour, 14); }
+  function gaugeV(ctx, x, y, w, h, frac) {
+    rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim);
+    var fh = Math.round((h - 2) * frac); rect(ctx, x + 1, y + h - 1 - fh, w - 2, fh, frac > 0 ? C.gold : C.slot);
+    for (var yy = y + 8; yy < y + h - 1; yy += 8) rect(ctx, x + 1, yy, w - 2, 1, C.slot);
+    text(ctx, 'FE', x - 1, y + h + 1, frac > 0 ? C.gold : C.red, 11);
+  }
+  function gaugeH(ctx, x, y, w, h, frac) {
+    rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim);
+    var fw = Math.round((w - 2) * frac); rect(ctx, x + 1, y + 1, fw, h - 2, frac > 0 ? C.gold : C.slot);
+    for (var xx = x + 8; xx < x + w - 1; xx += 8) rect(ctx, xx, y + 1, 1, h - 2, C.slot);
+  }
+  /** The pistol from the side in pixels, as the assembler pages draw it. */
+  function pistolSide(ctx, x, y, s) {
+    function r(a, b, w, h, c) { rect(ctx, x + a * s, y + b * s, w * s, h * s, c); }
+    r(4, 10, 30, 4, '#2E343D'); r(4, 10, 30, 1, '#4A5363'); r(5, 11, 28, 1, '#D9B23A');
+    r(14, 6, 6, 4, '#19D3B0'); r(13, 6, 1, 4, '#D9B23A'); r(20, 6, 1, 4, '#D9B23A');
+    r(30, 9, 12, 4, '#7D97B0'); r(41, 10, 2, 2, '#19D3B0'); r(29, 8, 1, 6, '#D9B23A');
+    r(14, 14, 7, 6, '#8C949F'); r(14, 16, 7, 2, '#19D3B0'); r(14, 14, 7, 1, '#D9B23A');
+    r(6, 14, 5, 3, '#4A5BB5'); r(5, 17, 5, 3, '#4A5BB5'); r(4, 20, 5, 3, '#4A5BB5'); r(10, 14, 1, 1, '#D9B23A');
+    r(7, 2, 9, 4, '#7D97B0'); r(15, 3, 1, 2, '#19D3B0'); r(9, 6, 3, 4, '#14181E');
+  }
+  /** The sheet as bars: teal the parts' share, gold what core and roll add, violet what the chips add, a red mark where a chip costs. */
+  function bars(ctx, x, y, w, rowH, big, loaded) {
+    STATS.forEach(function (s, i) {
+      var yy = y + i * rowH, lab = big ? 60 : 50, num = big ? 34 : 30;
+      text(ctx, s[0], x, yy - 1, C.muted, big ? 14 : 11);
+      var bx = x + lab, bw = w - lab - num, bh = big ? 7 : 5;
+      rect(ctx, bx, yy + 2, bw, bh, C.slot); frame(ctx, bx, yy + 2, bw, bh, C.dim);
+      if (!loaded) return;
+      function at(v) { return bx + 1 + Math.round((bw - 2) * v / s[2]); }
+      rect(ctx, bx + 1, yy + 3, at(s[3]) - bx - 1, bh - 2, C.teal);
+      rect(ctx, at(s[3]), yy + 3, at(s[4]) - at(s[3]), bh - 2, C.gold);
+      if (s[1] >= s[4]) rect(ctx, at(s[4]), yy + 3, at(s[1]) - at(s[4]), bh - 2, C.violet);
+      else { rect(ctx, at(s[1]), yy + 3, at(s[4]) - at(s[1]), bh - 2, C.slot); rect(ctx, at(s[1]), yy + 3, 1, bh - 2, C.red); rect(ctx, at(s[1]), yy + 1, at(s[4]) - at(s[1]), 1, C.red); }
+      text(ctx, String(s[1]) + (s[0] === 'PIERCING' ? '%' : ''), bx + bw + 4, yy - 1, C.text, big ? 14 : 11);
+    });
+  }
+  function title(ctx, s) { text(ctx, s, 6, 4, C.gold, 18); rect(ctx, 6, 20, 244, 1, C.dim); }
+  function keys(ctx, x, y, st, withRemove) {
+    var on = st.loaded && st.power, xx = x;
+    button(ctx, xx, y, 32, 'FIT', on); xx += 38;
+    if (withRemove) { button(ctx, xx, y, 52, 'REMOVE', on); xx += 58; }
+    button(ctx, xx, y, 60, 'UPGRADE', on); xx += 66;
+    button(ctx, xx, y, 52, 'REPAIR', on);
+  }
+  function status(ctx, x, y, key) {
+    var s = state[key];
+    if (s === 'NO POWER') text(ctx, 'NO POWER: 0 / 10 000 FE', x, y, C.red, 12);
+    else if (s === 'EMPTY') text(ctx, 'Put a weapon in the slot.', x, y, C.muted, 12);
+    else text(ctx, 'FIT costs 400 FE and 1 chip point.', x, y, C.muted, 12);
+  }
+  function chipRows(ctx, x, y, rowH, withKey, loaded) {
+    text(ctx, loaded ? 'CHIPS 2 / 3' : 'CHIPS', x, y, C.text, 13);
+    CHIPS.forEach(function (c, i) {
+      var yy = y + 14 + i * rowH;
+      if (!loaded) { text(ctx, '-', x, yy, C.faint, 12); return; }
+      if (!c) { text(ctx, 'empty slot', x, yy, C.faint, 12); return; }
+      text(ctx, c.name, x, yy, c.tint, 12);
+      pips(ctx, x, yy + 12, c.dura, c.max, c.tint); text(ctx, c.dura + '/' + c.max, x + 23, yy + 9, C.muted, 10); text(ctx, c.rarity, x + 48, yy + 9, C.violet, 10);
+      if (withKey) { rect(ctx, x + 76, yy, 12, 12, C.slot); frame(ctx, x + 76, yy, 12, 12, C.red); text(ctx, 'X', x + 79, yy, C.red, 12); }
+    });
+  }
+  function weaponName(ctx, x, y, loaded, withCore) { text(ctx, loaded ? 'Laser Pistol' : 'no weapon', x, y, loaded ? C.text : C.faint, 13); if (loaded && withCore) text(ctx, 'Core III  S  3 slots', x, y + 12, C.violet, 11); }
+
+  function screenA(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ENHANCER');
+    gaugeV(ctx, 8, 28, 8, 108, st.frac);
+    rect(ctx, 22, 28, 112, 56, C.slot); frame(ctx, 22, 28, 112, 56, C.dim);
+    if (st.loaded) pistolSide(ctx, 46, 44, 1.2); else text(ctx, 'empty', 70, 52, C.faint, 12);
+    weaponName(ctx, 26, 30, st.loaded, false); if (st.loaded) text(ctx, 'Core III  S  3 slots', 26, 72, C.violet, 11);
+    chipRows(ctx, 142, 28, 18, false, st.loaded);
+    slot(ctx, 22, 92, 'WEAPON', st.loaded, '#2E343D');
+    [56, 86, 116].forEach(function (x, i) { chipSlot(ctx, x, 92, 'CHIP ' + (i + 1), st.loaded ? CHIPS[i] : null, false); });
+    slot(ctx, 152, 92, 'CORE', st.loaded, '#B58CFF'); slot(ctx, 182, 92, 'REPAIR', st.loaded, '#7D97B0');
+    keys(ctx, 22, 128, st, true);
+    status(ctx, 22, 144, key);
+    bars(ctx, 22, 158, 226, 7, false, st.loaded);
+  }
+  function screenB(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ENHANCER');
+    rect(ctx, 24, 70, 122, 4, '#2E343D'); rect(ctx, 24, 70, 122, 1, '#4A5363'); rect(ctx, 26, 72, 118, 1, '#D9B23A'); // the rail
+    slot(ctx, 6, 63, 'WEAPON', st.loaded, '#2E343D');
+    if (st.loaded) pistolSide(ctx, 66, 48, 1.6);
+    [76, 104, 132].forEach(function (x, i) {
+      var c = st.loaded ? CHIPS[i] : null;
+      text(ctx, String(i + 1), x - 6, 26, C.faint, 11);
+      chipSlot(ctx, x, 26, null, c, true);
+      rect(ctx, x + 9, 44, 1, 14, c ? C.teal : C.faint); rect(ctx, x + 8, 57, 3, 1, c ? C.teal : C.faint);
+    });
+    slot(ctx, 96, 92, 'CORE', st.loaded, '#B58CFF'); rect(ctx, 105, 75, 1, 17, st.loaded ? C.gold : C.faint);
+    slot(ctx, 58, 92, 'REPAIR', st.loaded, '#7D97B0'); rect(ctx, 67, 75, 1, 17, st.loaded ? C.muted : C.faint);
+    weaponName(ctx, 154, 28, st.loaded, true);
+    chipRows(ctx, 154, 54, 18, false, st.loaded);
+    gaugeV(ctx, 242, 28, 8, 90, st.frac);
+    keys(ctx, 22, 128, st, true);
+    status(ctx, 22, 144, key);
+    bars(ctx, 22, 158, 226, 7, false, st.loaded);
+  }
+  function screenC(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ENHANCER');
+    gaugeH(ctx, 8, 25, 160, 6, st.frac); text(ctx, st.power ? 'FE 6 500 / 10 000' : 'FE 0 / 10 000', 174, 21, st.power ? C.gold : C.red, 12);
+    bars(ctx, 8, 40, 150, 14, true, st.loaded);
+    chipRows(ctx, 160, 38, 20, true, st.loaded);
+    weaponName(ctx, 160, 112, st.loaded, true);
+    slot(ctx, 8, 138, 'WEAPON', st.loaded, '#2E343D'); chipSlot(ctx, 40, 138, 'CHIP IN', st.loaded ? { name: 'Coolant', rarity: 'Epic', dura: 10, max: 10, tint: '#8AE8FF' } : null, false);
+    slot(ctx, 72, 138, 'CORE', st.loaded, '#B58CFF'); slot(ctx, 104, 138, 'REPAIR', st.loaded, '#7D97B0');
+    var on = st.loaded && st.power;
+    button(ctx, 140, 138, 32, 'FIT', on); button(ctx, 178, 138, 60, 'UPGRADE', on); button(ctx, 140, 154, 52, 'REPAIR', on);
+    status(ctx, 8, 172, key);
+    text(ctx, 'teal parts  gold core, roll  violet chips  red cost', 8, 186, C.faint, 11);
+  }
+  var screens = { a: screenA, b: screenB, c: screenC };
+  function drawScreens(key) {
+    var big = document.querySelector('[data-screen="' + key + '"]'), fit = document.querySelector('[data-fit="' + key + '"]');
+    var ctx = big.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 256, 200); screens[key](ctx, key);
+    var f = fit.getContext('2d'); px(f); f.setTransform(1, 0, 0, 1, 0, 0); rect(f, 0, 0, 320, 240, '#07090C'); f.save(); f.translate(32, 20); screens[key](f, key); f.restore();
+    frame(f, 0, 0, 320, 240, C.violet); text(f, '320 x 240', 262, 226, C.violet, 12);
+  }
+  ['a', 'b', 'c'].forEach(function (key) {
+    drawScreens(key);
+    group(document.querySelector('.controls[data-tabs="' + key + '"]'), 'STATE', STATES, 0, function (i) { state[key] = STATES[i]; drawScreens(key); });
+  });
+
+  // ---- the chip items: three turning concepts, icons for every augment, the tooltip ----------------------------------------------------
+  function chipA() {
+    var c = new VoxelPart('A');
+    c.fill(0, 0, 0, 7, 0, 7, DARK).fill(0, 1, 0, 7, 1, 7, 0x3A4250).fill(1, 1, 1, 6, 1, 6, GUNMETAL);
+    c.fill(2, 2, 2, 5, 2, 5, DARK).fill(2, 2, 2, 2, 2, 3, 'tint').fill(3, 2, 3, 3, 2, 3, 'tint').fill(4, 2, 3, 4, 2, 4, 'tint').fill(5, 2, 4, 5, 2, 5, 'tint');
+    for (var x = 1; x <= 6; x += 2) c.fill(x, 0, -1, x, 0, -1, GOLD).fill(x, 0, 8, x, 0, 8, GOLD);
+    c.fill(6, 1, 1, 6, 1, 1, GOLD).cut(0, 0, 0, 0, 1, 0);
+    return c;
+  }
+  function chipB() {
+    var c = new VoxelPart('B');
+    c.fill(0, 0, 0, 2, 2, 9, GUNMETAL); [[0, 0], [2, 0], [0, 2], [2, 2]].forEach(function (q) { c.cut(q[0], q[1], 0, q[0], q[1], 9); });
+    c.fill(0, 0, 2, 2, 2, 2, GOLD).cut(1, 1, 2, 1, 1, 2).fill(0, 0, 7, 2, 2, 7, GOLD).cut(1, 1, 7, 1, 1, 7);
+    c.fill(1, 2, 3, 1, 2, 6, 'tint').fill(0, 1, 3, 0, 1, 6, 'tint').fill(2, 1, 3, 2, 1, 6, 'tint');
+    c.fill(1, 1, 10, 1, 1, 10, GOLD).fill(1, 1, -1, 1, 1, -1, DARK);
+    return c;
+  }
+  function chipC() {
+    var c = new VoxelPart('C');
+    c.fill(0, 0, 0, 5, 1, 2, GUNMETAL).fill(0, 0, 0, 5, 0, 2, DARK).fill(0, 2, 0, 0, 2, 2, GOLD).fill(5, 2, 0, 5, 2, 2, GOLD).fill(2, 1, -1, 3, 1, -1, GOLD);
+    c.fill(1, 2, 0, 4, 3, 2, 'tintLit').fill(2, 4, 0, 3, 5, 2, 'tintLit').fill(2, 6, 1, 3, 7, 1, 'tintLit').fill(3, 8, 1, 3, 8, 1, 'tintLit');
+    c.fill(1, 2, 0, 1, 3, 0, 'tint').fill(4, 2, 2, 4, 3, 2, 'tint').fill(2, 5, 0, 2, 5, 0, 'tint').fill(3, 6, 1, 3, 7, 1, 'tint');
+    return c;
+  }
+  var chipModels = [chipA(), chipB(), chipC()], chipStage;
+  function makeChipStage() {
+    var el = document.querySelector('[data-stage="chips"]');
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene(), camera = new T.PerspectiveCamera(26, 2, 0.1, 500);
+    camera.position.set(0, 24, 46); camera.lookAt(0, 3, 0);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var light = new T.DirectionalLight(0xFFF3DC, 0.75); light.position.set(30, 50, 40); scene.add(light);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var labels = [], names = ['Wafer', 'Cartridge', 'Shard Key'];
+    chipModels.forEach(function (mdl, i) {
+      mdl.build();
+      var b = mdl.bounds(), c = b.getCenter(new T.Vector3());
+      var holder = new T.Group(); holder.position.set((i - 1) * 15, 0, 0); scene.add(holder);
+      mdl.group.position.set(-c.x, -b.min.y, -c.z); holder.add(mdl.group); mdl.holder = holder;
+      var d = document.createElement('div'); d.className = 'label'; var s = document.createElement('span'); s.textContent = mdl.name; d.appendChild(s); d.appendChild(document.createTextNode(names[i])); el.appendChild(d);
+      labels.push({ el: d, holder: holder, up: b.max.y - b.min.y + 3 });
+    });
+    chipStage = { el: el, renderer: renderer, scene: scene, camera: camera, labels: labels, yaw: 0, dragging: false, lastX: 0 };
+    el.addEventListener('pointerdown', function (ev) { chipStage.dragging = true; chipStage.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!chipStage.dragging) return; chipStage.yaw += (ev.clientX - chipStage.lastX) * 0.01; chipStage.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { chipStage.dragging = false; });
+    el.addEventListener('pointercancel', function () { chipStage.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+  }
+  makeChipStage();
+
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+  var iconKey = new T.DirectionalLight(0xFFF3DC, 0.8); iconKey.position.set(30, 50, 40); iconScene.add(iconKey);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModels = [chipA(), chipB(), chipC()];
+  iconModels.forEach(function (m) { m.build(); });
+  function renderIcon(canvas, model, size) {
+    iconScene.children.forEach(function (c) { if (c.userData.model) iconScene.remove(c); });
+    model.group.userData.model = true; model.group.position.set(0, 0, 0); iconScene.add(model.group);
+    var b = model.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 32, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  var iconJobs = [];
+  (function strip() {
+    var holder = document.querySelector('[data-strip="chips"]');
+    ['A', 'B', 'C'].forEach(function (name, i) {
+      var lab = document.createElement('span'); lab.textContent = name; holder.appendChild(lab);
+      var set = document.createElement('div'); set.className = 'set'; holder.appendChild(set);
+      var model = iconModels[i];
+      AUGMENTS.forEach(function (a, j) {
+        var cv = document.createElement('canvas'); cv.width = 16; cv.height = 16; cv.style.width = '32px'; cv.style.height = '32px'; cv.title = a[0] + ' Chip'; set.appendChild(cv);
+        iconJobs.push(function () { var keep = tint; tint = j; model.paint(); renderIcon(cv, model, 16); tint = keep; model.paint(); });
+      });
+      var big = document.createElement('canvas'); big.width = 32; big.height = 32; big.style.width = '64px'; big.style.height = '64px'; set.appendChild(big);
+      iconJobs.push(function () { renderIcon(big, model, 32); });
+    });
+  })();
+  function redrawIcons() { iconJobs.forEach(function (j) { j(); }); }
+  redrawIcons();
+
+  function hex(n) { return '#' + ('000000' + n.toString(16)).slice(-6); }
+  var CHANGES = [['+10 Armour piercing', '+15% Armour piercing'], ['+15% Fire rate'], ['-30% Spread'], ['+20% Damage', '-20% Heat capacity'], ['+35% Heat capacity'], ['+30% Capacity'], ['-5% Damage', 'Hits throw the target back']];
+  function drawTooltip() {
+    var cv = document.querySelector('[data-tooltip]'), ctx = cv.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 140, 82);
+    var a = AUGMENTS[tint], lines = CHANGES[tint];
+    rect(ctx, 0, 0, 140, 82, '#100A1E'); frame(ctx, 0, 0, 140, 82, '#28007F'); frame(ctx, 1, 1, 138, 80, C.violet);
+    text(ctx, a[0] + ' Chip', 6, 5, C.text, 14);
+    text(ctx, 'Rare  ' + a[0], 6, 18, C.violet, 12);
+    lines.forEach(function (l, i) { text(ctx, l, 6, 30 + i * 10, l.charAt(0) === '-' ? C.red : C.teal, 11); });
+    var y = 30 + lines.length * 10 + 3;
+    text(ctx, 'Durability 9 / 10', 6, y, C.muted, 11); pips(ctx, 86, y + 4, 9, 10, hex(a[1]));
+    text(ctx, 'Fits any weapon', 6, y + 12, C.faint, 11);
+  }
+  drawTooltip();
+  (function tints() {
+    var holder = document.querySelector('[data-tints]');
+    AUGMENTS.forEach(function (a, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = hex(a[1]); b.title = a[0]; b.setAttribute('aria-label', a[0]); b.setAttribute('aria-pressed', String(i === 0));
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call(holder.querySelectorAll('button'), function (x, j) { x.setAttribute('aria-pressed', String(j === i)); });
+        tint = i; chipModels.forEach(function (m) { m.paint(); }); iconModels.forEach(function (m) { m.paint(); }); redrawIcons(); drawTooltip();
+      });
+      holder.appendChild(b);
+    });
+    var name = document.createElement('span'); name.className = 'k'; name.style.marginLeft = '8px'; name.textContent = 'click a swatch'; holder.appendChild(name);
+  })();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ['a', 'b', 'c'].forEach(drawScreens); drawTooltip(); });
+
+  // ---- the loop ---------------------------------------------------------------------------------------------------------------------------
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    var e = chipPhase(now);
+    stages.forEach(function (st) {
+      st.machine.animate(now, dt, st.working, e);
+      if (!st.dragging && !reduced) st.yaw += dt * 0.22;
+      st.pivot.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        l.el.style.display = st.labelsOn ? '' : 'none'; if (!st.labelsOn) return;
+        v.copy(l.at); st.machine.group.localToWorld(v); v.project(st.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+      });
+    });
+    if (chipStage) {
+      if (!chipStage.dragging && !reduced) chipStage.yaw += dt * 0.5;
+      chipModels.forEach(function (m) { m.holder.rotation.y = chipStage.yaw; });
+      chipStage.renderer.render(chipStage.scene, chipStage.camera);
+      var cr = chipStage.el.getBoundingClientRect();
+      chipStage.labels.forEach(function (l) {
+        v.set(0, l.up, 0); l.holder.localToWorld(v); v.project(chipStage.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * cr.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * cr.height).toFixed(0) + 'px';
+      });
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

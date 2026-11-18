@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Whether a spec is a weapon the server would make: the pattern exists, every slot it asks for is filled with a part of
  * that kind and nothing else, every type and material exists and is allowed there, the core tier is real, and the
- * chips fit their slots and this weapon. Each problem is a plain sentence; an empty list means valid.
+ * chips fit their slots and this weapon and have points left. Each problem is a plain sentence; an empty list means valid.
  */
 public final class Validation {
     private Validation() {
@@ -46,11 +46,13 @@ public final class Validation {
         int slots = SheetCalculator.augmentSlots(spec);
         if (spec.augments().size() > slots) out.add("Too many chips: " + spec.augments().size() + " for " + slots + " slot" + (slots == 1 ? "" : "s") + ".");
         Set<ResourceLocation> chips = new HashSet<>();
-        for (ResourceLocation id : spec.augments()) {
+        for (FittedChip chip : spec.augments()) {
+            ResourceLocation id = chip.augment();
             Augment a = WeaponData.augment(id);
             if (a == null) { out.add("No augment '" + id + "'."); continue; }
             if (!chips.add(id)) out.add("The chip '" + id.getPath().replace('_', ' ') + "' is fitted twice.");
             if (!a.allowedOn(pattern)) out.add("The chip '" + id.getPath().replace('_', ' ') + "' does not fit a " + pattern.id().getPath().replace('_', ' ') + ".");
+            if (chip.burntOut()) out.add("The chip '" + id.getPath().replace('_', ' ') + "' is burnt out.");
         }
         return out;
     }

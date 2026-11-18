@@ -3,5 +3,7 @@
     "HEAT_CAP": {
       "percent": 35
     }
-  }
+  },
+  "colour": "#8AE8FF",
+  "durability": 10
 }

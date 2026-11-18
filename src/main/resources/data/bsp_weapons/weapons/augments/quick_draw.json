@@ -3,5 +3,7 @@
     "FIRE_RATE": {
       "percent": 15
     }
-  }
+  },
+  "colour": "#19D3B0",
+  "durability": 10
 }

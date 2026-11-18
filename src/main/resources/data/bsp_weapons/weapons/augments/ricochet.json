@@ -6,5 +6,8 @@
   },
   "kinds": [
     "ENERGY"
-  ]
+  ],
+  "colour": "#E6EBF2",
+  "durability": 10,
+  "available": false
 }

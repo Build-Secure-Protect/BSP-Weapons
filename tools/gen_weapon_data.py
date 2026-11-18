@@ -204,17 +204,19 @@ PATTERNS = {
     },
 }
 
-# ---- augments (D9, D25) ----------------------------------------------------------------------------------------------------
+# ---- augments (D9, D25, D71, D73, D83): colour tints the chip, durability is a fresh chip's points, available false keeps a chip
+# out of the creative tab and the machine until its effect exists ------------------------------------------------------------
 AUGMENTS = {
-    "piercing": {"modifiers": merge(flat(piercing=10), pct(piercing=15))},
-    "knockback": {"modifiers": pct(damage=-5)},  # the push itself is an effect for a later task
-    "quick_draw": {"modifiers": pct(fire_rate=15)},
-    "stabiliser": {"modifiers": pct(spread=-30)},
-    "overcharge": {"modifiers": merge(pct(damage=20), pct(heat_cap=-20))},
-    "coolant": {"modifiers": pct(heat_cap=35)},
-    "extended_cell": {"modifiers": pct(capacity=30)},
-    "breacher": {"modifiers": flat(block_damage=4), "kinds": ["ENERGY"]},  # D25: classes are set when the rifle, sniper and rail exist
-    "ricochet": {"modifiers": flat(ricochets=1), "kinds": ["ENERGY"]},
+    "piercing": {"modifiers": merge(flat(piercing=10), pct(piercing=15)), "colour": "#FFD23A", "durability": 10},
+    "knockback": {"modifiers": pct(damage=-5), "colour": "#FF9A3A", "durability": 10, "push": 1.0},  # push: blocks a hit throws the target back (D74)
+    "quick_draw": {"modifiers": pct(fire_rate=15), "colour": "#19D3B0", "durability": 10},
+    "stabiliser": {"modifiers": pct(spread=-30), "colour": "#4DA3FF", "durability": 10},
+    "overcharge": {"modifiers": merge(pct(damage=20), pct(heat_cap=-20)), "colour": "#FF6B5C", "durability": 8},
+    "coolant": {"modifiers": pct(heat_cap=35), "colour": "#8AE8FF", "durability": 10},
+    "extended_cell": {"modifiers": pct(capacity=30), "colour": "#B58CFF", "durability": 10},
+    # D25: classes are set when the rifle, sniper and rail exist; D73: no block cutting or laser bounce yet, so not available
+    "breacher": {"modifiers": flat(block_damage=4), "kinds": ["ENERGY"], "colour": "#C98A4B", "durability": 10, "available": False},
+    "ricochet": {"modifiers": flat(ricochets=1), "kinds": ["ENERGY"], "colour": "#E6EBF2", "durability": 10, "available": False},
 }
 
 # ---- catalysts (D21, D30): lapis plus one ingredient; odds Normal / Rare / Epic / S -----------------------------------------
@@ -246,7 +248,11 @@ def main():
         "type": "minecraft:block",
         "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "bsp_weapons:weapon_assembler"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}],
     }, indent=2) + "\n")
-    print("loot_tables: 1")
+    (LOOT / "weapon_enhancer.json").write_text(json.dumps({
+        "type": "minecraft:block",
+        "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "bsp_weapons:weapon_enhancer"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}],
+    }, indent=2) + "\n")
+    print("loot_tables: 2")
     dt = OUT.parent / "damage_type"
     dt.mkdir(parents=True, exist_ok=True)
     (dt / "laser.json").write_text(json.dumps({"message_id": "bsp_weapons.laser", "exhaustion": 0.1, "scaling": "when_caused_by_living_non_player"}, indent=2) + "\n")

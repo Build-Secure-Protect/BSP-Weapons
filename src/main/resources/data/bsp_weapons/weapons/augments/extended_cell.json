@@ -3,5 +3,7 @@
     "CAPACITY": {
       "percent": 30
     }
-  }
+  },
+  "colour": "#B58CFF",
+  "durability": 10
 }

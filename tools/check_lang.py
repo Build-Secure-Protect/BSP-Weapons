@@ -41,13 +41,22 @@ def main():
     for p in (DATA / "patterns").glob("*.json"):
         needed.add(f"item.{MOD}.{p.stem}")
         needed.add(f"item.{MOD}.{p.stem}_engram")
-    for kind in ("engram", "core", "barrel", "cell", "grip", "optic", "roll", "weapon", "part"):
+    for kind in ("engram", "core", "barrel", "cell", "grip", "optic", "roll", "weapon", "part", "chip_in", "repair"):
         needed.add(f"slot.{MOD}.{kind}")
-    for block in ("weapon_assembler", "weapon_assembler_part"):
+    for block in ("weapon_assembler", "weapon_assembler_part", "weapon_enhancer", "weapon_enhancer_top"):
         needed.add(f"block.{MOD}.{block}")
     for key in ("laser", "laser.player"):
         needed.add(f"death.attack.{MOD}.{key}")
     needed.add(f"item.{MOD}.energy_round")
+    for p in (DATA / "augments").glob("*.json"):
+        needed.add(f"augment.{MOD}.{p.stem}")
+    for kind in ("energy", "projectile", "thrown"):
+        needed.add(f"kind.{MOD}.{kind}")
+    needed.add(f"item.{MOD}.augment_chip")
+    needed.add(f"item.{MOD}.augment_chip.named")
+    # the enhancer's refusals are built as "enhance." + MODID + "." + key from Result.refused("key") and translatable(... ".key")
+    needed |= {f"enhance.{MOD}.{k}" for k in re.findall(r'refus(?:ed|al)\("([a-z_]+)"', every)}
+    needed |= {f"enhance.{MOD}.{k}" for k in re.findall(r'"enhance\." \+ BspWeapons\.MODID \+ "\.([a-z_]+)"', every)}
     for key in ("heat", "overheated", "reloading", "no_charge", "no_rounds"):
         needed.add(f"hud.{MOD}.{key}")
     missing = sorted(k for k in needed if k not in lang)

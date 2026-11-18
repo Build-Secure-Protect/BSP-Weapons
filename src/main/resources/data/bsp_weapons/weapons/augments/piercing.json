@@ -4,5 +4,7 @@
       "flat": 10,
       "percent": 15
     }
-  }
+  },
+  "colour": "#FFD23A",
+  "durability": 10
 }

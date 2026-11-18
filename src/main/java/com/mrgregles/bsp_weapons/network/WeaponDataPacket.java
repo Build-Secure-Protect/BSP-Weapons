@@ -1,6 +1,7 @@
 package com.mrgregles.bsp_weapons.network;
 
 import com.mrgregles.bsp_weapons.data.WeaponData;
+import com.mrgregles.bsp_weapons.parts.Augment;
 import com.mrgregles.bsp_weapons.parts.BandDefaults;
 import com.mrgregles.bsp_weapons.parts.Catalyst;
 import com.mrgregles.bsp_weapons.parts.Pattern;
@@ -27,14 +28,14 @@ import java.util.function.Supplier;
 /**
  * The part data a client needs for icons and tooltips (materials, bands, part types), sent when a player joins and on
  * every {@code /reload}. Lists are capped on the reading side so a bad packet cannot ask for more than a few thousand
- * entries. Patterns, augments and catalysts are not needed by the client yet.
+ * entries. Patterns and catalysts feed the assembler's screen; augments name and tint the chips (protocol 2).
  */
 public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, Map<Integer, BandDefaults> bands, Map<ResourceLocation, PartType> partTypes,
-                               Map<ResourceLocation, Pattern> patterns, Map<ResourceLocation, Catalyst> catalysts) {
+                               Map<ResourceLocation, Pattern> patterns, Map<ResourceLocation, Catalyst> catalysts, Map<ResourceLocation, Augment> augments) {
     public static final int MAX_ENTRIES = 4096;
 
     public static WeaponDataPacket current() {
-        return new WeaponDataPacket(WeaponData.materials(), WeaponData.bands(), WeaponData.partTypes(), WeaponData.patterns(), WeaponData.catalysts());
+        return new WeaponDataPacket(WeaponData.materials(), WeaponData.bands(), WeaponData.partTypes(), WeaponData.patterns(), WeaponData.catalysts(), WeaponData.augments());
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -85,6 +86,20 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             buf.writeUtf(c.ingredient(), 128);
             for (Rarity r : Rarity.values()) buf.writeVarInt(c.weight(r));
             buf.writeInt(c.colour());
+        }
+        buf.writeVarInt(augments.size());
+        for (Augment a : augments.values()) {
+            buf.writeResourceLocation(a.id());
+            writeModifiers(buf, a.modifiers());
+            int kinds = 0;
+            for (WeaponKind k : a.kinds()) kinds |= 1 << k.ordinal();
+            buf.writeByte(kinds);
+            buf.writeVarInt(a.classes().size());
+            for (ResourceLocation c : a.classes()) buf.writeResourceLocation(c);
+            buf.writeInt(a.colour());
+            buf.writeVarInt(a.durability());
+            buf.writeBoolean(a.available());
+            buf.writeDouble(a.push());
         }
     }
 
@@ -157,7 +172,24 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
                 // odds of all zero in a bad packet: skip the catalyst
             }
         }
-        return new WeaponDataPacket(materials, bands, types, patterns, catalysts);
+        Map<ResourceLocation, Augment> augments = new HashMap<>();
+        int an = Math.min(MAX_ENTRIES, buf.readVarInt());
+        for (int i = 0; i < an; i++) {
+            ResourceLocation id = buf.readResourceLocation();
+            Modifiers m = readModifiers(buf);
+            int mask = buf.readByte();
+            Set<WeaponKind> kinds = EnumSet.noneOf(WeaponKind.class);
+            for (WeaponKind k : WeaponKind.values()) if ((mask & (1 << k.ordinal())) != 0) kinds.add(k);
+            int cc = Math.min(256, buf.readVarInt());
+            Set<ResourceLocation> classes = new HashSet<>();
+            for (int j = 0; j < cc; j++) classes.add(buf.readResourceLocation());
+            int colour = buf.readInt();
+            int durability = Math.max(1, Math.min(255, buf.readVarInt()));
+            boolean available = buf.readBoolean();
+            double push = Math.max(0, Math.min(64, buf.readDouble()));
+            augments.put(id, new Augment(id, m, kinds, classes, colour, durability, available, push));
+        }
+        return new WeaponDataPacket(materials, bands, types, patterns, catalysts, augments);
     }
 
     static void writeModifiers(FriendlyByteBuf buf, Modifiers m) {
@@ -192,7 +224,7 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> WeaponData.acceptSync(materials, bands, partTypes, patterns, catalysts));
+        ctx.get().enqueueWork(() -> WeaponData.acceptSync(materials, bands, partTypes, patterns, catalysts, augments));
         ctx.get().setPacketHandled(true);
     }
 }

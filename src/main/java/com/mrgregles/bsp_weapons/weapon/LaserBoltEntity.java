@@ -29,7 +29,7 @@ import net.minecraftforge.network.NetworkHooks;
  */
 public class LaserBoltEntity extends Projectile {
     private static final EntityDataAccessor<Integer> COLOUR = SynchedEntityData.defineId(LaserBoltEntity.class, EntityDataSerializers.INT);
-    private double damage = 4, piercing = 0, range = 24, travelled;
+    private double damage = 4, piercing = 0, range = 24, travelled, push;
 
     public LaserBoltEntity(EntityType<? extends LaserBoltEntity> type, Level level) {
         super(type, level);
@@ -45,6 +45,15 @@ public class LaserBoltEntity extends Projectile {
         entityData.set(COLOUR, colour);
         Vec3 eye = shooter.getEyePosition();
         setPos(eye.x, eye.y - 0.1, eye.z);
+    }
+
+    /** The blocks a hit throws the target back along the shot, on top of the ordinary knockback of a hit (D74). */
+    public void push(double blocks) {
+        this.push = Math.max(0, blocks);
+    }
+
+    public double push() {
+        return push;
     }
 
     /** Sets the flight and faces along it, so the first frame drawn is already right. */
@@ -120,6 +129,15 @@ public class LaserBoltEntity extends Projectile {
             var source = Damage.laser(level(), this, owner);
             float amount = Damage.amountFor(living, damage, piercing);
             living.hurt(source, amount); // armour takes no wear from a laser (hurtArmor is not reachable from here); noted in the audit
+            if (push > 0 && living.isAlive()) {
+                // the Knockback chip (D74): thrown back along the shot; vanilla's 0.4 of a hit is about a block, so a block of push is another 0.4
+                Vec3 along = getDeltaMovement();
+                double flat = Math.sqrt(along.x * along.x + along.z * along.z);
+                if (flat > 1e-6) {
+                    living.knockback(0.4 * push, -along.x / flat, -along.z / flat);
+                    living.hurtMarked = true;
+                }
+            }
         }
         level().broadcastEntityEvent(this, (byte) 3);
         discard();
@@ -160,6 +178,7 @@ public class LaserBoltEntity extends Projectile {
         tag.putDouble("Piercing", piercing);
         tag.putDouble("Range", range);
         tag.putDouble("Travelled", travelled);
+        tag.putDouble("Push", push);
         tag.putInt("Colour", colour());
     }
 
@@ -170,6 +189,7 @@ public class LaserBoltEntity extends Projectile {
         piercing = tag.getDouble("Piercing");
         range = tag.getDouble("Range");
         travelled = tag.getDouble("Travelled");
+        push = tag.getDouble("Push");
         entityData.set(COLOUR, tag.getInt("Colour"));
     }
 

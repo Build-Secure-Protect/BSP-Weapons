@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=south": {
+      "model": "bsp_weapons:block/weapon_enhancer"
+    },
+    "facing=west": {
+      "model": "bsp_weapons:block/weapon_enhancer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "bsp_weapons:block/weapon_enhancer",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "bsp_weapons:block/weapon_enhancer",
+      "y": 270
+    }
+  }
+}

@@ -3,6 +3,7 @@ package com.mrgregles.bsp_weapons.gametest;
 import com.mrgregles.bsp_weapons.WeaponsConfig;
 import com.mrgregles.bsp_weapons.data.WeaponData;
 import com.mrgregles.bsp_weapons.parts.Catalyst;
+import com.mrgregles.bsp_weapons.parts.FittedChip;
 import com.mrgregles.bsp_weapons.parts.PartKind;
 import com.mrgregles.bsp_weapons.parts.PartSpec;
 import com.mrgregles.bsp_weapons.parts.Pattern;
@@ -46,7 +47,12 @@ public class PartSystemGameTests {
     }
 
     /** A plain Tier II Tetrium pistol: Focused barrel, Energy cell, Standard grip, Iron sight, every roll Normal. */
-    private static WeaponSpec pistol(int tier, Rarity roll, List<ResourceLocation> chips) {
+    /** A fresh Normal chip of the augment (D81: a Normal chip's effect is the augment's own). */
+    private static FittedChip chip(String augment) {
+        return new FittedChip(id(augment), Rarity.NORMAL, 10);
+    }
+
+    private static WeaponSpec pistol(int tier, Rarity roll, List<FittedChip> chips) {
         return new WeaponSpec(id("laser_pistol"), tier, List.of(
                 part(PartKind.BARREL, "focused_barrel", "tetrium", Rarity.NORMAL),
                 part(PartKind.CELL, "energy_cell", "steel", Rarity.NORMAL),
@@ -107,7 +113,7 @@ public class PartSystemGameTests {
         h.assertTrue(close(rare.get(Stat.DAMAGE), withParts.get(Stat.DAMAGE) * WeaponsConfig.rarityWeaponMultiplier(Rarity.RARE)), "Rare multiplies damage");
         h.assertTrue(close(rare.get(Stat.RECHARGE), withParts.get(Stat.RECHARGE) / WeaponsConfig.rarityWeaponMultiplier(Rarity.RARE)), "Rare shortens recharge");
         // chips come last, as a plain change on top of the roll
-        Sheet chipped = SheetCalculator.compute(pistol(1, Rarity.RARE, List.of(id("quick_draw"))));
+        Sheet chipped = SheetCalculator.compute(pistol(1, Rarity.RARE, List.of(chip("quick_draw"))));
         h.assertTrue(close(chipped.get(Stat.FIRE_RATE), rare.get(Stat.FIRE_RATE) * 1.15), "Quick-draw adds 15 % fire rate after the roll");
         h.assertTrue(close(chipped.get(Stat.DAMAGE), rare.get(Stat.DAMAGE)), "Quick-draw leaves damage alone");
         h.succeed();
@@ -136,7 +142,7 @@ public class PartSystemGameTests {
                 part(PartKind.CELL, "energy_cell", "steel", Rarity.NORMAL),
                 part(PartKind.GRIP, "standard_grip", "steel", Rarity.NORMAL),
                 part(PartKind.OPTIC, "iron_sight", "steel", Rarity.NORMAL)), Rarity.S,
-                List.of(id("piercing"), id("piercing"), id("piercing"), id("piercing"), id("piercing"), id("piercing")));
+                List.of(chip("piercing"), chip("piercing"), chip("piercing"), chip("piercing"), chip("piercing"), chip("piercing")));
         // six Piercing chips would reach about 100 % unclamped (validation refuses the doubled chips; the maths must still cap)
         Sheet s = SheetCalculator.compute(spec);
         h.assertTrue(close(s.get(Stat.PIERCING), WeaponsConfig.PIERCING_CAP.get()), "piercing stops at the cap: " + s.get(Stat.PIERCING));
@@ -147,21 +153,28 @@ public class PartSystemGameTests {
 
     @GameTest(template = EMPTY, batch = "parts")
     public void the_spec_survives_its_tag_and_the_sheet_ignores_anything_else_written_there(GameTestHelper h) {
-        WeaponSpec spec = pistol(3, Rarity.EPIC, List.of(id("coolant"), id("stabiliser")));
+        WeaponSpec spec = pistol(3, Rarity.EPIC, List.of(new FittedChip(id("coolant"), Rarity.RARE, 7), chip("stabiliser")));
         CompoundTag tag = spec.toTag();
         tag.putDouble("Damage", 9999); // a forged number: nothing reads it
         tag.putInt("Tier", 99);
         WeaponSpec back = WeaponSpec.fromTag(tag);
         h.assertTrue(back.equals(spec), "the spec round-trips through its tag: " + back);
         h.assertTrue(close(SheetCalculator.compute(back).get(Stat.DAMAGE), SheetCalculator.compute(spec).get(Stat.DAMAGE)), "the forged Damage changes nothing");
-        // a forged tag with a thousand chips is cut at the cap, and validation refuses what is left
+        // a forged tag with a thousand chips is cut at the cap, and validation refuses what is left; a chip's points are clamped
         CompoundTag forged = spec.toTag();
         net.minecraft.nbt.ListTag chips = new net.minecraft.nbt.ListTag();
-        for (int i = 0; i < 1000; i++) chips.add(net.minecraft.nbt.StringTag.valueOf("bsp_weapons:coolant"));
+        for (int i = 0; i < 1000; i++) chips.add(new FittedChip(id("coolant"), Rarity.S, 9999).toTag());
         forged.put("Chips", chips);
         WeaponSpec many = WeaponSpec.fromTag(forged);
         h.assertTrue(many.augments().size() == WeaponSpec.MAX_AUGMENTS, "chips are capped at " + WeaponSpec.MAX_AUGMENTS);
+        h.assertTrue(many.augments().get(0).durability() == FittedChip.MAX_DURABILITY, "a chip's points are clamped at " + FittedChip.MAX_DURABILITY);
         h.assertTrue(!Validation.isValid(many), "a weapon with more chips than slots is refused");
+        // the old string list of chips reads as no chips at all
+        CompoundTag old = spec.toTag();
+        net.minecraft.nbt.ListTag strings = new net.minecraft.nbt.ListTag();
+        strings.add(net.minecraft.nbt.StringTag.valueOf("bsp_weapons:coolant"));
+        old.put("Chips", strings);
+        h.assertTrue(WeaponSpec.fromTag(old).augments().isEmpty(), "a string chip list is ignored");
         // garbage in the tag is a spec that validation refuses, never an exception
         CompoundTag junk = new CompoundTag();
         junk.putString("Pattern", "not a location!!");
@@ -173,7 +186,7 @@ public class PartSystemGameTests {
 
     @GameTest(template = EMPTY, batch = "parts")
     public void validation_refuses_what_the_server_would_never_make(GameTestHelper h) {
-        h.assertTrue(Validation.isValid(pistol(2, Rarity.RARE, List.of(id("coolant")))), "a proper pistol passes: " + Validation.problems(pistol(2, Rarity.RARE, List.of(id("coolant")))));
+        h.assertTrue(Validation.isValid(pistol(2, Rarity.RARE, List.of(chip("coolant")))), "a proper pistol passes: " + Validation.problems(pistol(2, Rarity.RARE, List.of(chip("coolant")))));
         // an empty slot
         WeaponSpec noOptic = new WeaponSpec(id("laser_pistol"), 2, pistol(2, Rarity.NORMAL, List.of()).parts().subList(0, 3), Rarity.NORMAL, List.of());
         h.assertTrue(Validation.problems(noOptic).stream().anyMatch(s -> s.contains("optic slot is empty")), "an empty optic slot is named: " + Validation.problems(noOptic));
@@ -192,9 +205,9 @@ public class PartSystemGameTests {
         h.assertTrue(!Validation.isValid(new WeaponSpec(id("plasma_sword"), 2, List.of(), Rarity.NORMAL, List.of())), "an unknown pattern is refused");
         // the tier, the chip slots and a doubled chip
         h.assertTrue(!Validation.isValid(pistol(6, Rarity.NORMAL, List.of())), "tier 6 is refused");
-        h.assertTrue(!Validation.isValid(pistol(1, Rarity.NORMAL, List.of(id("coolant"), id("stabiliser")))), "two chips on a tier I core (one slot) are refused");
-        h.assertTrue(Validation.isValid(pistol(1, Rarity.S, List.of(id("coolant"), id("stabiliser")))), "an S roll adds a slot, so two chips fit a tier I core");
-        h.assertTrue(!Validation.isValid(pistol(5, Rarity.NORMAL, List.of(id("coolant"), id("coolant")))), "the same chip twice is refused");
+        h.assertTrue(!Validation.isValid(pistol(1, Rarity.NORMAL, List.of(chip("coolant"), chip("stabiliser")))), "two chips on a tier I core (one slot) are refused");
+        h.assertTrue(Validation.isValid(pistol(1, Rarity.S, List.of(chip("coolant"), chip("stabiliser")))), "an S roll adds a slot, so two chips fit a tier I core");
+        h.assertTrue(!Validation.isValid(pistol(5, Rarity.NORMAL, List.of(chip("coolant"), chip("coolant")))), "the same chip twice is refused");
         h.assertTrue(SheetCalculator.augmentSlots(pistol(5, Rarity.S, List.of())) == WeaponsConfig.tierAugmentSlots(5) + 1, "tier V S-tier slots");
         h.succeed();
     }
