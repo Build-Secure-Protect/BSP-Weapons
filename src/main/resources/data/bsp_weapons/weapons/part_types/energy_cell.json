@@ -1,4 +1,5 @@
 {
   "kind": "CELL",
-  "modifiers": {}
+  "modifiers": {},
+  "ammo": "energy"
 }

@@ -1,0 +1,393 @@
+<title>Assembler Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; a row of three block concepts (voxel, turning, working); a row of three screen layouts drawn at 2x with a 320 x 240 fit check; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  h2.section { font-family: var(--pixel); font-weight: 400; font-size: 30px; line-height: 1; margin: 18px auto 10px; color: var(--violet); max-width: 1240px; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h3 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head h3 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .screen { padding: 10px 14px 0; display: grid; gap: 8px; }
+  .screen canvas { width: 100%; height: auto; max-width: 100%; image-rendering: pixelated; border: 1px solid var(--dim); }
+  .fit { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fit canvas { width: 320px; height: 240px; max-width: 100%; }
+  .fit span { font-family: var(--pixel); font-size: 16px; color: var(--muted); max-width: 22ch; }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>THE WEAPON ASSEMBLER</h1>
+  <p>Where a pattern, a Core and parts become a weapon, and a weapon comes apart again. Two picks: the block, drawn as a 16-voxel block in the pixel style with the pistol being built inside it (WORKING shows the parts flying in), and the screen, drawn at the game's pixel size with the bars sheet (D38), a catalyst slot for the roll and a PLAN tab for trying parts you do not own (D19). Each screen is also shown inside a 320 by 240 window, the smallest the game allows.</p>
+</header>
+
+<h2 class="section">THE BLOCK</h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>BENCH</h3><small>a jig on a workbench</small></div>
+    <div class="stage" data-block="a"><div class="grid"></div></div>
+    <div class="controls" data-for="a"></div>
+    <p class="blurb"><b>A heavy gunmetal bench</b> with a gold two-rail jig on top: the weapon under assembly sits in the jig in the open, drawn full size over the block, and a teal hologram of the missing parts hangs where they will go. A screen and keypad on the front, tool drawers on the sides. The most Minecraft of the three: a workstation you walk up to. Clamps and a vice, Halo and Mass Effect armouries.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>GANTRY</h3><small>an open frame, the weapon hung inside</small></div>
+    <div class="stage" data-block="b"><div class="grid"></div></div>
+    <div class="controls" data-for="b"></div>
+    <p class="blurb"><b>Four posts and a top ring</b> with gold clamps, open on every side, the weapon floating at the centre and slowly turning; teal strips run up the posts and the floor plate glows under the work. You see the whole weapon from any side as it builds, and a row of these reads as a factory line. Star Wars hangar, Destiny vault.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>POD</h3><small>a dome over the work</small></div>
+    <div class="stage" data-block="c"><div class="grid"></div></div>
+    <div class="controls" data-for="c"></div>
+    <p class="blurb"><b>A machine base with vents and a gold seam</b>, and a teal glass dome over the top half with the weapon inside, lit from below; a lamp on the front turns from teal to gold while it works. The most sci-fi silhouette and the one that hides the mess; the dome's glass is the pixel-shaded tinted glass of the pack. Star Trek replicator, Cyberpunk ripperdoc.</p>
+  </section>
+</div>
+
+<h2 class="section">THE SCREEN</h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>WORKBENCH</h3><small>slots left, weapon centre, sheet right</small></div>
+    <div class="screen">
+      <canvas data-screen="a" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="a" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits with 32 px to spare</span></div>
+    </div>
+    <div class="controls" data-tabs="a"></div>
+    <p class="blurb"><b>Reads like a crafting table.</b> Pattern and Core slots top left, the pattern's part slots under them in the order the pattern lists them (empty slots are drawn as faint outlines named for the kind), the weapon turning in the middle over its output slot, the bars sheet on the right with the roll odds under it, and the catalyst slot beside ASSEMBLE. PLAN swaps the slots for pick lists and greys the output.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>RAIL</h3><small>slots laid out as the weapon is</small></div>
+    <div class="screen">
+      <canvas data-screen="b" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="b" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits</span></div>
+    </div>
+    <div class="controls" data-tabs="b"></div>
+    <p class="blurb"><b>The slots sit where the parts go.</b> A rail runs across the middle with the Core slot at its heart; the Optic slot above the rail, the Barrel slot ahead, the Cell and Grip slots below, exactly the Spine Rail layout, with the weapon drawn between them. The sheet is a band of bars along the foot and the pattern slot is the rail's end cap. Teaches the gun's anatomy every time you build one.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>SHEET FIRST</h3><small>the numbers on top, slots in a row</small></div>
+    <div class="screen">
+      <canvas data-screen="c" width="512" height="400"></canvas>
+      <div class="fit"><canvas data-fit="c" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window: the whole screen fits</span></div>
+    </div>
+    <div class="controls" data-tabs="c"></div>
+    <p class="blurb"><b>For the min-maxer.</b> The six bars take the top half with the final numbers large, the before-and-after of the last change shown as a ghost bar; the pattern, Core, parts, catalyst and output run in one row underneath; the weapon is a small turning preview in the corner. PLAN is a side drawer of pick lists, so the bars stay in view while you try parts.</p>
+  </section>
+</div>
+
+<section class="notes">
+  <h2 class="section" style="margin-left:0">WHAT TO PICK</h2>
+  <ol>
+    <li><b>The block</b> (A, B or C), or a mix such as "A's bench with C's dome".</li>
+    <li><b>The screen layout</b> (A, B or C), and whether the weapon preview in it should turn.</li>
+    <li><b>Taking apart.</b> As drawn, TAKE APART returns every part and the Core to the slots and loses the roll (D20); or: taking apart costs something, for example the catalyst again.</li>
+    <li><b>The catalyst slot.</b> As drawn, one slot beside ASSEMBLE, empty means Normal (D30); or: no slot, the catalyst is placed on the pattern.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, STONE = 0x4A4F58, LIGHT = 0x5A6270, GLASS = 'glass', MAT = 0x7D97B0, GLOW = 0x19D3B0, RED = 0xFF6B5C;
+
+  // ---- voxels (as parts_system_refined.html) -----------------------------------------------------------------------------
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); this.home = new T.Vector3(); this.apart = new T.Vector3(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.at = function (home, apart) { this.home.set(home[0], home[1], home[2]); this.apart.set(apart[0], apart[1], apart[2]); this.group.position.copy(this.home); return this; };
+  VoxelPart.prototype.set = function (e) { this.group.position.copy(this.home).addScaledVector(this.apart, e); };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === GLASS) glass.push(k); else if (r === 'glow' || r === 'teal') glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material, shadeFn) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) {
+        var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m);
+        var c = new T.Color(shadeFn(self.cubes[k])); var h = hash(p[0], p[1], p[2]); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); im.setColorAt(i, c);
+      });
+      im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
+      self.group.add(im); return im;
+    }
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }), function (r) { return r; });
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }), function (r) { return r === 'glow' ? GLOW : TEAL; });
+    this.glassMesh = mesh(glass, new T.MeshLambertMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.35, depthWrite: false }), function () { return 0x5AE0D0; });
+    return this;
+  };
+
+  /** The Spine Rail pistol's parts (the refined pick), to sit inside each block. */
+  function pistol() {
+    var frame = new VoxelPart('Frame').at([0, 0, 0], [0, 0, 0]);
+    frame.fill(-2, 0, -10, 1, 3, 12, GUNMETAL).cut(-1, 3, -10, 0, 3, 12);
+    for (var z = -8; z <= 12; z += 4) frame.cut(-2, 3, z, 1, 3, z);
+    frame.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD).fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD);
+    frame.fill(-2, -2, -4, 1, -1, -1, DARK).cut(-1, -2, -3, 0, -1, -2).fill(-1, -2, -3, 0, -1, -3, GOLD);
+    var core = new VoxelPart('Core').at([0, 0, 0], [0, 10, 0]);
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD).cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow').fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL).cut(-1, 7, -2, 0, 7, -1).fill(-1, 7, -2, 0, 7, -1, 'glow');
+    var barrel = new VoxelPart('Barrel').at([0, 0, 0], [0, 0, 14]);
+    barrel.fill(-2, 1, 13, 1, 4, 24, MAT).fill(-1, 2, 25, 0, 3, 25, 'teal').fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23).fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);
+    barrel.fill(-3, 1, 16, -3, 4, 16, MAT).fill(-3, 1, 18, -3, 4, 18, MAT).fill(2, 1, 16, 2, 4, 16, MAT).fill(2, 1, 18, 2, 4, 18, MAT).fill(-1, 5, 15, 0, 5, 21, DARK);
+    var cell = new VoxelPart('Cell').at([0, 0, 0], [0, -11, 0]);
+    cell.fill(-2, -6, -8, 1, -1, -3, MAT).fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal').fill(-2, -6, -8, 1, -6, -3, DARK).fill(-2, -1, -3, 1, -1, -3, GOLD);
+    var grip = new VoxelPart('Grip').at([0, 0, 0], [0, -8, -7]);
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, MAT); }
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7).fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK).fill(-2, -10, -14, 1, -10, -10, DARK);
+    var optic = new VoxelPart('Optic').at([0, 0, 0], [0, 10, 0]);
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK).fill(-1, 8, -10, 0, 10, -4, MAT).fill(-1, 8, -3, 0, 9, -3, 'teal').fill(-1, 11, -9, 0, 11, -9, GOLD).fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD);
+    var parts = [frame, core, barrel, cell, grip, optic], root = new T.Group();
+    parts.forEach(function (p) { p.build(); root.add(p.group); });
+    root.position.set(0.5, 0, -6.5);
+    return { root: root, parts: parts };
+  }
+
+  // ---- the three blocks, each a 16 x 16 x 16 voxel block with the pistol inside ------------------------------------------------
+  function floor() { var f = new VoxelPart('floor'); f.fill(-16, -1, -16, 31, -1, 31, STONE); return f.build(); }
+  function blockA() {
+    var b = new VoxelPart('bench');
+    b.fill(0, 0, 0, 15, 9, 15, GUNMETAL).fill(0, 9, 0, 15, 9, 15, LIGHT);               // the body and its top plate
+    b.fill(0, 0, 0, 15, 0, 15, DARK).fill(1, 3, -0, 14, 6, 0, DARK).fill(3, 4, -1, 8, 6, -1, 'teal').fill(10, 4, -1, 13, 4, -1, GOLD).fill(10, 6, -1, 13, 6, -1, GOLD); // front panel: screen and keys
+    b.fill(-1, 2, 3, -1, 7, 12, DARK).fill(-1, 4, 4, -1, 4, 11, GOLD).fill(16, 2, 3, 16, 7, 12, DARK).fill(16, 4, 4, 16, 4, 11, GOLD); // side drawers with gold handles
+    b.fill(4, 10, 1, 4, 11, 14, GOLD).fill(11, 10, 1, 11, 11, 14, GOLD);                 // the two-rail jig
+    b.fill(4, 12, 2, 4, 12, 2, GOLD).fill(11, 12, 2, 11, 12, 2, GOLD).fill(4, 12, 13, 4, 12, 13, GOLD).fill(11, 12, 13, 11, 12, 13, GOLD); // clamp posts
+    var g = new T.Group(); g.add(b.build().group);
+    var p = pistol(); var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(8, 12.2, 8); gun.add(p.root); g.add(gun);
+    var lamp = new T.PointLight(TEAL, 0.6, 14); lamp.position.set(8, 14, 8); g.add(lamp);
+    return { group: g, pistol: p, lamp: lamp, turnGun: false };
+  }
+  function blockB() {
+    var b = new VoxelPart('gantry');
+    b.fill(0, 0, 0, 15, 0, 15, DARK).fill(2, 0, 2, 13, 0, 13, 'teal').fill(3, 0, 3, 12, 0, 12, DARK); // floor plate with a lit ring
+    [[0, 0], [14, 0], [0, 14], [14, 14]].forEach(function (c) {
+      b.fill(c[0], 1, c[1], c[0] + 1, 13, c[1] + 1, GUNMETAL);
+      b.fill(c[0] === 0 ? -1 : 16, 3, c[1] + 0, c[0] === 0 ? -1 : 16, 11, c[1] + 1, 'teal');           // teal strips on the outer faces
+    });
+    b.fill(0, 14, 0, 15, 15, 15, GUNMETAL).cut(2, 14, 2, 13, 15, 13);                     // the top ring
+    b.fill(0, 14, 7, 1, 15, 8, GOLD).fill(14, 14, 7, 15, 15, 8, GOLD).fill(7, 14, 0, 8, 15, 1, GOLD).fill(7, 14, 14, 8, 15, 15, GOLD); // clamps
+    b.fill(7, 13, 7, 8, 13, 8, GOLD);                                                   // the hanger
+    var g = new T.Group(); g.add(b.build().group);
+    var p = pistol(); var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(8, 8.5, 8); gun.add(p.root); g.add(gun);
+    var lamp = new T.PointLight(TEAL, 0.6, 14); lamp.position.set(8, 3, 8); g.add(lamp);
+    return { group: g, pistol: p, lamp: lamp, gun: gun, turnGun: true };
+  }
+  function blockC() {
+    var b = new VoxelPart('pod');
+    b.fill(0, 0, 0, 15, 7, 15, GUNMETAL).fill(0, 0, 0, 15, 0, 15, DARK).fill(0, 7, 0, 15, 7, 15, GOLD); // base and the gold seam
+    for (var z = 2; z <= 13; z += 3) b.fill(-1, 2, z, -1, 5, z, DARK).fill(16, 2, z, 16, 5, z, DARK);      // vents on the sides
+    b.fill(6, 3, -1, 9, 4, -1, 'teal');                                                                 // the front lamp
+    b.fill(1, 8, 1, 14, 15, 14, GLASS).cut(2, 8, 2, 13, 14, 13);                                          // the dome: a hollow glass shell
+    b.fill(1, 15, 1, 14, 15, 14, GLASS).cut(3, 15, 3, 12, 15, 12).fill(3, 15, 3, 12, 15, 12, GLASS);
+    b.fill(1, 8, 1, 1, 8, 14, GOLD).fill(14, 8, 1, 14, 8, 14, GOLD).fill(1, 8, 1, 14, 8, 1, GOLD).fill(1, 8, 14, 14, 8, 14, GOLD); // the dome's foot ring
+    b.fill(4, 8, 4, 11, 8, 11, 'teal');                                                                 // the lit floor under the work
+    var g = new T.Group(); g.add(b.build().group);
+    var p = pistol(); var gun = new T.Group(); gun.scale.setScalar(0.3); gun.position.set(8, 11.5, 8); gun.add(p.root); g.add(gun);
+    var lamp = new T.PointLight(TEAL, 0.8, 14); lamp.position.set(8, 10, 8); g.add(lamp);
+    return { group: g, pistol: p, lamp: lamp, gun: gun, turnGun: true };
+  }
+
+  var stages = [];
+  function makeStage(el, build) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var camera = new T.PerspectiveCamera(30, 4 / 3, 0.1, 500);
+    camera.position.set(34, 26, 40); camera.lookAt(8, 7, 8);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var pivot = new T.Group(); pivot.position.set(8, 0, 8); scene.add(pivot);
+    var block = build(); block.group.position.set(-8, 0, -8); pivot.add(block.group);
+    var f = floor(); f.group.position.set(-8, 0, -8); pivot.add(f.group);
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pivot: pivot, block: block, yaw: 0.6, dragging: false, lastX: 0, working: !reduced };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  var builders = { a: blockA, b: blockB, c: blockC };
+  ['a', 'b', 'c'].forEach(function (key) {
+    var st = makeStage(document.querySelector('[data-block="' + key + '"]'), builders[key]);
+    group(document.querySelector('.controls[data-for="' + key + '"]'), 'STATE', ['WORKING', 'IDLE'], reduced ? 1 : 0, function (i) { st.working = i === 0; });
+  });
+
+  // ---- the screens, drawn at the game's pixel size (256 x 200) then shown at 2x and inside 320 x 240 ----------------------------------
+  var C = { panel: '#10151C', slot: '#0C0E12', dim: '#2A2F3A', muted: '#9AA3B5', text: '#E6EBF2', teal: '#19D3B0', violet: '#B58CFF', gold: '#FFD23A', red: '#FF6B5C', board: '#0B0F14' };
+  var STATS = [['DAMAGE', 6.4, 20, 4.0], ['PIERCING', 8, 75, 0], ['RANGE', 36, 160, 24], ['FIRE RATE', 3.0, 12, 2.4], ['HEAT CAP', 70, 200, 50], ['DURABILITY', 480, 2000, 300]];
+  var tabs = { a: 'BUILD', b: 'BUILD', c: 'BUILD' };
+
+  function px(ctx) { ctx.imageSmoothingEnabled = false; ctx.font = '16px VT323, monospace'; ctx.textBaseline = 'top'; }
+  function text(ctx, s, x, y, colour, size) { ctx.fillStyle = colour || C.text; ctx.font = (size || 16) + 'px VT323, monospace'; ctx.fillText(s, x, y); }
+  function rect(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); }
+  function frame(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x, y, 1, h); ctx.fillRect(x + w - 1, y, 1, h); }
+  function slot(ctx, x, y, label, filled, colour) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, filled ? C.dim : '#1A1F27');
+    if (filled) { rect(ctx, x + 4, y + 4, 10, 10, colour || '#7D97B0'); rect(ctx, x + 4, y + 11, 10, 3, 'rgba(0,0,0,0.3)'); }
+    if (label) text(ctx, label, x, y + 19, filled ? C.muted : '#3A4150', 10);
+  }
+  function button(ctx, x, y, w, label, colour) { rect(ctx, x, y, w, 14, C.slot); frame(ctx, x, y, w, 14, colour || C.teal); text(ctx, label, x + 4, y + 1, colour || C.teal, 14); }
+  /** The pistol from the side in pixels, for the preview boxes. */
+  function pistolSide(ctx, x, y, s) {
+    s = s || 1;
+    function r(a, b, w, h, c) { rect(ctx, x + a * s, y + b * s, w * s, h * s, c); }
+    r(4, 10, 30, 4, '#2E343D'); r(4, 10, 30, 1, '#4A5363'); r(5, 11, 28, 1, '#D9B23A');   // rail
+    r(14, 6, 6, 4, '#19D3B0'); r(13, 6, 1, 4, '#D9B23A'); r(20, 6, 1, 4, '#D9B23A');       // core in its cradle
+    r(30, 9, 12, 4, '#7D97B0'); r(41, 10, 2, 2, '#19D3B0'); r(29, 8, 1, 6, '#D9B23A');     // barrel, bore, clamp
+    r(14, 14, 7, 6, '#8C949F'); r(14, 16, 7, 2, '#19D3B0'); r(14, 14, 7, 1, '#D9B23A');    // cell
+    r(6, 14, 5, 3, '#4A5BB5'); r(5, 17, 5, 3, '#4A5BB5'); r(4, 20, 5, 3, '#4A5BB5'); r(10, 14, 1, 1, '#D9B23A'); // grip and trigger
+    r(7, 2, 9, 4, '#7D97B0'); r(15, 3, 1, 2, '#19D3B0'); r(9, 6, 3, 4, '#14181E');          // optic on its mount
+  }
+  function bars(ctx, x, y, w, rowH, big) {
+    STATS.forEach(function (s, i) {
+      var yy = y + i * rowH;
+      text(ctx, s[0], x, yy - 1, C.muted, big ? 14 : 11);
+      var bx = x + (big ? 64 : 52), bw = w - (big ? 64 : 52) - (big ? 34 : 30);
+      rect(ctx, bx, yy + 2, bw, big ? 7 : 5, C.slot); frame(ctx, bx, yy + 2, bw, big ? 7 : 5, C.dim);
+      rect(ctx, bx + 1, yy + 3, Math.round((bw - 2) * s[3] / s[2]), big ? 5 : 3, C.teal);
+      rect(ctx, bx + 1 + Math.round((bw - 2) * s[3] / s[2]), yy + 3, Math.round((bw - 2) * (s[1] - s[3]) / s[2]), big ? 5 : 3, C.gold);
+      text(ctx, String(s[1]) + (s[0] === 'PIERCING' ? '%' : ''), bx + bw + 4, yy - 1, C.text, big ? 14 : 11);
+    });
+  }
+  function title(ctx, s) { text(ctx, s, 6, 4, C.gold, 18); rect(ctx, 6, 20, 244, 1, C.dim); }
+  function tabRow(ctx, x, y, current) {
+    ['BUILD', 'PLAN'].forEach(function (t, i) { var on = t === current; rect(ctx, x + i * 40, y, 38, 12, on ? C.slot : 'transparent'); frame(ctx, x + i * 40, y, 38, 12, on ? C.teal : C.dim); text(ctx, t, x + i * 40 + 6, y, on ? C.teal : C.muted, 13); });
+  }
+  function planLists(ctx, x, y, w) {
+    text(ctx, 'PATTERN', x, y, C.muted, 12); ['Laser Pistol', 'Laser Rifle', 'Rail Gun'].forEach(function (p, i) { var on = i === 0; rect(ctx, x, y + 12 + i * 12, w, 11, on ? C.slot : 'transparent'); text(ctx, p, x + 3, y + 12 + i * 12, on ? C.teal : C.muted, 12); });
+    text(ctx, 'BARREL', x, y + 52, C.muted, 12); ['Focused', 'Scatter', 'Thermal', 'Pulse'].forEach(function (p, i) { var on = i === 0; rect(ctx, x, y + 64 + i * 12, w, 11, on ? C.slot : 'transparent'); text(ctx, p, x + 3, y + 64 + i * 12, on ? C.teal : C.muted, 12); });
+    text(ctx, 'MATERIAL', x, y + 116, C.muted, 12);
+    [['#7D97B0', 'Tetrium'], ['#4A5BB5', 'Magnatite'], ['#8C949F', 'Steel'], ['#E8D77A', 'Illyrium']].forEach(function (m, i) { rect(ctx, x + i * 22, y + 128, 18, 10, m[0]); if (i === 0) frame(ctx, x + i * 22, y + 128, 18, 10, C.text); });
+    text(ctx, 'nothing is spent in PLAN', x, y + 142, '#3A4150', 12);
+  }
+
+  function screenA(ctx, tab) {
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ASSEMBLER'); tabRow(ctx, 170, 4, tab);
+    if (tab === 'BUILD') {
+      slot(ctx, 8, 28, 'PATTERN', true, '#D9B23A'); slot(ctx, 40, 28, 'CORE II', true, '#19D3B0');
+      ['BARREL', 'CELL', 'GRIP', 'OPTIC'].forEach(function (k, i) { slot(ctx, 8, 62 + i * 30, k, i < 3, ['#7D97B0', '#8C949F', '#4A5BB5', null][i]); });
+      rect(ctx, 64, 28, 96, 84, C.slot); frame(ctx, 64, 28, 96, 84, C.dim); pistolSide(ctx, 86, 54, 1.2);
+      text(ctx, 'Laser Pistol', 68, 31, C.text, 13); text(ctx, 'optic slot empty', 68, 100, C.red, 12);
+      slot(ctx, 103, 118, 'WEAPON', false); slot(ctx, 136, 118, 'ROLL', true, '#2A4AC8');
+      button(ctx, 64, 148, 64, 'ASSEMBLE', C.teal); button(ctx, 64, 166, 96, 'TAKE APART', C.muted);
+      bars(ctx, 168, 30, 84, 14, false);
+      text(ctx, 'ROLL: lapis', 168, 118, C.muted, 12); text(ctx, '70 / 25 / 5 / 0', 168, 130, C.violet, 12);
+      text(ctx, 'teal: parts  gold: core, roll', 168, 180, '#3A4150', 11);
+    } else {
+      planLists(ctx, 8, 28, 56); rect(ctx, 72, 28, 88, 84, C.slot); frame(ctx, 72, 28, 88, 84, C.dim); pistolSide(ctx, 90, 54, 1.2);
+      text(ctx, 'Laser Pistol (plan)', 76, 31, C.muted, 13);
+      bars(ctx, 168, 30, 84, 14, false); text(ctx, 'planned: Core II, Rare', 168, 118, C.muted, 12); button(ctx, 72, 148, 88, 'BACK TO BUILD', C.muted);
+    }
+    // the player inventory, as every container screen shows it
+    for (var r = 0; r < 1; r++) for (var c = 0; c < 9; c++) { rect(ctx, 10 + c * 26, 185, 18, 12, C.slot); frame(ctx, 10 + c * 26, 185, 18, 12, '#1A1F27'); }
+    text(ctx, 'inventory below (cut here)', 8, 170, '#3A4150', 11);
+  }
+  function screenB(ctx, tab) {
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ASSEMBLER'); tabRow(ctx, 170, 4, tab);
+    if (tab === 'BUILD') {
+      rect(ctx, 24, 86, 208, 4, '#2E343D'); rect(ctx, 24, 86, 208, 1, '#4A5363'); rect(ctx, 26, 88, 204, 1, '#D9B23A'); // the rail
+      slot(ctx, 8, 79, 'PATTERN', true, '#D9B23A');                       // the rail's end cap
+      slot(ctx, 119, 79, 'CORE II', true, '#19D3B0');                     // at the heart
+      slot(ctx, 92, 50, 'OPTIC', false); slot(ctx, 160, 79, 'BARREL', true, '#7D97B0');
+      slot(ctx, 119, 108, 'CELL', true, '#8C949F'); slot(ctx, 84, 108, 'GRIP', true, '#4A5BB5');
+      pistolSide(ctx, 150, 40, 1.0); text(ctx, 'Laser Pistol', 190, 28, C.text, 13); text(ctx, 'optic slot empty', 190, 40, C.red, 12);
+      rect(ctx, 24, 91, 208, 1, C.dim);
+      slot(ctx, 218, 108, 'WEAPON', false); slot(ctx, 190, 108, 'ROLL', true, '#2A4AC8');
+      button(ctx, 8, 108, 60, 'ASSEMBLE', C.teal); button(ctx, 8, 124, 72, 'TAKE APART', C.muted);
+      bars(ctx, 8, 138, 240, 10, false);
+    } else {
+      planLists(ctx, 8, 28, 60); rect(ctx, 80, 28, 168, 60, C.slot); frame(ctx, 80, 28, 168, 60, C.dim); pistolSide(ctx, 130, 42, 1.4); text(ctx, 'plan: Laser Pistol, Core II', 84, 31, C.muted, 12);
+      bars(ctx, 80, 96, 168, 10, false); button(ctx, 80, 160, 80, 'BACK TO BUILD', C.muted);
+    }
+  }
+  function screenC(ctx, tab) {
+    rect(ctx, 0, 0, 256, 200, C.panel); frame(ctx, 0, 0, 256, 200, C.dim); title(ctx, 'WEAPON ASSEMBLER'); tabRow(ctx, 170, 4, tab);
+    bars(ctx, 8, 26, 176, 16, true);
+    STATS.forEach(function (s, i) { rect(ctx, 72 + Math.round((176 - 64 - 34 - 2) * s[3] / s[2]) + 1, 26 + i * 16 + 10, 6, 1, C.violet); }); // the ghost mark of the last change
+    rect(ctx, 192, 26, 56, 56, C.slot); frame(ctx, 192, 26, 56, 56, C.dim); pistolSide(ctx, 196, 42, 1.0); text(ctx, 'Laser Pistol', 192, 84, C.text, 12); text(ctx, 'Core II  Rare?', 192, 96, C.violet, 12);
+    rect(ctx, 8, 124, 240, 1, C.dim);
+    slot(ctx, 8, 130, 'PATTERN', true, '#D9B23A'); slot(ctx, 40, 130, 'CORE', true, '#19D3B0');
+    ['BARREL', 'CELL', 'GRIP', 'OPTIC'].forEach(function (k, i) { slot(ctx, 72 + i * 30, 130, k, i < 3, ['#7D97B0', '#8C949F', '#4A5BB5', null][i]); });
+    slot(ctx, 196, 130, 'ROLL', true, '#2A4AC8'); slot(ctx, 230, 130, 'WEAPON', false);
+    button(ctx, 8, 164, 64, 'ASSEMBLE', C.teal); button(ctx, 80, 164, 80, 'TAKE APART', C.muted); text(ctx, 'roll: lapis  70/25/5/0', 170, 165, C.muted, 12);
+    if (tab === 'PLAN') { rect(ctx, 184, 22, 72, 178, C.board); frame(ctx, 184, 22, 72, 178, C.violet); planLists(ctx, 188, 26, 64); }
+  }
+  var screens = { a: screenA, b: screenB, c: screenC };
+  function drawScreens(key) {
+    var big = document.querySelector('[data-screen="' + key + '"]'), fit = document.querySelector('[data-fit="' + key + '"]');
+    var ctx = big.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 256, 200); screens[key](ctx, tabs[key]);
+    var f = fit.getContext('2d'); px(f); f.setTransform(1, 0, 0, 1, 0, 0); rect(f, 0, 0, 320, 240, '#07090C'); f.save(); f.translate(32, 20); screens[key](f, tabs[key]); f.restore();
+    frame(f, 0, 0, 320, 240, C.violet); text(f, '320 x 240', 262, 226, C.violet, 12);
+  }
+  ['a', 'b', 'c'].forEach(function (key) {
+    drawScreens(key);
+    group(document.querySelector('.controls[data-tabs="' + key + '"]'), 'TAB', ['BUILD', 'PLAN'], 0, function (i) { tabs[key] = ['BUILD', 'PLAN'][i]; drawScreens(key); });
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ['a', 'b', 'c'].forEach(drawScreens); });
+
+  // ---- the loop ----------------------------------------------------------------------------------------------------------------------
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  function cycleValue(time) { var p = time % 6; if (p < 1.5) return 1; if (p < 2.5) return 1 - smooth(p - 1.5); if (p < 4.5) return 0; if (p < 5.5) return smooth(p - 4.5); return 1; }
+  var last = performance.now() / 1000;
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    stages.forEach(function (st) {
+      var e = st.working ? cycleValue(now) : 0;
+      st.block.pistol.parts.forEach(function (p) { p.set(e); });
+      if (st.block.turnGun && st.block.gun && !reduced) st.block.gun.rotation.y = now * 0.6;
+      st.block.lamp.intensity = st.working ? 0.6 + 0.4 * Math.abs(Math.sin(now * 2.2)) : 0.3;
+      if (!st.dragging && !reduced) st.yaw += dt * 0.25;
+      st.pivot.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

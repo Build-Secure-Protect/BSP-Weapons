@@ -1,0 +1,292 @@
+<title>Pattern and Catalyst Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; two rows (patterns, catalysts), each a turntable of three voxel concepts beside an icon strip at 16 and 32 pixels; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .two { max-width: 1240px; margin: 0 auto 16px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 2 / 1; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label span { color: var(--gold); margin-right: 6px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  button.sw { width: 26px; height: 22px; padding: 0; }
+  button.sw[aria-pressed="true"] { outline: 2px solid var(--text); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); display: grid; gap: 6px; }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .strip .set { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .notes h2 { font-family: var(--pixel); font-weight: 400; font-size: 26px; margin: 0; color: var(--violet); }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>PATTERNS AND CATALYSTS</h1>
+  <p>The two items the assembler needs besides parts: the weapon pattern that names a class and its slots (D17), and the catalyst that sets the roll's odds (D21, D30). Three looks for each, every one a small voxel model so its icon is the model (D48), shown turning and as 16 and 32 pixel icons in a hotbar slot. Patterns are found in loot as well as made, so they should read as something worth finding.</p>
+</header>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>PATTERN PLATES</h2><small>the laser pistol's; other classes change the glyph</small></div>
+    <div class="stage" data-stage="patterns"><div class="grid"></div></div>
+    <div class="blurb">
+      <div><b>A Blueprint Card.</b> A thin dark plate with the weapon drawn on it in raised teal lines, a gold tab at one corner and a gold class mark. Reads as a schematic.</div>
+      <div><b>B Data Chip.</b> A gunmetal cartridge with gold contacts along one end, a notch, and a teal window showing the class glyph. Reads as something you plug into the console.</div>
+      <div><b>C Etched Plate.</b> A bright metal plate with the weapon's silhouette cut into it to the dark layer beneath and a gold rivet at each corner. Reads as a stamped template, Tinkers'-adjacent.</div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>AS ICONS</h3>
+      <div class="strip" data-strip="patterns"></div>
+      <p class="blurb" style="padding:0">In loot a pattern should be spotted in a chest at a glance; the gold on each is there for that.</p>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>CATALYSTS</h2><small>lapis plus one ingredient; the colour is the ingredient's</small></div>
+    <div class="stage" data-stage="catalysts"><div class="grid"></div></div>
+    <div class="controls" data-ingredients><span class="k">INGREDIENT</span></div>
+    <div class="blurb">
+      <div><b>A Crystal.</b> A lapis crystal cluster, a tall spire and two shards, with the ingredient glowing at its heart. Reads as a gem; sits well in a slot.</div>
+      <div><b>B Vial.</b> A small glass vial with a gold cap, lapis liquid inside and ingredient-coloured motes rising through it. Reads as a reagent; the liquid level could show as it is used.</div>
+      <div><b>C Bound Shards.</b> A lapis shard and an ingredient shard crossed and bound with a gold band. Reads as a charm; the two colours tell the ladder step apart at once.</div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>AS ICONS, THE WHOLE LADDER</h3>
+      <div class="strip" data-strip="catalysts"></div>
+      <p class="blurb" style="padding:0">Redstone, Magnatite, Illyrium, Allthemodium (D30), each at 16 pixels for the picked look. The odds tooltip under each item reads, for example, "Lapis Catalyst · 70 / 25 / 5 / 0".</p>
+    </div>
+  </section>
+</div>
+
+<section class="notes">
+  <h2>WHAT TO PICK</h2>
+  <ol>
+    <li><b>The pattern plate</b> (A, B or C), or a mix such as "C's plate with A's gold tab".</li>
+    <li><b>The catalyst</b> (A, B or C).</li>
+    <li><b>Naming.</b> Default: "Laser Pistol Pattern" and "Lapis Catalyst", "Magnatite Catalyst", "Illyrium Catalyst", "Allthemodium Catalyst". Or: names of your own.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, LIGHT = 0x8C949F, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, LAPIS = 0x2A4AC8, LAPIS_DARK = 0x1C3290;
+  var INGREDIENTS = [{ name: 'Redstone', color: 0xE03A3A }, { name: 'Magnatite', color: 0x6E7CFF }, { name: 'Illyrium', color: 0xE8D77A }, { name: 'Allthemodium', color: 0xF2C94A }];
+  var ingredient = 0;
+
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  /** roles: a hex colour, 'glow' (unlit, the ingredient colour), 'teal' (unlit), 'glass' (translucent), 'ing' (lit, the ingredient colour). */
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === 'glass') glass.push(k); else if (r === 'glow' || r === 'teal') glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); });
+      im.instanceMatrix.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.lit = lit; this.glow = glow; this.glassKeys = glass;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }));
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    this.glassMesh = mesh(glass, new T.MeshBasicMaterial({ color: 0x8AE8DC, transparent: true, opacity: 0.4, depthWrite: false }));
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this, ing = INGREDIENTS[ingredient].color;
+    function colour(role) { if (role === 'glow' || role === 'ing') return ing; if (role === 'teal') return TEAL; return role; }
+    [[this.mesh, this.lit], [this.glowMesh, this.glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(colour(self.cubes[k])); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); pair[0].setColorAt(i, c); });
+      pair[0].instanceColor.needsUpdate = true;
+    });
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+
+  /** A tiny pistol silhouette, 9 wide by 5 tall, as (x, y) pixels for the plates. */
+  var PISTOL_PX = [[1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [3, 3], [4, 3], [3, 4], [2, 1], [3, 1], [4, 1], [6, 1]];
+
+  // ---- the pattern plates --------------------------------------------------------------------------------------------------------
+  function plateA() {
+    var p = new VoxelPart('A').fill(0, 0, 0, 11, 0, 8, DARK).fill(1, 0, 1, 10, 0, 7, 0x1C2230);
+    PISTOL_PX.forEach(function (q) { p.fill(1 + q[0], 1, 2 + q[1], 1 + q[0], 1, 2 + q[1], 'teal'); });
+    p.fill(10, 1, 0, 11, 1, 1, GOLD).fill(0, 1, 7, 1, 1, 8, GOLD).fill(1, 1, 1, 1, 1, 1, GOLD);
+    return p;
+  }
+  function plateB() {
+    var p = new VoxelPart('B').fill(0, 0, 0, 7, 1, 9, GUNMETAL).cut(0, 0, 0, 0, 1, 0).fill(1, 1, 1, 6, 1, 8, 0x3A4250);
+    for (var x = 1; x <= 6; x += 2) p.fill(x, 0, 9, x, 1, 9, GOLD).fill(x, 1, 8, x, 1, 8, GOLD);
+    p.fill(2, 2, 2, 5, 2, 5, DARK).fill(3, 2, 3, 4, 2, 4, 'teal').fill(2, 1, 6, 5, 1, 6, GOLD);
+    return p;
+  }
+  function plateC() {
+    var p = new VoxelPart('C').fill(0, 0, 0, 11, 0, 7, DARK).fill(0, 1, 0, 11, 1, 7, LIGHT);
+    PISTOL_PX.forEach(function (q) { p.cut(1 + q[0], 1, 1 + q[1], 1 + q[0], 1, 1 + q[1]); });
+    p.fill(0, 1, 0, 0, 1, 0, GOLD).fill(11, 1, 0, 11, 1, 0, GOLD).fill(0, 1, 7, 0, 1, 7, GOLD).fill(11, 1, 7, 11, 1, 7, GOLD);
+    return p;
+  }
+  // ---- the catalysts --------------------------------------------------------------------------------------------------------------
+  function catalystA() {
+    var c = new VoxelPart('A');
+    c.fill(2, 0, 2, 5, 1, 5, LAPIS_DARK).fill(3, 2, 3, 4, 6, 4, LAPIS).fill(3, 7, 3, 3, 7, 4, LAPIS).fill(3, 8, 3, 3, 8, 3, LAPIS);   // the spire
+    c.fill(3, 3, 3, 4, 5, 4, 'glow');                                                                                      // the ingredient heart
+    c.fill(0, 0, 3, 1, 2, 4, LAPIS).fill(1, 3, 4, 1, 3, 4, LAPIS).fill(6, 0, 2, 7, 2, 3, LAPIS).fill(6, 3, 2, 6, 4, 2, LAPIS);   // two shards
+    c.fill(1, 1, 4, 1, 1, 4, 'glow').fill(6, 2, 2, 6, 2, 2, 'glow');
+    return c;
+  }
+  function catalystB() {
+    var c = new VoxelPart('B');
+    c.fill(1, 0, 1, 4, 6, 4, 'glass').fill(1, 0, 1, 4, 0, 4, LAPIS_DARK).fill(2, 1, 2, 3, 4, 3, LAPIS);                         // the vial and its liquid
+    c.fill(2, 2, 2, 2, 2, 2, 'glow').fill(3, 3, 3, 3, 3, 3, 'glow').fill(2, 4, 3, 2, 4, 3, 'glow');                              // rising motes
+    c.fill(2, 7, 2, 3, 7, 3, GOLD).fill(2, 8, 2, 3, 8, 3, GOLD).fill(1, 7, 1, 4, 7, 4, GOLD).cut(2, 7, 2, 3, 7, 3).fill(2, 7, 2, 3, 7, 3, DARK); // the cap
+    return c;
+  }
+  function catalystC() {
+    var c = new VoxelPart('C');
+    for (var i = 0; i < 7; i++) c.fill(i, i, 2, i, i, 3, LAPIS);                                        // the lapis shard, rising to the right
+    for (var j = 0; j < 7; j++) c.fill(6 - j, j, 4, 6 - j, j, 5, 'ing');                               // the ingredient shard, crossing it
+    c.fill(2, 2, 1, 4, 4, 6, GOLD).cut(3, 3, 2, 3, 3, 5);                                                // the gold band
+    c.fill(3, 3, 2, 3, 3, 2, LAPIS).fill(3, 3, 5, 3, 3, 5, 'ing');
+    return c;
+  }
+
+  // ---- stages ----------------------------------------------------------------------------------------------------------------------
+  var stages = [], models = { patterns: [plateA(), plateB(), plateC()], catalysts: [catalystA(), catalystB(), catalystC()] };
+  function makeStage(key) {
+    var el = document.querySelector('[data-stage="' + key + '"]');
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene(), camera = new T.PerspectiveCamera(26, 2, 0.1, 500);
+    camera.position.set(0, 26, 50); camera.lookAt(0, 3, 0);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var light = new T.DirectionalLight(0xFFF3DC, 0.75); light.position.set(30, 50, 40); scene.add(light);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var labels = [];
+    models[key].forEach(function (mdl, i) {
+      mdl.build();
+      var b = mdl.bounds(), c = b.getCenter(new T.Vector3());
+      var holder = new T.Group(); holder.position.set((i - 1) * 16, 0, 0); scene.add(holder);
+      mdl.group.position.set(-c.x, -b.min.y, -c.z); holder.add(mdl.group);
+      mdl.holder = holder;
+      var d = document.createElement('div'); d.className = 'label'; var s = document.createElement('span'); s.textContent = mdl.name; d.appendChild(s); d.appendChild(document.createTextNode(['Blueprint Card', 'Data Chip', 'Etched Plate'][i] && key === 'patterns' ? ['Blueprint Card', 'Data Chip', 'Etched Plate'][i] : ['Crystal', 'Vial', 'Bound Shards'][i])); el.appendChild(d);
+      labels.push({ el: d, holder: holder, up: b.max.y - b.min.y + 3 });
+    });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, labels: labels, yaw: 0, dragging: false, lastX: 0, key: key };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+  }
+  makeStage('patterns'); makeStage('catalysts');
+
+  // ---- icons: each model rendered small from a three-quarter angle, as the game would draw the item ------------------------------------
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+  var iconKey = new T.DirectionalLight(0xFFF3DC, 0.8); iconKey.position.set(30, 50, 40); iconScene.add(iconKey);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModels = { patterns: [plateA(), plateB(), plateC()], catalysts: [catalystA(), catalystB(), catalystC()] };
+  Object.keys(iconModels).forEach(function (k) { iconModels[k].forEach(function (m) { m.build(); }); });
+  function renderIcon(canvas, model, size) {
+    iconScene.children.forEach(function (c) { if (c.userData.model) iconScene.remove(c); });
+    model.group.userData.model = true; model.group.position.set(0, 0, 0); iconScene.add(model.group);
+    var b = model.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 32, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  var iconJobs = [];
+  function strip(key) {
+    var holder = document.querySelector('[data-strip="' + key + '"]');
+    ['A', 'B', 'C'].forEach(function (name, i) {
+      var lab = document.createElement('span'); lab.textContent = name; holder.appendChild(lab);
+      var set = document.createElement('div'); set.className = 'set'; holder.appendChild(set);
+      var model = iconModels[key][i];
+      if (key === 'patterns') {
+        [16, 32].forEach(function (size) { var cv = document.createElement('canvas'); cv.width = size; cv.height = size; cv.style.width = (size * 2) + 'px'; cv.style.height = (size * 2) + 'px'; set.appendChild(cv); iconJobs.push(function () { renderIcon(cv, model, size); }); });
+      } else {
+        INGREDIENTS.forEach(function (ing, j) {
+          var cv = document.createElement('canvas'); cv.width = 16; cv.height = 16; cv.style.width = '32px'; cv.style.height = '32px'; cv.title = ing.name; set.appendChild(cv);
+          iconJobs.push(function () { var keep = ingredient; ingredient = j; model.paint(); renderIcon(cv, model, 16); ingredient = keep; model.paint(); });
+        });
+        var big = document.createElement('canvas'); big.width = 32; big.height = 32; big.style.width = '64px'; big.style.height = '64px'; set.appendChild(big);
+        iconJobs.push(function () { renderIcon(big, model, 32); });
+      }
+    });
+  }
+  strip('patterns'); strip('catalysts');
+  function redrawIcons() { iconJobs.forEach(function (j) { j(); }); }
+  redrawIcons();
+
+  var holder = document.querySelector('[data-ingredients]');
+  INGREDIENTS.forEach(function (ing, i) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = '#' + ('000000' + ing.color.toString(16)).slice(-6); b.title = ing.name; b.setAttribute('aria-label', ing.name); b.setAttribute('aria-pressed', String(i === 0));
+    b.addEventListener('click', function () { Array.prototype.forEach.call(holder.querySelectorAll('button'), function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); ingredient = i; models.catalysts.forEach(function (m) { m.paint(); }); iconModels.catalysts.forEach(function (m) { m.paint(); }); redrawIcons(); });
+    holder.appendChild(b);
+  });
+
+  // ---- the loop ---------------------------------------------------------------------------------------------------------------------
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    stages.forEach(function (st) {
+      if (!st.dragging && !reduced) st.yaw += dt * 0.5;
+      models[st.key].forEach(function (m) { m.holder.rotation.y = st.yaw; });
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        v.set(0, l.up, 0); l.holder.localToWorld(v); v.project(st.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+      });
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

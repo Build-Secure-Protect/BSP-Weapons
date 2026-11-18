@@ -9,7 +9,6 @@ takes the tier colour (tint index 1). Edit this script, never the output.
   python3 tools/gen_part_models.py
 """
 import json
-import shutil
 import struct
 import zlib
 from pathlib import Path
@@ -17,8 +16,9 @@ from pathlib import Path
 ASSETS = Path(__file__).resolve().parent.parent / "src/main/resources/assets/bsp_weapons"
 
 # ---- colours and roles ------------------------------------------------------------------------------------------------------
-GUNMETAL, GOLD, DARK, TEAL, RED, VIOLET = "gunmetal", "gold", "dark", "teal", "red", "violet"
-MAT, GLOW = "mat", "glow"  # tinted in code: material colour (0), core tier colour (1)
+GUNMETAL, GOLD, DARK, TEAL, RED, VIOLET, LIGHT, GLASS, LAPIS = "gunmetal", "gold", "dark", "teal", "red", "violet", "light", "glass", "lapis"
+MAT, GLOW, ING = "mat", "glow", "ing"  # tinted in code: material colour (0), core tier colour (1), a catalyst's ingredient (2)
+MAT_SLOT = ["mat_barrel", "mat_cell", "mat_grip", "mat_optic"]  # an assembled weapon: one tint per slot (0 to 3), the core glow is 4
 TEXTURES = {  # name: (base colour, the three pixel shades as factors)
     "part_metal": (0xFFFFFF, (1.0, 0.84, 0.68)),
     "part_glow": (0xFFFFFF, (1.0, 0.8, 1.0)),
@@ -28,10 +28,18 @@ TEXTURES = {  # name: (base colour, the three pixel shades as factors)
     "part_teal": (0x19D3B0, (1.0, 0.85, 1.0)),
     "part_red": (0xFF6B5C, (1.0, 0.85, 1.0)),
     "part_violet": (0xB58CFF, (1.0, 0.85, 1.0)),
+    "part_light": (0x5A6270, (1.0, 0.86, 0.72)),
+    "part_lapis": (0x2A4AC8, (1.0, 0.86, 0.72)),
 }
+GLASS_TEXTURE = ("part_glass", 0x8AE8DC, 120)  # translucent
 ROLE_TEXTURE = {MAT: "part_metal", GLOW: "part_glow", GUNMETAL: "part_gunmetal", GOLD: "part_gold", DARK: "part_dark",
-                TEAL: "part_teal", RED: "part_red", VIOLET: "part_violet"}
-TINT = {MAT: 0, GLOW: 1}
+                TEAL: "part_teal", RED: "part_red", VIOLET: "part_violet", LIGHT: "part_light", GLASS: "part_glass", LAPIS: "part_lapis", ING: "part_glow"}
+for i, r in enumerate(MAT_SLOT):
+    ROLE_TEXTURE[r] = "part_metal"
+TINT = {MAT: 0, GLOW: 1, ING: 2}
+for i, r in enumerate(MAT_SLOT):
+    TINT[r] = i
+TINT_CORE_IN_WEAPON = 4
 
 
 def hash01(x, y, z=0):
@@ -169,17 +177,92 @@ def parts():
     return out
 
 
+def engram():
+    """D61: the Data Chip. A gunmetal cartridge, gold contacts along one end, a notch, a teal glyph window."""
+    p = Part("laser_pistol_engram").fill(0, 0, 0, 7, 1, 9, GUNMETAL).cut(0, 0, 0, 0, 1, 0).fill(1, 1, 1, 6, 1, 8, LIGHT)
+    for x in (1, 3, 5):
+        p.fill(x, 0, 9, x, 1, 9, GOLD).fill(x, 1, 8, x, 1, 8, GOLD)
+    p.fill(2, 2, 2, 5, 2, 5, DARK).fill(3, 2, 3, 4, 2, 4, TEAL).fill(2, 1, 6, 5, 1, 6, GOLD)
+    return p
+
+
+def catalyst():
+    """D62: the Vial. Glass, a gold cap, lapis liquid, motes tinted by the ingredient (tint 2)."""
+    p = Part("catalyst").fill(1, 0, 1, 4, 6, 4, GLASS).fill(1, 0, 1, 4, 0, 4, LAPIS).fill(2, 1, 2, 3, 4, 3, LAPIS)
+    p.fill(2, 2, 2, 2, 2, 2, ING).fill(3, 3, 3, 3, 3, 3, ING).fill(2, 4, 3, 2, 4, 3, ING)
+    p.fill(1, 7, 1, 4, 7, 4, GOLD).fill(2, 8, 2, 3, 8, 3, GOLD).fill(2, 7, 2, 3, 7, 3, DARK)
+    return p
+
+
+def energy_round():
+    """D68: the Capsule. A short gunmetal cartridge, a teal cap, a gold band."""
+    return Part("energy_round").fill(0, 0, 0, 1, 1, 6, GUNMETAL).fill(0, 0, 7, 1, 1, 8, TEAL).fill(0, 0, 2, 1, 1, 2, GOLD).fill(0, 0, 0, 1, 1, 0, DARK)
+
+
+def weapon(name, part_list):
+    """An assembled weapon: the parts merged into one model, each slot's metal tinted on its own index, the core glow on 4."""
+    w = Part(name)
+    slot_of = {"focused_barrel": "mat_barrel", "energy_cell": "mat_cell", "standard_grip": "mat_grip", "scope": "mat_optic"}
+    for part in part_list:
+        for (x, y, z), role in part.cubes.items():
+            if role == MAT:
+                role = slot_of[part.name]
+            elif role == GLOW:
+                role = "core_glow"
+            elif role == TEAL:
+                role = "weapon_teal"
+            w.cubes[(x, y, z)] = role
+    return w
+
+
+ROLE_TEXTURE["core_glow"] = "part_glow"
+TINT["core_glow"] = TINT_CORE_IN_WEAPON
+ROLE_TEXTURE["weapon_teal"] = "part_glow"
+TINT["weapon_teal"] = 5
+
+
+def frame():
+    """The Spine Rail frame: fixed colours, never tinted."""
+    f = Part("frame").fill(-2, 0, -10, 1, 3, 12, GUNMETAL).cut(-1, 3, -10, 0, 3, 12)
+    for z in range(-8, 13, 4):
+        f.cut(-2, 3, z, 1, 3, z)
+    f.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD).fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD)
+    f.fill(-2, -2, -4, 1, -1, -1, DARK).cut(-1, -2, -3, 0, -1, -2).fill(-1, -2, -3, 0, -1, -3, GOLD)
+    return f
+
+
 # ---- models ------------------------------------------------------------------------------------------------------------------
 def face_uv(face, x0, y0, z0, x1, y1, z1):
-    """Texture coordinates for a face, taken from the face's own position so the pixel pattern follows the voxels."""
+    """Texture coordinates for a face, taken from the face's own position so the pixel pattern follows the voxels; a span
+    never runs past the tile's edge (a face longer than the tile would sample the atlas's neighbours)."""
+    def span(a0, a1):
+        u0 = a0 % 16
+        return u0, min(16, u0 + (a1 - a0))
     if face in ("north", "south"):
-        return [x0 % 16, (16 - y1) % 16 if y1 % 16 else 0, x0 % 16 + (x1 - x0), (16 - y1) % 16 + (y1 - y0)]
+        u0, u1 = span(x0, x1)
+        v0, v1 = span(16 - y1, 16 - y0) if y1 % 16 else (0, min(16, y1 - y0))
+        return [u0, v0, u1, v1]
     if face in ("east", "west"):
-        return [z0 % 16, (16 - y1) % 16 if y1 % 16 else 0, z0 % 16 + (z1 - z0), (16 - y1) % 16 + (y1 - y0)]
-    return [x0 % 16, z0 % 16, x0 % 16 + (x1 - x0), z0 % 16 + (z1 - z0)]
+        u0, u1 = span(z0, z1)
+        v0, v1 = span(16 - y1, 16 - y0) if y1 % 16 else (0, min(16, y1 - y0))
+        return [u0, v0, u1, v1]
+    u0, u1 = span(x0, x1)
+    v0, v1 = span(z0, z1)
+    return [u0, v0, u1, v1]
 
 
-def model(part):
+WEAPON_DISPLAY = {
+    "gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0], "scale": [0.28, 0.28, 0.28]},
+    "ground": {"scale": [0.2, 0.2, 0.2], "translation": [0, 2, 0]},
+    "fixed": {"rotation": [0, 90, 0], "scale": [0.4, 0.4, 0.4]},
+    "thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, 3, 1], "scale": [0.27, 0.27, 0.27]},
+    "thirdperson_lefthand": {"rotation": [0, -90, 0], "translation": [0, 3, 1], "scale": [0.27, 0.27, 0.27]},
+    "firstperson_righthand": {"rotation": [0, 90, 0], "translation": [1, 2, 0], "scale": [0.3, 0.3, 0.3]},
+    "firstperson_lefthand": {"rotation": [0, -90, 0], "translation": [-1, 2, 0], "scale": [0.3, 0.3, 0.3]},
+}
+
+
+def model(part, display=None):
     boxes = part.boxes()
     xs = [b[0] for b in boxes] + [b[3] + 1 for b in boxes]
     ys = [b[1] for b in boxes] + [b[4] + 1 for b in boxes]
@@ -207,7 +290,7 @@ def model(part):
         "gui_light": "side",
         "textures": textures,
         "elements": elements,
-        "display": {
+        "display": display or {
             "gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0], "scale": [gui_scale, gui_scale, gui_scale]},
             "ground": {"scale": [0.25, 0.25, 0.25], "translation": [0, 3, 0]},
             "fixed": {"rotation": [0, 180, 0], "scale": [0.5, 0.5, 0.5]},
@@ -228,7 +311,7 @@ def png(width, height, rgba_rows):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
 
 
-def texture(colour, shades):
+def texture(colour, shades, alpha=255):
     rows = []
     r, g, b = (colour >> 16) & 255, (colour >> 8) & 255, colour & 255
     for y in range(16):
@@ -236,7 +319,7 @@ def texture(colour, shades):
         for x in range(16):
             h = hash01(x, y)
             f = shades[0] if h < 0.5 else (shades[1] if h < 0.82 else shades[2])
-            row += [min(255, int(r * f)), min(255, int(g * f)), min(255, int(b * f)), 255]
+            row += [min(255, int(r * f)), min(255, int(g * f)), min(255, int(b * f)), alpha]
         rows.append(row)
     return png(16, 16, rows)
 
@@ -245,16 +328,29 @@ def main():
     models_dir = ASSETS / "models/item"
     textures_dir = ASSETS / "textures/item"
     for d in (models_dir, textures_dir):
-        if d.exists():
-            shutil.rmtree(d)
-        d.mkdir(parents=True)
+        d.mkdir(parents=True, exist_ok=True)
+    # remove only what this script writes (gen_block_models.py writes models/item/weapon_assembler.json)
+    for old in list(models_dir.glob("*.json")) + list(textures_dir.glob("part_*.png")):
+        if old.name != "weapon_assembler.json":
+            old.unlink()
     for name, (colour, shades) in TEXTURES.items():
         (textures_dir / f"{name}.png").write_bytes(texture(colour, shades))
-    print(f"textures: {len(TEXTURES)}")
-    for part in parts():
+    (textures_dir / f"{GLASS_TEXTURE[0]}.png").write_bytes(texture(GLASS_TEXTURE[1], (1.0, 0.9, 1.0), GLASS_TEXTURE[2]))
+    print(f"textures: {len(TEXTURES) + 1}")
+    all_parts = parts()
+    by_name = {p.name: p for p in all_parts}
+    for part in all_parts + [engram(), catalyst(), energy_round()]:
         data, n = model(part)
         (models_dir / f"{part.name}.json").write_text(json.dumps(data, indent=2) + "\n")
         print(f"{part.name}: {len(part.cubes)} voxels -> {n} cubes, gui scale {data['display']['gui']['scale'][0]}")
+    # one item model per catalyst id, each the shared vial model (the tint handler colours the motes per item)
+    for name in ("lapis_catalyst", "magnatite_catalyst", "illyrium_catalyst", "allthemodium_catalyst"):
+        (models_dir / f"{name}.json").write_text(json.dumps({"parent": "bsp_weapons:item/catalyst"}, indent=2) + "\n")
+    print("catalyst item models: 4")
+    pistol = weapon("laser_pistol", [frame(), by_name["weapon_core"], by_name["focused_barrel"], by_name["energy_cell"], by_name["standard_grip"], by_name["scope"]])
+    data, n = model(pistol, WEAPON_DISPLAY)
+    (models_dir / "laser_pistol.json").write_text(json.dumps(data, indent=2) + "\n")
+    print(f"laser_pistol: {len(pistol.cubes)} voxels -> {n} cubes")
 
 
 if __name__ == "__main__":

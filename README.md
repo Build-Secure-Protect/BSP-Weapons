@@ -11,11 +11,11 @@ Planned contents:
 - Machines: parts manufacturing, weapon assembly, weapon enhancement, turret base, turret remote, turret AI.
 - A test dummy and a target block that show the damage per hit and per second of any weapon.
 
-The mod is in development: nothing is playable yet.
+The mod is in development. Built so far: the part system, the part items, the Weapon Assembler, Engrams and catalysts, and the Laser Pistol with energy cells or magazines. Not yet: the other weapons, the parts and enhancement machines, turrets, the dummy.
 
 ## Requirements
 
-- Minecraft 1.20.1 with Forge 47.4.10 or newer.
+- Minecraft 1.20.1 with Forge 47 (built on 47.4.10; the network runs 47.4.23).
 - BSP-Core 1.17.1 or newer and GeckoLib 4.7.3 or newer (both required).
 - Optional: BSP-Region Guard 0.7.0 (region rules for firing, block damage and turrets), BSP-RankUp 0.6.0 (kills count for ranks), BSP-InventorySync 0.8.0 (weapons follow players between servers), Mekanism 10.4 (gas and infusion recipes for parts).
 

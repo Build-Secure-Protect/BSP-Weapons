@@ -151,7 +151,7 @@ tasks.register('checkLang', Exec) {
     group = 'verification'
     description = 'Checks the client code against the language file (tools/check_lang.py).'
     commandLine 'python3', 'tools/check_lang.py'
-    inputs.files(fileTree('src/main/java/com/mrgregles/bsp_weapons/client'), 'src/main/resources/assets/bsp_weapons/lang/en_us.json', 'tools/check_lang.py')
+    inputs.files(fileTree('src/main/java'), fileTree('src/main/resources/data/bsp_weapons/weapons'), 'src/main/resources/assets/bsp_weapons/lang/en_us.json', 'tools/check_lang.py')
     outputs.upToDateWhen { true }
 }
 tasks.named('check') {

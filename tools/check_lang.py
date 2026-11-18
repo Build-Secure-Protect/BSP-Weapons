@@ -23,7 +23,7 @@ def main():
     # keys written whole: translatable("item.bsp_weapons.x")
     needed |= set(re.findall(r'translatable\("([a-z0-9_.]+)"\s*[,)]', every))
     # keys built from a prefix and an id: "tooltip." + MODID + ".part" -> the literal tail after the mod id
-    for prefix, tail in re.findall(r'"([a-z]+)\." \+ BspWeapons\.MODID \+ "\.([a-z0-9_]+)"', every):
+    for prefix, tail in re.findall(r'"([a-z]+)\." \+ BspWeapons\.MODID \+ "\.([a-z0-9_.]+)"', every):
         needed.add(f"{prefix}.{MOD}.{tail}")
     # ids from the data folders: every material, part type and stat needs a name
     for p in (DATA / "materials").glob("*.json"):
@@ -36,11 +36,25 @@ def main():
         needed.add(f"rarity.{MOD}.{rarity}")
     for key in ("core_tier", "core_slot", "core_slots", "part", "unknown_material"):
         needed.add(f"tooltip.{MOD}.{key}")
+    for p in (DATA / "catalysts").glob("*.json"):
+        needed.add(f"item.{MOD}.{p.stem}")
+    for p in (DATA / "patterns").glob("*.json"):
+        needed.add(f"item.{MOD}.{p.stem}")
+        needed.add(f"item.{MOD}.{p.stem}_engram")
+    for kind in ("engram", "core", "barrel", "cell", "grip", "optic", "roll", "weapon", "part"):
+        needed.add(f"slot.{MOD}.{kind}")
+    for block in ("weapon_assembler", "weapon_assembler_part"):
+        needed.add(f"block.{MOD}.{block}")
+    for key in ("laser", "laser.player"):
+        needed.add(f"death.attack.{MOD}.{key}")
+    needed.add(f"item.{MOD}.energy_round")
+    for key in ("heat", "overheated", "reloading", "no_charge", "no_rounds"):
+        needed.add(f"hud.{MOD}.{key}")
     missing = sorted(k for k in needed if k not in lang)
     unused = sorted(k for k in lang if k not in needed and not k.startswith("itemGroup.") and k != f"{MOD}.name" and k != f"item.{MOD}.weapon_core")
     bad = 0
     for k, v in lang.items():
-        if re.search(r"(?<!%)%(?![s%])", v):
+        if re.search(r"(?<!%)%(?!(\d+\$)?s|%)", v):  # %s, %1$s and %% are fine
             print("BAD %   ", k, repr(v), "(write %% for a percent sign)")
             bad += 1
     for k in missing:

@@ -2,6 +2,11 @@ package com.mrgregles.bsp_weapons.network;
 
 import com.mrgregles.bsp_weapons.data.WeaponData;
 import com.mrgregles.bsp_weapons.parts.BandDefaults;
+import com.mrgregles.bsp_weapons.parts.Catalyst;
+import com.mrgregles.bsp_weapons.parts.Pattern;
+import com.mrgregles.bsp_weapons.parts.Rarity;
+import com.mrgregles.bsp_weapons.parts.Sheet;
+import com.mrgregles.bsp_weapons.parts.WeaponKind;
 import com.mrgregles.bsp_weapons.parts.Modifiers;
 import com.mrgregles.bsp_weapons.parts.PartKind;
 import com.mrgregles.bsp_weapons.parts.PartType;
@@ -24,11 +29,12 @@ import java.util.function.Supplier;
  * every {@code /reload}. Lists are capped on the reading side so a bad packet cannot ask for more than a few thousand
  * entries. Patterns, augments and catalysts are not needed by the client yet.
  */
-public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, Map<Integer, BandDefaults> bands, Map<ResourceLocation, PartType> partTypes) {
+public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, Map<Integer, BandDefaults> bands, Map<ResourceLocation, PartType> partTypes,
+                               Map<ResourceLocation, Pattern> patterns, Map<ResourceLocation, Catalyst> catalysts) {
     public static final int MAX_ENTRIES = 4096;
 
     public static WeaponDataPacket current() {
-        return new WeaponDataPacket(WeaponData.materials(), WeaponData.bands(), WeaponData.partTypes());
+        return new WeaponDataPacket(WeaponData.materials(), WeaponData.bands(), WeaponData.partTypes(), WeaponData.patterns(), WeaponData.catalysts());
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -63,6 +69,22 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             writeModifiers(buf, t.modifiers());
             buf.writeVarInt(t.classes().size());
             for (ResourceLocation c : t.classes()) buf.writeResourceLocation(c);
+            buf.writeBoolean(t.holdsEnergy());
+        }
+        buf.writeVarInt(patterns.size());
+        for (Pattern p : patterns.values()) {
+            buf.writeResourceLocation(p.id());
+            buf.writeByte(p.kind().ordinal());
+            buf.writeVarInt(p.slots().size());
+            for (PartKind k : p.slots()) buf.writeByte(k.ordinal());
+            for (Stat s : Stat.values()) buf.writeDouble(p.base().get(s));
+        }
+        buf.writeVarInt(catalysts.size());
+        for (Catalyst c : catalysts.values()) {
+            buf.writeResourceLocation(c.id());
+            buf.writeUtf(c.ingredient(), 128);
+            for (Rarity r : Rarity.values()) buf.writeVarInt(c.weight(r));
+            buf.writeInt(c.colour());
         }
     }
 
@@ -103,17 +125,47 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             int cc = Math.min(256, buf.readVarInt());
             Set<ResourceLocation> classes = new HashSet<>();
             for (int j = 0; j < cc; j++) classes.add(buf.readResourceLocation());
-            types.put(id, new PartType(id, k, m, classes));
+            boolean energy = buf.readBoolean();
+            types.put(id, new PartType(id, k, m, classes, energy ? PartType.ENERGY : PartType.ROUNDS));
         }
-        return new WeaponDataPacket(materials, bands, types);
+        Map<ResourceLocation, Pattern> patterns = new HashMap<>();
+        int pn = Math.min(MAX_ENTRIES, buf.readVarInt());
+        for (int i = 0; i < pn; i++) {
+            ResourceLocation id = buf.readResourceLocation();
+            WeaponKind kind = WeaponKind.values()[Math.min(WeaponKind.values().length - 1, Math.max(0, buf.readByte()))];
+            int sc = Math.min(PartKind.values().length, buf.readVarInt());
+            java.util.List<PartKind> slots = new java.util.ArrayList<>();
+            for (int j = 0; j < sc; j++) {
+                PartKind k = PartKind.values()[Math.min(PartKind.values().length - 1, Math.max(0, buf.readByte()))];
+                if (k != PartKind.CORE && !slots.contains(k)) slots.add(k);
+            }
+            Sheet base = new Sheet();
+            for (Stat s : Stat.values()) base.set(s, buf.readDouble());
+            patterns.put(id, new Pattern(id, kind, slots, base));
+        }
+        Map<ResourceLocation, Catalyst> catalysts = new HashMap<>();
+        int cn = Math.min(MAX_ENTRIES, buf.readVarInt());
+        for (int i = 0; i < cn; i++) {
+            ResourceLocation id = buf.readResourceLocation();
+            String ingredient = buf.readUtf(128);
+            int[] odds = new int[Rarity.values().length];
+            for (int j = 0; j < odds.length; j++) odds[j] = Math.max(0, buf.readVarInt());
+            int colour = buf.readInt();
+            try {
+                catalysts.put(id, new Catalyst(id, ingredient, odds, colour));
+            } catch (IllegalArgumentException ignored) {
+                // odds of all zero in a bad packet: skip the catalyst
+            }
+        }
+        return new WeaponDataPacket(materials, bands, types, patterns, catalysts);
     }
 
     static void writeModifiers(FriendlyByteBuf buf, Modifiers m) {
         buf.writeVarInt(m.changes().size());
         for (Map.Entry<Stat, double[]> e : m.changes().entrySet()) {
             buf.writeByte(e.getKey().ordinal());
-            buf.writeFloat((float) e.getValue()[0]);
-            buf.writeFloat((float) e.getValue()[1]);
+            buf.writeDouble(e.getValue()[0]);
+            buf.writeDouble(e.getValue()[1]);
         }
     }
 
@@ -122,7 +174,7 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
         int n = Math.min(Stat.values().length, buf.readVarInt());
         for (int i = 0; i < n; i++) {
             Stat s = Stat.values()[Math.min(Stat.values().length - 1, Math.max(0, buf.readByte()))];
-            m.flat(s, buf.readFloat()).percent(s, buf.readFloat());
+            m.flat(s, buf.readDouble()).percent(s, buf.readDouble());
         }
         return m;
     }
@@ -140,7 +192,7 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> WeaponData.acceptSync(materials, bands, partTypes));
+        ctx.get().enqueueWork(() -> WeaponData.acceptSync(materials, bands, partTypes, patterns, catalysts));
         ctx.get().setPacketHandled(true);
     }
 }

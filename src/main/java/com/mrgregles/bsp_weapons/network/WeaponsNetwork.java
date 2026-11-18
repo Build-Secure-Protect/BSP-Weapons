@@ -20,6 +20,8 @@ public final class WeaponsNetwork {
     public static void register() {
         CHANNEL.messageBuilder(WeaponDataPacket.class, 0, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(WeaponDataPacket::encode).decoder(WeaponDataPacket::decode).consumerNetworkThread(WeaponDataPacket::handle).add();
+        CHANNEL.messageBuilder(AssemblerActionPacket.class, 1, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(AssemblerActionPacket::encode).decoder(AssemblerActionPacket::decode).consumerNetworkThread(AssemblerActionPacket::handle).add();
     }
 
     /** On a join (one player) or a reload (everyone): the part data the client draws and reads. */

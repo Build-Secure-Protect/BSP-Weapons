@@ -17,7 +17,7 @@ GEM_KINDS = ["OPTIC"]  # D35: gems for optics (and cores and chips, which are no
 
 
 def pct(**stats):
-    return {k.upper(): {"percent": v} for k, v in stats.items()}
+    return {k.upper(): {"percent": round(v, 2)} for k, v in stats.items()}
 
 
 def flat(**stats):
@@ -70,10 +70,10 @@ MATERIALS = [
     m("gold", "forge:ingots/gold", 1, "#F2D14A", mods={"GRIP": pct(fire_rate=8), "BARREL": flat(durability=-40)}, trait="soft"),
     m("netherite", "forge:ingots/netherite", 4, "#4A3F44", mods={"BARREL": pct(piercing=10), "GRIP": flat(durability=200)}, trait="fireproof"),
     # BSP-Core
-    m("tetrium", "forge:ingots/tetrium", 2, "#7D97B0", mods={"BARREL": pct(damage=6)}),
-    m("magnatite", "forge:ingots/magnatite", 3, "#4A5BB5", mods={"BARREL": pct(range=8, piercing=6)}, trait="magnetic"),
+    m("tetrium", "forge:ingots/tetrium", 2, "#6B4FA3", mods={"BARREL": pct(damage=6)}),
+    m("magnatite", "forge:ingots/magnatite", 3, "#5C7FB8", mods={"BARREL": pct(range=8, piercing=6)}, trait="magnetic"),
     m("charged_magnatite", "forge:ingots/charged_magnatite", 4, "#6E7CFF", mods={"CELL": pct(capacity=12)}, trait="charged"),
-    m("illyrium", "forge:ingots/illyrium", 5, "#E8D77A", mods={"BARREL": pct(damage=8), "CELL": pct(capacity=8), "GRIP": pct(fire_rate=4), "OPTIC": pct(zoom=8)}),
+    m("illyrium", "forge:ingots/illyrium", 5, "#19D3B0", mods={"BARREL": pct(damage=8), "CELL": pct(capacity=8), "GRIP": pct(fire_rate=4), "OPTIC": pct(zoom=8)}),
     # common tech metals
     m("tin", "forge:ingots/tin", 1, "#D5D9DD", mods={"GRIP": pct(spread=-6)}),
     m("zinc", "forge:ingots/zinc", 1, "#C9CFC4", mods={"GRIP": pct(fire_rate=6)}),
@@ -155,7 +155,6 @@ MATERIALS = [
     m("ridiculite", "forge:ingots/ridiculite", 5, "#E83A3A", mods={"BARREL": pct(damage=10)}),
     m("ludicrite", "forge:ingots/ludicrite", 5, "#E8E83A", mods={"CELL": pct(capacity=16, recharge=-12)}),
     m("plutonium", "forge:ingots/plutonium", 4, "#8AE83A", mods={"BARREL": pct(damage=14)}, trait="irradiates_strongly"),
-    m("pink_slime", "forge:ingots/pink_slime", 2, "#F0A0D0", mods={"BARREL": flat(ricochets=1)}, trait="bouncy"),
     # gems (D35: optics only among the material parts)
     m("diamond", "forge:gems/diamond", 3, "#6AF0E8", GEM_KINDS, {"OPTIC": pct(spread=-12)}),
     m("emerald", "forge:gems/emerald", 3, "#3AD86A", GEM_KINDS, {"OPTIC": pct(zoom=8)}),
@@ -183,10 +182,10 @@ PART_TYPES = {
     "scatter_barrel": {"kind": "BARREL", "modifiers": merge(pct(damage=15, spread=80), pct(range=-35))},
     "thermal_barrel": {"kind": "BARREL", "modifiers": merge(pct(damage=5), flat(heat_cap=-10))},
     "pulse_barrel": {"kind": "BARREL", "modifiers": merge(pct(fire_rate=25), pct(damage=-10))},
-    "energy_cell": {"kind": "CELL", "modifiers": {}},
-    "overcharge_cell": {"kind": "CELL", "modifiers": merge(pct(damage=12), pct(recharge=30, capacity=-25))},
-    "magazine": {"kind": "CELL", "modifiers": merge(pct(capacity=20), pct(recharge=15))},
-    "emp_cell": {"kind": "CELL", "modifiers": merge(pct(damage=-30), pct(capacity=10))},
+    "energy_cell": {"kind": "CELL", "modifiers": {}, "ammo": "energy"},
+    "overcharge_cell": {"kind": "CELL", "modifiers": merge(pct(damage=12), pct(recharge=30, capacity=-25)), "ammo": "energy"},
+    "magazine": {"kind": "CELL", "modifiers": merge(pct(capacity=20), pct(recharge=15)), "ammo": "rounds"},
+    "emp_cell": {"kind": "CELL", "modifiers": merge(pct(damage=-30), pct(capacity=10)), "ammo": "energy"},
     "standard_grip": {"kind": "GRIP", "modifiers": {}},
     "light_grip": {"kind": "GRIP", "modifiers": merge(pct(fire_rate=12, spread=10), flat(durability=-60))},
     "heavy_grip": {"kind": "GRIP", "modifiers": merge(pct(spread=-20, fire_rate=-8), flat(durability=120))},
@@ -219,11 +218,12 @@ AUGMENTS = {
 }
 
 # ---- catalysts (D21, D30): lapis plus one ingredient; odds Normal / Rare / Epic / S -----------------------------------------
+# colour: the ingredient's, which tints the vial's motes (D62)
 CATALYSTS = {
-    "lapis_catalyst": {"ingredient": "forge:dusts/redstone", "odds": [70, 25, 5, 0]},
-    "magnatite_catalyst": {"ingredient": "forge:ingots/magnatite", "odds": [20, 55, 25, 0]},
-    "illyrium_catalyst": {"ingredient": "forge:ingots/illyrium", "odds": [0, 0, 85, 15]},
-    "allthemodium_catalyst": {"ingredient": "forge:ingots/allthemodium", "odds": [0, 0, 40, 60]},
+    "lapis_catalyst": {"ingredient": "forge:dusts/redstone", "odds": [70, 25, 5, 0], "colour": "#E03A3A"},
+    "magnatite_catalyst": {"ingredient": "forge:ingots/magnatite", "odds": [20, 55, 25, 0], "colour": "#5C7FB8"},
+    "illyrium_catalyst": {"ingredient": "forge:ingots/illyrium", "odds": [0, 0, 85, 15], "colour": "#19D3B0"},
+    "allthemodium_catalyst": {"ingredient": "forge:ingots/allthemodium", "odds": [0, 0, 40, 60], "colour": "#F2C94A"},
 }
 
 
@@ -237,7 +237,31 @@ def write(folder, items):
     print(f"{folder}: {len(items)}")
 
 
+LOOT = Path(__file__).resolve().parent.parent / "src/main/resources/data/bsp_weapons/loot_tables/blocks"
+
+
 def main():
+    LOOT.mkdir(parents=True, exist_ok=True)
+    (LOOT / "weapon_assembler.json").write_text(json.dumps({
+        "type": "minecraft:block",
+        "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "bsp_weapons:weapon_assembler"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}],
+    }, indent=2) + "\n")
+    print("loot_tables: 1")
+    dt = OUT.parent / "damage_type"
+    dt.mkdir(parents=True, exist_ok=True)
+    (dt / "laser.json").write_text(json.dumps({"message_id": "bsp_weapons.laser", "exhaustion": 0.1, "scaling": "when_caused_by_living_non_player"}, indent=2) + "\n")
+    # the pierced share skips armour by the maths in Damage, so the type itself bypasses armour; Projectile Protection applies
+    tags = Path(__file__).resolve().parent.parent / "src/main/resources/data/minecraft/tags/damage_type"
+    tags.mkdir(parents=True, exist_ok=True)
+    for tag in ("bypasses_armor", "is_projectile", "bypasses_cooldown"):
+        (tags / f"{tag}.json").write_text(json.dumps({"replace": False, "values": ["bsp_weapons:laser"]}, indent=2) + "\n")
+    print("damage_type: 1 (+3 tags)")
+    # BSP-Core declares no forge ingot tags for its metals (request WP-R3 asks it to); until then this mod declares them
+    ingot_tags = Path(__file__).resolve().parent.parent / "src/main/resources/data/forge/tags/items/ingots"
+    ingot_tags.mkdir(parents=True, exist_ok=True)
+    for name in ("tetrium", "magnatite", "charged_magnatite", "illyrium"):
+        (ingot_tags / f"{name}.json").write_text(json.dumps({"replace": False, "values": [f"bsp_core:{name}_ingot"]}, indent=2) + "\n")
+    print("forge ingot tags for BSP-Core's metals: 4")
     write("bands", [(f"band_{n}", band(n)) for n in range(1, 6)])
     write("materials", MATERIALS)
     write("part_types", list(PART_TYPES.items()))

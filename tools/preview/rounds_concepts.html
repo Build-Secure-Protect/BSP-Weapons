@@ -1,0 +1,155 @@
+<title>Rounds Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; one turntable of three voxel concepts beside an icon strip; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .two { max-width: 1240px; margin: 0 auto 16px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 2 / 1; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label span { color: var(--gold); margin-right: 6px; }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); display: grid; gap: 6px; }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .strip .set { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .notes h2 { font-family: var(--pixel); font-weight: 400; font-size: 26px; margin: 0; color: var(--violet); }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>ROUNDS FOR THE MAGAZINE</h1>
+  <p>A weapon built with a Magazine cell (D10) loads rounds instead of charging: a stackable item made at the parts machine, spent one per shot, reloaded from the inventory. Three looks, each a small voxel model so its icon is the model, turning and as 16 and 32 pixel icons. The same item serves every weapon class with a magazine; a later task can tier it.</p>
+</header>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE ROUND</h2><small>one item, stacks to 64</small></div>
+    <div class="stage" data-stage="rounds"></div>
+    <div class="blurb">
+      <div><b>A Capsule.</b> A short gunmetal cartridge with a teal cap at the business end and a gold band: a sci-fi bullet with no brass. Reads instantly as ammunition.</div>
+      <div><b>B Clip.</b> Four capsules side by side in a dark clip with a gold spine: the item is a strip, and one shot takes one capsule off it in the icon's count. Reads as something you slot in.</div>
+      <div><b>C Charge Shard.</b> A teal crystal shard with a gunmetal sleeve: energy made solid, the ammunition of an energy weapon. Reads as part of the same world as the Core and the catalysts.</div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>AS ICONS</h3>
+      <div class="strip" data-strip="rounds"></div>
+      <p class="blurb" style="padding:0">Each at 16 and at 32 pixels. In a hotbar the item shows its stack count as any ammunition does.</p>
+    </div>
+  </section>
+</div>
+
+<section class="notes">
+  <h2>WHAT TO PICK</h2>
+  <ol>
+    <li><b>The round</b> (A, B or C).</li>
+    <li><b>Name.</b> Default: "Energy Round". Or a name of your own.</li>
+    <li><b>Reloading.</b> Default: an empty magazine weapon reloads by itself from the player's inventory over its Recharge time, taking Capacity rounds. Or: a reload key the player presses.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, LIGHT = 0x5A6270;
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { (self.cubes[k] === 'teal' ? glow : lit).push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); var r = self.cubes[k]; var c = new T.Color(r === 'teal' ? TEAL : r); var h = hash(p[0], p[1], p[2]); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); im.setColorAt(i, c); });
+      im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; self.group.add(im); return im;
+    }
+    mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF })); mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    return this;
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+
+  function capsule() { var c = new VoxelPart('A'); c.fill(0, 0, 0, 1, 1, 6, GUNMETAL).fill(0, 0, 7, 1, 1, 8, 'teal').fill(0, 0, 2, 1, 1, 2, GOLD).fill(0, 0, 0, 1, 1, 0, DARK); return c; }
+  function clip() { var c = new VoxelPart('B'); c.fill(0, 0, 0, 10, 0, 6, DARK).fill(0, 1, 0, 10, 1, 0, GOLD); for (var i = 0; i < 4; i++) { var x = 1 + i * 2.5 | 0; c.fill(x, 1, 1, x + 1, 2, 6, GUNMETAL).fill(x, 1, 7, x + 1, 2, 7, 'teal'); } return c; }
+  function shard() { var c = new VoxelPart('C'); c.fill(1, 0, 1, 3, 2, 3, GUNMETAL).fill(1, 3, 1, 3, 3, 3, GOLD).fill(1, 4, 1, 3, 7, 3, 'teal').fill(2, 8, 2, 2, 9, 2, 'teal').fill(1, 4, 1, 1, 5, 1, LIGHT); return c; }
+
+  var models = [capsule(), clip(), shard()], names = ['Capsule', 'Clip', 'Charge Shard'];
+  var el = document.querySelector('[data-stage="rounds"]');
+  var renderer = new T.WebGLRenderer({ antialias: false, alpha: true }); renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputEncoding = T.sRGBEncoding;
+  el.insertBefore(renderer.domElement, el.firstChild);
+  var scene = new T.Scene(), camera = new T.PerspectiveCamera(26, 2, 0.1, 500); camera.position.set(0, 24, 46); camera.lookAt(0, 3, 0);
+  scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+  var light = new T.DirectionalLight(0xFFF3DC, 0.75); light.position.set(30, 50, 40); scene.add(light);
+  var labels = [];
+  models.forEach(function (mdl, i) {
+    mdl.build(); var b = mdl.bounds(), c = b.getCenter(new T.Vector3());
+    var holder = new T.Group(); holder.position.set((i - 1) * 16, 0, 0); scene.add(holder);
+    mdl.group.position.set(-c.x, -b.min.y, -c.z); holder.add(mdl.group); mdl.holder = holder;
+    var d = document.createElement('div'); d.className = 'label'; var s = document.createElement('span'); s.textContent = mdl.name; d.appendChild(s); d.appendChild(document.createTextNode(names[i])); el.appendChild(d);
+    labels.push({ el: d, holder: holder, up: b.max.y - b.min.y + 3 });
+  });
+  var yaw = 0, dragging = false, lastX = 0;
+  el.addEventListener('pointerdown', function (ev) { dragging = true; lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+  el.addEventListener('pointermove', function (ev) { if (!dragging) return; yaw += (ev.clientX - lastX) * 0.01; lastX = ev.clientX; });
+  el.addEventListener('pointerup', function () { dragging = false; });
+  function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+  resize();
+
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true }); iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9)); var ik = new T.DirectionalLight(0xFFF3DC, 0.8); ik.position.set(30, 50, 40); iconScene.add(ik);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModels = [capsule(), clip(), shard()]; iconModels.forEach(function (m) { m.build(); });
+  function renderIcon(canvas, model, size) {
+    iconScene.children.forEach(function (c) { if (c.userData.model) iconScene.remove(c); });
+    model.group.userData.model = true; model.group.position.set(0, 0, 0); iconScene.add(model.group);
+    var b = model.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3()), r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 32, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  var holder = document.querySelector('[data-strip="rounds"]');
+  ['A', 'B', 'C'].forEach(function (name, i) {
+    var lab = document.createElement('span'); lab.textContent = name; holder.appendChild(lab);
+    var set = document.createElement('div'); set.className = 'set'; holder.appendChild(set);
+    [16, 32].forEach(function (size) { var cv = document.createElement('canvas'); cv.width = size; cv.height = size; cv.style.width = (size * 2) + 'px'; cv.style.height = (size * 2) + 'px'; set.appendChild(cv); renderIcon(cv, iconModels[i], size); });
+  });
+
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    if (!dragging && !reduced) yaw += dt * 0.5;
+    models.forEach(function (m) { m.holder.rotation.y = yaw; });
+    renderer.render(scene, camera);
+    var r = el.getBoundingClientRect();
+    labels.forEach(function (l) { v.set(0, l.up, 0); l.holder.localToWorld(v); v.project(camera); l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px'; });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

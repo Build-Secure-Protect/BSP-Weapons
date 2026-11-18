@@ -1,7 +1,7 @@
 {
   "tag": "forge:ingots/tetrium",
   "band": 2,
-  "colour": "#7D97B0",
+  "colour": "#6B4FA3",
   "kinds": [
     "BARREL",
     "CELL",

@@ -28,7 +28,9 @@ public class BspWeapons {
         context.registerConfig(ModConfig.Type.SERVER, WeaponsConfig.SPEC);
         // the part system's data (patterns, materials, bands, part types, augments, catalysts) from every datapack
         MinecraftForge.EVENT_BUS.addListener((AddReloadListenerEvent e) -> WeaponData.register(e));
+        com.mrgregles.bsp_weapons.registry.ModBlocks.register(context.getModEventBus());
         ModItems.register(context.getModEventBus());
+        com.mrgregles.bsp_weapons.registry.ModEntities.register(context.getModEventBus());
         WeaponsNetwork.register();
         MinecraftForge.EVENT_BUS.addListener(WeaponsNetwork::onDatapackSync);
         if (FMLEnvironment.dist == Dist.CLIENT) com.mrgregles.bsp_weapons.client.ClientSetup.register(context.getModEventBus());

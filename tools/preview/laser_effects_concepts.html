@@ -1,0 +1,312 @@
+<title>Laser Effect Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; three first-person stages in a row (stacking on phones), each with FIRE, RELOAD, OVERHEAT and AUTO keys and a note; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { .row { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head h2 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--pixel); }
+  .hud .cross { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); }
+  .hud .cross::before, .hud .cross::after { content: ""; position: absolute; background: #fff; }
+  .hud .cross::before { left: 6px; top: 0; width: 2px; height: 14px; }
+  .hud .cross::after { top: 6px; left: 0; width: 14px; height: 2px; }
+  .hud .heat { position: absolute; right: 10px; bottom: 10px; width: 120px; display: grid; gap: 2px; font-size: 16px; color: var(--muted); }
+  .hud .heat .bar { height: 8px; background: rgba(12,14,18,0.8); border: 1px solid var(--dim); position: relative; }
+  .hud .heat .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+  .hud .heat .bar i.hot { background: var(--red); }
+  .hud .charge { position: absolute; left: 10px; bottom: 10px; font-size: 22px; color: var(--text); }
+  .hud .charge small { font-size: 16px; color: var(--muted); }
+  .hud .lock { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font-size: 20px; color: var(--red); opacity: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .notes h2 { font-family: var(--pixel); font-weight: 400; font-size: 26px; margin: 0; color: var(--violet); }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>THE LASER PISTOL: FIRE, HIT, RELOAD, OVERHEAT</h1>
+  <p>Three families of effect for the first energy weapon, each in the first-person view with a target post eight blocks ahead. Every effect is pixels: cubes, flat squares and short lines, never a smooth glow. FIRE shoots once, RELOAD drops the Cell and brings a full one back, OVERHEAT fires eight shots fast so the gun locks, AUTO keeps shooting on its own. The heat bar and charge count at the foot are the HUD as decided (D47).</p>
+</header>
+
+<div class="row">
+  <section class="card">
+    <div class="head"><h2><span>A</span>BOLT</h2><small>a fast pixel slug</small></div>
+    <div class="stage" data-effect="bolt"><div class="hud"><div class="cross"></div><div class="charge"><span data-charge>24</span><small> / 24</small></div><div class="heat"><span>HEAT</span><div class="bar"><i data-heat></i></div></div><div class="lock" data-lock>OVERHEATED</div></div></div>
+    <div class="controls" data-for="bolt"></div>
+    <p class="blurb"><b>A bright teal slug</b> three pixels long leaves the muzzle behind a four-pixel cross of flash and crosses to the target in a tenth of a second; where it lands, eight pixel sparks burst outward and fall. Reload drops the Cell out and slides a fresh one up. Overheating turns the barrel's vents red pixel by pixel and lets grey puffs rise from them; the gun locks until they clear. Reads as a weapon that shoots something; the slug is visible to everyone and can be dodged at range.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2><span>B</span>BEAM</h2><small>an instant line</small></div>
+    <div class="stage" data-effect="beam"><div class="hud"><div class="cross"></div><div class="charge"><span data-charge>24</span><small> / 24</small></div><div class="heat"><span>HEAT</span><div class="bar"><i data-heat></i></div></div><div class="lock" data-lock>OVERHEATED</div></div></div>
+    <div class="controls" data-for="beam"></div>
+    <p class="blurb"><b>A one-pixel teal line</b> from muzzle to target for four frames, with a fainter two-pixel halo and a flat square flare at the muzzle that shrinks away; the hit leaves a glowing square scorch on the target for a second and throws six sparks. Overheating tints the beam and the halo toward red and the lock shows as a red pulse in the bore. Reads as a true laser: no travel, nothing to dodge, the hit lands where the crosshair is.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h2><span>C</span>PULSE</h2><small>a lance with a ring</small></div>
+    <div class="stage" data-effect="pulse"><div class="hud"><div class="cross"></div><div class="charge"><span data-charge>24</span><small> / 24</small></div><div class="heat"><span>HEAT</span><div class="bar"><i data-heat></i></div></div><div class="lock" data-lock>OVERHEATED</div></div></div>
+    <div class="controls" data-for="pulse"></div>
+    <p class="blurb"><b>A thick short lance</b> of teal pixels crosses in a sixth of a second with a ring of eight pixels expanding behind it from the muzzle; where it lands a second ring opens flat on the surface and fades. Overheating makes the Cell's windows flash red and the whole gun shiver; the lock is a slow red breathing of the Core. Reads as plasma rather than light: slower, heavier, showier, and the one that would suit the grenades and the rifle's burst too.</p>
+  </section>
+</div>
+
+<section class="notes">
+  <h2>WHAT TO PICK</h2>
+  <ol>
+    <li><b>The effect family</b> for energy weapons (A, B or C), or a mix such as "B's beam with A's sparks".</li>
+    <li><b>Travel.</b> As drawn, A and C travel (a slug or lance you can see cross the gap, and dodge at long range) and B is instant. For the pistol: instant (hitscan) is the default; or travelling at A's speed.</li>
+    <li><b>Overheat tell.</b> As drawn, each family has its own; or one shared tell for every energy weapon (the barrel vents turning red).</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, MAT = 0x6B4FA3, RED = 0xFF6B5C, STONE = 0x4A4F58, SKIN = 0xC58C62, SHIRT = 0x2F6F8F;
+
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); this.home = new T.Vector3(); this.apart = new T.Vector3(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.at = function (home, apart) { this.home.set(home[0], home[1], home[2]); this.apart.set(apart[0], apart[1], apart[2]); this.group.position.copy(this.home); return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; (r === 'glow' || r === 'teal' ? glow : lit).push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material, shadeFn) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); var c = new T.Color(shadeFn(self.cubes[k])); var h = hash(p[0], p[1], p[2]); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); im.setColorAt(i, c); });
+      im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.litKeys = lit; this.glowKeys = glow;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }), function (r) { return r; });
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }), function (r) { return r === 'glow' ? TEAL : TEAL; });
+    return this;
+  };
+  /** Recolours the lit cubes toward a colour by a share 0..1 (the barrel heating up). */
+  VoxelPart.prototype.heat = function (share, towards) {
+    if (!this.mesh) return;
+    var self = this, to = new T.Color(towards);
+    this.litKeys.forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(self.cubes[k]); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); var local = Math.max(0, Math.min(1, share * 1.6 - h * 0.6)); c.lerp(to, local); self.mesh.setColorAt(i, c); });
+    this.mesh.instanceColor.needsUpdate = true;
+  };
+  VoxelPart.prototype.glowColour = function (hex) {
+    if (!this.glowMesh) return;
+    var self = this, c0 = new T.Color(hex);
+    this.glowKeys.forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = c0.clone(); c.multiplyScalar(h < 0.6 ? 1.0 : 0.8); self.glowMesh.setColorAt(i, c); });
+    this.glowMesh.instanceColor.needsUpdate = true;
+  };
+
+  function pistol() {
+    var frame = new VoxelPart('Frame').at([0, 0, 0], [0, 0, 0]);
+    frame.fill(-2, 0, -10, 1, 3, 12, GUNMETAL).cut(-1, 3, -10, 0, 3, 12);
+    for (var z = -8; z <= 12; z += 4) frame.cut(-2, 3, z, 1, 3, z);
+    frame.fill(-3, 1, -9, -3, 2, 11, GOLD).fill(2, 1, -9, 2, 2, 11, GOLD).fill(-2, 0, -12, 1, 5, -10, GUNMETAL).fill(-1, 6, -12, 0, 6, -11, GOLD);
+    frame.fill(-2, -2, -4, 1, -1, -1, DARK).cut(-1, -2, -3, 0, -1, -2).fill(-1, -2, -3, 0, -1, -3, GOLD);
+    var core = new VoxelPart('Core').at([0, 0, 0], [0, 9, 0]);
+    core.fill(-3, 4, -4, 2, 7, -4, GOLD).fill(-3, 4, 1, 2, 7, 1, GOLD).cut(-2, 5, -4, 1, 7, -4).cut(-2, 5, 1, 1, 7, 1);
+    core.fill(-2, 4, -3, 1, 7, 0, 'glow').fill(-2, 4, -3, 1, 4, 0, GUNMETAL).fill(-2, 7, -3, 1, 7, 0, GUNMETAL).cut(-1, 7, -2, 0, 7, -1).fill(-1, 7, -2, 0, 7, -1, 'glow');
+    var barrel = new VoxelPart('Barrel').at([0, 0, 0], [0, 0, 12]);
+    barrel.fill(-2, 1, 13, 1, 4, 24, MAT).fill(-1, 2, 25, 0, 3, 25, 'teal').fill(-3, 0, 23, 2, 5, 23, GOLD).cut(-2, 1, 23, 1, 4, 23).fill(-3, 0, 13, 2, 5, 14, GOLD).cut(-2, 1, 13, 1, 4, 14);
+    barrel.fill(-3, 1, 16, -3, 4, 16, MAT).fill(-3, 1, 18, -3, 4, 18, MAT).fill(2, 1, 16, 2, 4, 16, MAT).fill(2, 1, 18, 2, 4, 18, MAT).fill(-1, 5, 15, 0, 5, 21, DARK);
+    var cell = new VoxelPart('Cell').at([0, 0, 0], [0, -8, 0]);
+    cell.fill(-2, -6, -8, 1, -1, -3, 0x8C949F).fill(-2, -4, -7, -2, -2, -4, 'teal').fill(1, -4, -7, 1, -2, -4, 'teal').fill(-2, -6, -8, 1, -6, -3, DARK).fill(-2, -1, -3, 1, -1, -3, GOLD);
+    var grip = new VoxelPart('Grip').at([0, 0, 0], [0, -6, -6]);
+    for (var y = -1; y >= -9; y--) { var back = Math.floor((-1 - y) / 2); grip.fill(-2, y, -10 - back, 1, y, -6 - back, 0x5C7FB8); }
+    grip.cut(-2, -3, -6, 1, -3, -6).cut(-2, -6, -7, 1, -6, -7).fill(-2, -3, -7, 1, -3, -7, DARK).fill(-2, -6, -8, 1, -6, -8, DARK).fill(-2, -10, -14, 1, -10, -10, DARK);
+    var optic = new VoxelPart('Optic').at([0, 0, 0], [0, 9, 0]);
+    optic.fill(-1, 4, -9, 0, 7, -6, DARK).fill(-1, 8, -10, 0, 10, -4, MAT).fill(-1, 8, -3, 0, 9, -3, 'teal').fill(-1, 11, -9, 0, 11, -9, GOLD).fill(-2, 9, -7, -2, 9, -7, GOLD).fill(1, 9, -7, 1, 9, -7, GOLD);
+    var parts = [frame, core, barrel, cell, grip, optic], root = new T.Group();
+    parts.forEach(function (p) { p.build(); root.add(p.group); });
+    root.position.set(0.5, 0, -6.5);
+    return { root: root, parts: parts, byName: function (n) { for (var i = 0; i < parts.length; i++) if (parts[i].name === n) return parts[i]; } };
+  }
+
+  /** Pixel particles: a pool of unit cubes with a life, a velocity and a colour; the effects spawn into it. */
+  function Particles(scene, max) {
+    this.max = max; this.live = [];
+    this.mesh = new T.InstancedMesh(new T.BoxGeometry(1, 1, 1), new T.MeshBasicMaterial({ color: 0xFFFFFF }), max);
+    this.mesh.count = 0; scene.add(this.mesh);
+    this.m = new T.Matrix4(); this.q = new T.Quaternion(); this.s = new T.Vector3();
+  }
+  Particles.prototype.spawn = function (p) { if (this.live.length < this.max) this.live.push(p); };
+  Particles.prototype.update = function (dt) {
+    var self = this, keep = [];
+    this.live.forEach(function (p) { p.age += dt; if (p.age >= p.life) return; if (p.vel) { p.pos.addScaledVector(p.vel, dt); if (p.gravity) p.vel.y -= 9 * dt; } keep.push(p); });
+    this.live = keep;
+    this.live.forEach(function (p, i) {
+      var k = 1 - p.age / p.life, size = p.size * (p.shrink ? k : 1);
+      self.s.set(size * (p.sx || 1), size * (p.sy || 1), size * (p.sz || 1));
+      if (p.quat) self.q.copy(p.quat); else self.q.identity();
+      self.m.compose(p.pos, self.q, self.s); self.mesh.setMatrixAt(i, self.m);
+      var c = new T.Color(p.colour); if (p.fade) c.multiplyScalar(0.4 + 0.6 * k); self.mesh.setColorAt(i, c);
+    });
+    this.mesh.count = this.live.length; this.mesh.instanceMatrix.needsUpdate = true; if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+  };
+
+  var UP = new T.Vector3(0, 1, 0);
+  function lineQuat(dir) { return new T.Quaternion().setFromUnitVectors(UP, dir.clone().normalize()); }
+
+  // ---- the three effect families: each gets (particles, muzzle, target, dir, heatShare) -----------------------------------------------
+  var EFFECTS = {
+    bolt: {
+      fire: function (ps, muzzle, target, dir, heat) {
+        var len = muzzle.distanceTo(target), q = lineQuat(dir);
+        ps.spawn({ pos: muzzle.clone(), vel: dir.clone().multiplyScalar(len / 0.12), life: 0.12, age: 0, size: 0.45, sy: 6.5, quat: q, colour: TEAL });
+        ps.spawn({ pos: muzzle.clone(), life: 0.06, age: 0, size: 1.6, sx: 1, sy: 0.3, sz: 0.3, colour: 0xBFFFF0 });
+        ps.spawn({ pos: muzzle.clone(), life: 0.06, age: 0, size: 1.6, sx: 0.3, sy: 1, sz: 0.3, colour: 0xBFFFF0 });
+        for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4; ps.spawn({ pos: target.clone(), vel: new T.Vector3(Math.cos(a) * 4, Math.sin(a) * 4 + 2, -1.5), gravity: true, life: 0.45, age: 0, size: 0.35, colour: i % 2 ? TEAL : 0xBFFFF0, fade: true, delay: 0 }); }
+      },
+      tick: function (pistol, heat, now, ps, muzzle) {
+        pistol.byName('Barrel').heat(Math.max(0, heat - 0.4) / 0.6, RED);
+        if (heat > 0.75 && Math.random() < 0.3) ps.spawn({ pos: muzzle.clone().add(new T.Vector3((Math.random() - 0.5) * 1.5, 0.6, -2 - Math.random() * 3)), vel: new T.Vector3(0, 1.5, 0), life: 0.6, age: 0, size: 0.4, colour: 0x6B7280, fade: true, shrink: true });
+      }
+    },
+    beam: {
+      fire: function (ps, muzzle, target, dir, heat) {
+        var len = muzzle.distanceTo(target), mid = muzzle.clone().add(target).multiplyScalar(0.5), q = lineQuat(dir);
+        var c = new T.Color(TEAL).lerp(new T.Color(RED), Math.max(0, heat - 0.5) * 2).getHex();
+        ps.spawn({ pos: mid.clone(), life: 0.07, age: 0, size: 1, sx: 0.12, sy: len, sz: 0.12, quat: q, colour: 0xE8FFFA });
+        ps.spawn({ pos: mid.clone(), life: 0.1, age: 0, size: 1, sx: 0.3, sy: len, sz: 0.3, quat: q, colour: c, fade: true });
+        ps.spawn({ pos: muzzle.clone(), life: 0.1, age: 0, size: 1.2, sx: 1, sy: 1, sz: 0.05, colour: 0xE8FFFA, shrink: true });
+        ps.spawn({ pos: target.clone(), life: 1.0, age: 0, size: 0.9, sx: 1, sy: 1, sz: 0.06, colour: c, fade: true });
+        for (var i = 0; i < 6; i++) { var a = i * Math.PI / 3; ps.spawn({ pos: target.clone(), vel: new T.Vector3(Math.cos(a) * 3, Math.sin(a) * 3 + 1, -1), gravity: true, life: 0.35, age: 0, size: 0.25, colour: 0xE8FFFA, fade: true }); }
+      },
+      tick: function (pistol, heat, now) {
+        var locked = heat >= 1;
+        pistol.byName('Barrel').glowColour(locked ? (Math.sin(now * 10) > 0 ? RED : 0x5A1A14) : new T.Color(TEAL).lerp(new T.Color(RED), Math.max(0, heat - 0.5) * 2).getHex());
+      }
+    },
+    pulse: {
+      fire: function (ps, muzzle, target, dir, heat) {
+        var len = muzzle.distanceTo(target), q = lineQuat(dir), right = new T.Vector3().crossVectors(dir, UP).normalize(), up = new T.Vector3().crossVectors(right, dir).normalize();
+        ps.spawn({ pos: muzzle.clone(), vel: dir.clone().multiplyScalar(len / 0.17), life: 0.17, age: 0, size: 0.8, sy: 4, quat: q, colour: TEAL });
+        for (var i = 0; i < 8; i++) {
+          var a = i * Math.PI / 4, r = right.clone().multiplyScalar(Math.cos(a)).add(up.clone().multiplyScalar(Math.sin(a)));
+          ps.spawn({ pos: muzzle.clone().add(r.clone().multiplyScalar(0.6)), vel: dir.clone().multiplyScalar(len / 0.25).add(r.clone().multiplyScalar(5)), life: 0.25, age: 0, size: 0.35, colour: 0xBFFFF0, fade: true });
+          ps.spawn({ pos: target.clone().add(r.clone().multiplyScalar(0.3)), vel: r.clone().multiplyScalar(6), life: 0.4, age: 0, size: 0.35, sz: 0.3, colour: TEAL, fade: true, shrink: true });
+        }
+      },
+      tick: function (pistol, heat, now, ps, muzzle, gun) {
+        var hot = heat > 0.75;
+        pistol.byName('Cell').glowColour(hot && Math.sin(now * 14) > 0 ? RED : TEAL);
+        pistol.byName('Core').glowColour(heat >= 1 ? new T.Color(0x3A0E0A).lerp(new T.Color(RED), 0.5 + 0.5 * Math.sin(now * 3)).getHex() : TEAL);
+        if (gun) { gun.position.x = hot ? (Math.random() - 0.5) * 0.15 : 0; }
+      }
+    }
+  };
+
+  // ---- a first-person stage with a target post ahead ------------------------------------------------------------------------------------
+  var stages = [];
+  function makeStage(el, effect) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene(), camera = new T.PerspectiveCamera(70, 4 / 3, 0.1, 500);
+    camera.position.set(0, 0, 0); camera.lookAt(0, 0, 1);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, -40); scene.add(key);
+    // the ground and a target post (a dummy's size: two blocks tall) eight blocks (128 voxels) ahead
+    var ground = new VoxelPart('g'); ground.fill(-40, -30, 0, 39, -30, 199, STONE); ground.build(); scene.add(ground.group);
+    var post = new VoxelPart('post'); post.fill(-3, -29, 126, 2, -2, 131, 0x3A3F48).fill(-6, -1, 124, 5, 9, 133, 0xC9A96E).fill(-5, 0, 123, 4, 8, 123, 0xE8E0CC).fill(-3, 2, 122, 2, 6, 122, RED).fill(-1, 4, 121, 0, 4, 121, 0xE8E0CC);
+    post.fill(-10, -28, 120, 9, -28, 140, 0x565C66); post.build(); scene.add(post.group);
+    var S = 0.3, HOLD = [4.6, -4.4, 12];
+    var p = pistol(); var gun = new T.Group(); gun.scale.setScalar(S); gun.add(p.root);
+    var hold = new T.Group(); hold.position.set(HOLD[0], HOLD[1], HOLD[2]); hold.add(gun); scene.add(hold);
+    var arm = new VoxelPart('arm'); arm.fill(-2, -14, -3, 1, -1, 0, SHIRT).fill(-2, -4, -3, 1, -1, 0, SKIN).build();
+    arm.group.scale.setScalar(0.5); arm.group.rotation.set(0.5, 0, -0.35); arm.group.position.set(0.3, -2.2, -2.4); hold.add(arm.group);
+    var muzzle = new T.Vector3(HOLD[0] + 0.5 * S, HOLD[1] + 3 * S, HOLD[2] + 19 * S);
+    var target = new T.Vector3(0, 4, 121.5);
+    var particles = new Particles(scene, 400);
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pistol: p, gun: gun, arm: arm, muzzle: muzzle, target: target, particles: particles, effect: effect,
+      heat: 0, charge: 24, locked: 0, kick: 0, reload: 0, auto: !reduced, nextShot: 1, nextReload: 9, burst: 0,
+      heatEl: el.querySelector('[data-heat]'), chargeEl: el.querySelector('[data-charge]'), lockEl: el.querySelector('[data-lock]') };
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function fire(st) {
+    if (st.locked > 0 || st.reload > 0) return;
+    if (st.charge <= 0) { st.reload = 1.2; return; }
+    st.charge -= 1; st.kick = 0.18; st.heat = Math.min(1, st.heat + 0.14);
+    var dir = st.target.clone().sub(st.muzzle).normalize();
+    EFFECTS[st.effect].fire(st.particles, st.muzzle, st.target, dir, st.heat);
+    if (st.heat >= 1) st.locked = 1.5;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; if (current >= 0) b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { if (current >= 0) buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  ['bolt', 'beam', 'pulse'].forEach(function (key) {
+    var st = makeStage(document.querySelector('[data-effect="' + key + '"]'), key);
+    var holder = document.querySelector('.controls[data-for="' + key + '"]');
+    group(holder, 'DO', ['FIRE', 'RELOAD', 'OVERHEAT'], -1, function (i) { if (i === 0) fire(st); else if (i === 1) { st.reload = 1.2; st.charge = 24; } else st.burst = 8; });
+    group(holder, 'AUTO', ['ON', 'OFF'], st.auto ? 0 : 1, function (i) { st.auto = i === 0; });
+  });
+
+  var last = performance.now() / 1000;
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    stages.forEach(function (st) {
+      if (st.auto) {
+        if (now >= st.nextShot) { fire(st); st.nextShot = now + 0.5; }
+        if (now >= st.nextReload) { st.reload = 1.2; st.charge = 24; st.nextReload = now + 9; }
+      }
+      if (st.burst > 0 && st.locked <= 0) { fire(st); st.burst -= 1; }
+      st.kick = Math.max(0, st.kick - dt); st.reload = Math.max(0, st.reload - dt); st.locked = Math.max(0, st.locked - dt);
+      st.heat = Math.max(0, st.heat - dt * (st.locked > 0 ? 0.55 : 0.2));
+      if (st.locked <= 0 && st.heat >= 1) st.heat = 0.99;
+      var k = st.kick > 0 ? Math.sin(st.kick / 0.18 * Math.PI) : 0, bob = reduced ? 0 : Math.sin(now * 1.6) * 0.15;
+      st.gun.position.set(0, bob, -k * 1.0); st.arm.group.position.set(0.3, -2.2 + bob, -2.4 - k * 1.0);
+      st.gun.rotation.x = -k * 0.22 + (st.reload > 0 ? Math.sin(st.reload / 1.2 * Math.PI) * 0.35 : 0);
+      var cellDrop = st.reload > 0 ? Math.sin(st.reload / 1.2 * Math.PI) : 0;
+      st.pistol.parts.forEach(function (p) { p.group.position.copy(p.home); });
+      st.pistol.byName('Cell').group.position.y = -cellDrop * 9;
+      EFFECTS[st.effect].tick(st.pistol, st.heat, now, st.particles, st.muzzle, st.gun);
+      st.particles.update(dt);
+      st.heatEl.style.width = Math.round(st.heat * 100) + '%'; st.heatEl.className = st.heat > 0.75 ? 'hot' : '';
+      st.chargeEl.textContent = String(st.charge); st.lockEl.style.opacity = st.locked > 0 ? (Math.sin(now * 8) > 0 ? 1 : 0.4) : 0;
+      st.renderer.render(st.scene, st.camera);
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

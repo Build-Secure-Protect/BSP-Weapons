@@ -70,10 +70,13 @@ public final class WeaponData {
     public static Map<ResourceLocation, Catalyst> catalysts() { return catalysts; }
 
     /** The client's copy of the part data, from {@code WeaponDataPacket}; on a single-player client it matches what the server loaded. */
-    public static void acceptSync(Map<ResourceLocation, WeaponMaterial> m, Map<Integer, BandDefaults> b, Map<ResourceLocation, PartType> t) {
+    public static void acceptSync(Map<ResourceLocation, WeaponMaterial> m, Map<Integer, BandDefaults> b, Map<ResourceLocation, PartType> t,
+                                  Map<ResourceLocation, Pattern> p, Map<ResourceLocation, Catalyst> c) {
         materials = Collections.unmodifiableMap(new HashMap<>(m));
         bands = Collections.unmodifiableMap(new HashMap<>(b));
         partTypes = Collections.unmodifiableMap(new HashMap<>(t));
+        patterns = Collections.unmodifiableMap(new HashMap<>(p));
+        catalysts = Collections.unmodifiableMap(new HashMap<>(c));
     }
 
     public static Pattern pattern(ResourceLocation id) { return patterns.get(id); }
@@ -103,7 +106,9 @@ public final class WeaponData {
         for (Map.Entry<String, JsonElement> e : o.getAsJsonObject("base").entrySet()) {
             Stat s = Stat.byId(e.getKey());
             if (s == null) throw new IllegalArgumentException("unknown stat '" + e.getKey() + "' in base");
-            base.set(s, e.getValue().getAsDouble());
+            double v = e.getValue().getAsDouble();
+            if (Double.isNaN(v) || Double.isInfinite(v)) throw new IllegalArgumentException("base '" + e.getKey() + "' is not a number");
+            base.set(s, v);
         }
         return new Pattern(id, kind, slots, base);
     }
@@ -145,7 +150,9 @@ public final class WeaponData {
         PartKind kind = PartKind.byId(string(o, "kind"));
         if (kind == null || kind == PartKind.CORE) throw new IllegalArgumentException("a part type needs a kind other than the Core");
         Modifiers m = o.has("modifiers") ? Modifiers.fromJson(o.getAsJsonObject("modifiers")) : Modifiers.NONE;
-        return new PartType(id, kind, m, ids(o, "classes"));
+        String ammo = o.has("ammo") ? o.get("ammo").getAsString() : PartType.ENERGY;
+        if (!ammo.equals(PartType.ENERGY) && !ammo.equals(PartType.ROUNDS)) throw new IllegalArgumentException("ammo must be energy or rounds, not '" + ammo + "'");
+        return new PartType(id, kind, m, ids(o, "classes"), ammo);
     }
 
     static Augment readAugment(ResourceLocation id, JsonObject o) {
@@ -163,7 +170,8 @@ public final class WeaponData {
         var arr = o.getAsJsonArray("odds");
         int[] odds = new int[arr.size()];
         for (int i = 0; i < arr.size(); i++) odds[i] = arr.get(i).getAsInt();
-        return new Catalyst(id, string(o, "ingredient"), odds);
+        int colour = o.has("colour") ? Integer.parseInt(string(o, "colour").replace("#", ""), 16) : 0x2A4AC8;
+        return new Catalyst(id, string(o, "ingredient"), odds, colour);
     }
 
     private static String string(JsonObject o, String key) {

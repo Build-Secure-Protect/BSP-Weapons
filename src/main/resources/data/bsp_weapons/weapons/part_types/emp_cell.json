@@ -7,5 +7,6 @@
     "CAPACITY": {
       "percent": 10
     }
-  }
+  },
+  "ammo": "energy"
 }

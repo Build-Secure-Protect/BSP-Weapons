@@ -7,5 +7,6 @@
     "RECHARGE": {
       "percent": 15
     }
-  }
+  },
+  "ammo": "rounds"
 }

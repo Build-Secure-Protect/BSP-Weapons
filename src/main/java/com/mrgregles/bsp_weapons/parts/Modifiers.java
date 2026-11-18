@@ -70,10 +70,15 @@ public final class Modifiers {
             Stat s = Stat.byId(e.getKey());
             if (s == null) throw new IllegalArgumentException("unknown stat '" + e.getKey() + "'");
             JsonObject o = e.getValue().getAsJsonObject();
-            if (o.has("flat")) m.flat(s, o.get("flat").getAsDouble());
-            if (o.has("percent")) m.percent(s, o.get("percent").getAsDouble());
+            if (o.has("flat")) m.flat(s, finite(o.get("flat").getAsDouble(), e.getKey()));
+            if (o.has("percent")) m.percent(s, finite(o.get("percent").getAsDouble(), e.getKey()));
         }
         return m;
+    }
+
+    static double finite(double v, String where) {
+        if (Double.isNaN(v) || Double.isInfinite(v)) throw new IllegalArgumentException("'" + where + "' is not a number");
+        return v;
     }
 
     @Override
