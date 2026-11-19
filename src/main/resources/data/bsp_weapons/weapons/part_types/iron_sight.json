@@ -1,4 +1,5 @@
 {
   "kind": "OPTIC",
-  "modifiers": {}
+  "modifiers": {},
+  "cost": 1
 }

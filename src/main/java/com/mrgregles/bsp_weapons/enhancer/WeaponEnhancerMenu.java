@@ -15,13 +15,13 @@ import net.minecraftforge.items.SlotItemHandler;
 /**
  * The enhancer's container, laid out as the Board screen (D85): the weapon at the rail's end, CHIP IN, REPAIR under the
  * grip and CORE under the heart in a row beneath the rail; the machine's part of the screen is the top 148 rows, the
- * player's inventory the rest. 256 x 232. The charge reaches the client as four shorts
+ * player's inventory the rest. 300 x 232. The charge reaches the client as four shorts
  * (low and high halves of the stored and the capacity), since container data is sixteen bits wide on the wire.
  */
 public class WeaponEnhancerMenu extends AbstractContainerMenu {
     /** Slot positions on the screen, by {@link Enhancing} slot number: weapon, chip in, core, repair. */
     public static final int[][] SLOT_XY = {{6, 53}, {20, 80}, {96, 80}, {58, 80}};
-    public static final int INVENTORY_X = 47, INVENTORY_Y = 150, HOTBAR_Y = 208;
+    public static final int INVENTORY_X = 69, INVENTORY_Y = 150, HOTBAR_Y = 208;
     private final WeaponEnhancerBlockEntity blockEntity;
     private final ContainerLevelAccess access;
     private final BlockPos pos;

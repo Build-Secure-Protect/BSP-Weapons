@@ -6,5 +6,15 @@
     }
   },
   "colour": "#FFD23A",
-  "durability": 10
+  "durability": 10,
+  "ingredients": [
+    {
+      "tag": "forge:gems/diamond",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

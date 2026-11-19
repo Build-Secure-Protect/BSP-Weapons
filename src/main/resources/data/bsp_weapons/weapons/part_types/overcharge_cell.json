@@ -11,5 +11,6 @@
       "percent": -25
     }
   },
-  "ammo": "energy"
+  "ammo": "energy",
+  "cost": 2
 }

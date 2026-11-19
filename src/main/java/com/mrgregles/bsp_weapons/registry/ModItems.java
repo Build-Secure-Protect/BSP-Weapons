@@ -3,6 +3,7 @@ package com.mrgregles.bsp_weapons.registry;
 import com.mrgregles.bsp_weapons.BspWeapons;
 import com.mrgregles.bsp_weapons.data.WeaponData;
 import com.mrgregles.bsp_weapons.item.AugmentChipItem;
+import com.mrgregles.bsp_weapons.item.BlankEngramItem;
 import com.mrgregles.bsp_weapons.item.CatalystItem;
 import com.mrgregles.bsp_weapons.parts.Augment;
 import com.mrgregles.bsp_weapons.item.CoreItem;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** The mod's items: one part item per part type, the Weapon Core, the Augment Chip, and the BSP-Weapons creative tab. */
+/** The mod's items: one part item per part type, the Weapon Core, the engrams and the Blank Engram, the catalysts, the round, the Augment Chip, the machines, and the BSP-Weapons creative tab. */
 public final class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BspWeapons.MODID);
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, BspWeapons.MODID);
@@ -46,6 +47,8 @@ public final class ModItems {
     public static final List<RegistryObject<WeaponItem>> WEAPON_ITEMS;
     public static final List<RegistryObject<EngramItem>> ENGRAMS;
     public static final List<RegistryObject<CatalystItem>> CATALYST_ITEMS;
+    /** The Slate a class's Engram is written into at the Weapon Fabricator (D102, D110, R31). */
+    public static final RegistryObject<BlankEngramItem> BLANK_ENGRAM = ITEMS.register("blank_engram", () -> new BlankEngramItem(new Item.Properties().stacksTo(16)));
     /** The round every magazine weapon loads (D68, D69). */
     public static final RegistryObject<Item> ENERGY_ROUND = ITEMS.register("energy_round", () -> new Item(new Item.Properties()) {
         @Override
@@ -57,6 +60,7 @@ public final class ModItems {
     public static final RegistryObject<AugmentChipItem> AUGMENT_CHIP = ITEMS.register("augment_chip", () -> new AugmentChipItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<BlockItem> WEAPON_ASSEMBLER = ITEMS.register("weapon_assembler", () -> new BlockItem(ModBlocks.WEAPON_ASSEMBLER.get(), new Item.Properties()));
     public static final RegistryObject<BlockItem> WEAPON_ENHANCER = ITEMS.register("weapon_enhancer", () -> new BlockItem(ModBlocks.WEAPON_ENHANCER.get(), new Item.Properties()));
+    public static final RegistryObject<BlockItem> WEAPON_FABRICATOR = ITEMS.register("weapon_fabricator", () -> new BlockItem(ModBlocks.WEAPON_FABRICATOR.get(), new Item.Properties()));
     public static final RegistryObject<CreativeModeTab> TAB;
 
     static {
@@ -87,6 +91,8 @@ public final class ModItems {
                 .displayItems((parameters, output) -> {
                     output.accept(WEAPON_ASSEMBLER.get());
                     output.accept(WEAPON_ENHANCER.get());
+                    output.accept(WEAPON_FABRICATOR.get());
+                    output.accept(BLANK_ENGRAM.get());
                     for (RegistryObject<EngramItem> e : ENGRAMS) output.accept(e.get());
                     for (RegistryObject<CatalystItem> c : CATALYST_ITEMS) output.accept(c.get());
                     output.accept(ENERGY_ROUND.get());

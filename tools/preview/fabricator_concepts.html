@@ -1,0 +1,599 @@
+<title>Fabricator Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; a row of three machine concepts (voxel, turning, working, labelled); a row of three screen layouts at 2x with a 320 x 240 fit check, the player's inventory in place this time; the blank engram as a turntable of the Data Chip and three concepts beside an icon strip; the questions. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header, .notes { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  h2.section { font-family: var(--pixel); font-weight: 400; font-size: 30px; line-height: 1; margin: 18px auto 10px; color: var(--violet); max-width: 1240px; }
+  h2.section small { font-size: 18px; color: var(--muted); margin-left: 10px; }
+  header p, .notes p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .row { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .two { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 1000px) { .row, .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; flex-wrap: wrap; }
+  .head h3 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; }
+  .head h3 span { color: var(--gold); margin-right: 8px; }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage.wide { aspect-ratio: 2 / 1; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 16px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .label span { color: var(--gold); margin-right: 6px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b { color: var(--text); font-weight: 500; }
+  .screen { padding: 10px 14px 0; display: grid; gap: 8px; }
+  .screen canvas { width: 100%; height: auto; max-width: 100%; image-rendering: pixelated; border: 1px solid var(--dim); }
+  .fit { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fit canvas { width: 320px; height: 240px; max-width: 100%; }
+  .fit span { font-family: var(--pixel); font-size: 16px; color: var(--muted); max-width: 22ch; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .strip .set { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .notes ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; color: var(--muted); }
+  .notes b { color: var(--text); font-weight: 500; }
+</style>
+
+<header>
+  <h1>THE WEAPON FABRICATOR AND THE BLANK ENGRAM</h1>
+  <p>The first machine of the brief, decided as D97 to D107: a bench two blocks wide, one high and one deep on Forge Energy, that makes parts from any material by tag with an optional catalyst for the part's roll, chips, engrams from a blank, Cores, catalysts and rounds, each job a set charge and about four seconds of work. Three picks: the machine, the screen, the Blank Engram. Every model is pixels (D37). The machines are shown turning with a job running (WORKING: a Tetrium Focused Barrel being made, the finished part appearing on the tray); the screens are drawn at the game's pixel size, 256 by 232 with the player's inventory where it goes, and inside a 320 by 240 window; the blank is shown turning beside the Data Chip it becomes, and as 16 and 32 pixel icons.</p>
+</header>
+
+<h2 class="section">THE MACHINE <small>set 9: 32 x 16 x 16 voxels, two block spaces</small></h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>LATHE</h3><small>the work turns, the tool walks</small></div>
+    <div class="stage" data-block="a"><div class="grid"></div></div>
+    <div class="controls" data-for="a"></div>
+    <p class="blurb"><b>A machinist's bench.</b> The energy tower on the left with its gold gauge, an ingot hopper on the front, a headstock and gold chuck that spin the workpiece, a tool carriage that walks along the bed throwing sparks, a tailstock, the finished part dropping onto the output tray on the right, and a console with a teal readout and buttons at the back right.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>PRESS AND BELT</h3><small>a press on the left, moulds ride a belt</small></div>
+    <div class="stage" data-block="b"><div class="grid"></div></div>
+    <div class="controls" data-for="b"></div>
+    <p class="blurb"><b>A foundry.</b> A C-frame press on the left whose gold head drops into a mould on the anvil with a teal flash, a belt on the right carrying mould tiles toward an output chute, a tall gauge on the back right, red and gold buttons along the front, the ingot hopper beside the press.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>GANTRY PRINTER</h3><small>the part grows layer by layer</small></div>
+    <div class="stage" data-block="c"><div class="grid"></div></div>
+    <div class="controls" data-for="c"></div>
+    <p class="blurb"><b>A fabricator proper.</b> A frame over a dark bed with a teal grid, a bridge that runs along the bed and a head that runs along the bridge, laying the part down in three layers with a teal nozzle and sparks, a material spool in the left tower with the gauge beside it, a console with a readout and buttons at the right front, the finished part lifted off to the tray.</p>
+  </section>
+</div>
+
+<h2 class="section">THE SCREEN <small>set 10: 256 x 232, the inventory at row 150</small></h2>
+<div class="row">
+  <section class="card">
+    <div class="head"><h3><span>A</span>CATALOGUE</h3><small>a list on the left, the job on the right</small></div>
+    <div class="screen">
+      <canvas data-screen="a" width="512" height="464"></canvas>
+      <div class="fit"><canvas data-fit="a" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window</span></div>
+    </div>
+    <div class="controls" data-tabs="a"></div>
+    <p class="blurb"><b>Tabs</b> PARTS, CHIPS, ENGRAMS, MORE over a list of everything the machine makes, each with its glyph; the chosen one framed teal. <b>On the right</b> the job: its name, what it needs as ghost items with counts, the MATERIAL, ROLL and BLANK slots, the OUT slot, the progress bar, the charge gauge, MAKE, and a status line with the cost or the refusal.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>B</span>WORKBENCH</h3><small>the part large in the middle</small></div>
+    <div class="screen">
+      <canvas data-screen="b" width="512" height="464"></canvas>
+      <div class="fit"><canvas data-fit="b" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window</span></div>
+    </div>
+    <div class="controls" data-tabs="b"></div>
+    <p class="blurb"><b>A row of glyphs</b> across the top picks what to make. <b>The part</b> is drawn large in the middle, tinted by the material in the slot; MATERIAL, ROLL and BLANK feed it from the left along teal traces; the progress fills under it; the cost sits on the right over the gauge; OUT at the bottom right; MAKE under the progress.</p>
+  </section>
+  <section class="card">
+    <div class="head"><h3><span>C</span>LEDGER</h3><small>the job as lines, the part's changes as bars</small></div>
+    <div class="screen">
+      <canvas data-screen="c" width="512" height="464"></canvas>
+      <div class="fit"><canvas data-fit="c" width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window</span></div>
+    </div>
+    <div class="controls" data-tabs="c"></div>
+    <p class="blurb"><b>The list</b> narrow on the left; <b>the ledger</b> on the right reads the job as lines: cost, charge, time, the roll odds of the catalyst in the slot, then the part's own changes to a sheet as small teal bars (what a Focused Tetrium barrel adds), so the player plans before pressing MAKE. The charge as a band under the title; the slots and the progress in one row at the foot with MAKE.</p>
+  </section>
+</div>
+
+<h2 class="section">THE BLANK ENGRAM <small>set 11: the Data Chip it becomes is on the left</small></h2>
+<div class="two">
+  <section class="card">
+    <div class="head"><h3>FOUR ITEMS</h3><small>drag to turn; the Data Chip is D61 as built</small></div>
+    <div class="stage wide" data-stage="blank"><div class="grid"></div></div>
+    <p class="blurb"><b>A Unwritten Chip:</b> the same cartridge with steel contacts, no gold band and a dark empty window: the blank is plainly the engram before it is written. <b>B Slate:</b> a flat dark board with a light grid etched in it, a gold tab at one corner, a glass pane over it: a blank to be filled, the machine writes the glyph into the grid. <b>C Spool:</b> a small reel of teal tape on a gunmetal hub: raw data, wound; the engram is cut from it.</p>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>ICONS: 16 PX AND 32 PX</h3>
+      <div class="strip" data-strip="blank"></div>
+      <h3>HOW IT IS USED</h3>
+      <p class="blurb" style="padding:0"><b>Crafting table</b> (D102): four iron ingots, a redstone and a glass pane make one Blank Engram. <b>Fabricator:</b> a Blank Engram in the BLANK slot and four of the class's signature material in MATERIAL make that class's Engram (Laser Pistol: Tetrium); the engram list on the screen shows every pattern the server knows. The blank stacks to 16.</p>
+    </div>
+  </section>
+</div>
+
+<section class="notes">
+  <h2 class="section" style="margin-left:0">WHAT TO PICK</h2>
+  <ol>
+    <li><b>The machine:</b> A Lathe, B Press and Belt, or C Gantry Printer, or a mix.</li>
+    <li><b>The screen:</b> A Catalogue, B Workbench, or C Ledger. The part's own changes as bars (C) can join A or B.</li>
+    <li><b>The Blank Engram:</b> A Unwritten Chip, B Slate, or C Spool.</li>
+    <li><b>The working look:</b> the part appearing on the tray at the end (as drawn), or in the OUT slot only with the machine's motion as the whole tell.</li>
+  </ol>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, STONE = 0x4A4F58, LIGHT = 0x5A6270, MAT = 0x7D97B0, RED = 0xFF6B5C, OFF = 0x1C2230, STEEL = 0x8C949F, VIOLET = 0xB58CFF, LAMP = 0xFFD23A, TETRIUM = 0x6B4FA3, BELT = 0x1A1F27;
+
+  // ---- voxels (as the earlier pages). Roles: a colour (lit), 'teal' / 'glow' (teal, full bright), 'red', 'violet', 'lamp' (gold), 'g:RRGGBB' (any colour, full bright), 'glass'. ----
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function isGlow(r) { return r === 'teal' || r === 'glow' || r === 'red' || r === 'violet' || r === 'lamp' || (typeof r === 'string' && r.slice(0, 2) === 'g:'); }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === 'glass') glass.push(k); else if (isGlow(r)) glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); });
+      im.instanceMatrix.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.lit = lit; this.glow = glow;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }));
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    this.glassMesh = mesh(glass, new T.MeshBasicMaterial({ color: 0x8AE8DC, transparent: true, opacity: 0.42, depthWrite: false }));
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this;
+    function colour(r) { if (r === 'teal' || r === 'glow') return TEAL; if (r === 'red') return RED; if (r === 'violet') return VIOLET; if (r === 'lamp') return LAMP; if (typeof r === 'string' && r.slice(0, 2) === 'g:') return parseInt(r.slice(2), 16); return r; }
+    [[this.mesh, this.lit], [this.glowMesh, this.glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(colour(self.cubes[k])); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); pair[0].setColorAt(i, c); });
+      pair[0].instanceColor.needsUpdate = true;
+    });
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+  function centred(part) { part.build(); var b = part.bounds(), c = b.getCenter(new T.Vector3()); var g = new T.Group(); part.group.position.set(-c.x, -c.y, -c.z); g.add(part.group); return g; }
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  function Sparks(parent, n, colour) {
+    this.items = []; this.m = new T.Matrix4();
+    this.mesh = new T.InstancedMesh(new T.BoxGeometry(0.5, 0.5, 0.5), new T.MeshBasicMaterial({ color: colour }), n);
+    for (var i = 0; i < n; i++) this.items.push({ p: new T.Vector3(), v: new T.Vector3(), life: 0 });
+    parent.add(this.mesh); this.tick(0);
+  }
+  Sparks.prototype.spit = function (x, y, z, count) { var n = 0; for (var i = 0; i < this.items.length && n < count; i++) { var it = this.items[i]; if (it.life > 0) continue; it.p.set(x, y, z); it.v.set((Math.random() - 0.5) * 10, 4 + Math.random() * 6, (Math.random() - 0.5) * 10); it.life = 0.3 + Math.random() * 0.3; n++; } };
+  Sparks.prototype.tick = function (dt) {
+    var self = this;
+    this.items.forEach(function (it, i) {
+      if (it.life > 0) { it.life -= dt; it.v.y -= 30 * dt; it.p.addScaledVector(it.v, dt); self.m.makeTranslation(it.p.x, it.p.y, it.p.z); } else self.m.makeScale(0.001, 0.001, 0.001);
+      self.mesh.setMatrixAt(i, self.m);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
+  };
+  function floor(x0, z0, x1, z1) { var f = new VoxelPart('floor'); f.fill(x0, -1, z0, x1, -1, z1, STONE); return f.build(); }
+  /** The job cycle, 8 s: idle 1 s, working 5 s (progress 0 to 1), done 2 s (the part on the tray). */
+  function jobPhase(now) { var t = now % 8; if (t < 1) return { p: 0, state: 'idle' }; if (t < 6) return { p: (t - 1) / 5, state: 'working' }; return { p: 1, state: 'done' }; }
+
+  /** A Focused Barrel in Tetrium, lying along x, 12 long: the thing being made. */
+  function barrelPiece() {
+    var b = new VoxelPart('barrel');
+    b.fill(0, 0, 0, 11, 2, 2, TETRIUM).fill(0, 0, 0, 0, 2, 2, GOLD).cut(0, 1, 1, 0, 1, 1).fill(10, 0, 0, 11, 2, 2, GOLD).cut(10, 1, 1, 11, 1, 1).fill(11, 1, 1, 11, 1, 1, 'teal').fill(3, 3, 1, 8, 3, 1, DARK);
+    return b;
+  }
+  function ingotPiece() { var c = new VoxelPart('ingot'); c.fill(0, 0, 0, 3, 0, 1, TETRIUM).fill(1, 1, 0, 2, 1, 1, TETRIUM); return c; }
+  function base(b) {
+    b.fill(0, 0, 0, 31, 5, 15, GUNMETAL).fill(0, 0, 0, 31, 0, 15, DARK).fill(0, 5, 0, 31, 5, 15, GOLD).fill(1, 5, 1, 30, 5, 14, LIGHT);
+    for (var z = 2; z <= 13; z += 3) { b.fill(0, 1, z, 0, 4, z, DARK); b.fill(31, 1, z, 31, 4, z, DARK); }
+    for (var x = 20; x <= 29; x += 3) b.fill(x, 1, 0, x, 4, 0, DARK);
+    return b;
+  }
+  function gauge(b, x, y0, y1, z, lit) { for (var y = y0; y <= y1; y++) b.fill(x, y, z, x + 2, y, z, y <= lit ? 'lamp' : OFF); }
+  function console(b, x0, z0) {
+    // a small stepped console: a sloped readout and two button rows, within x0..x0+6, z0..z0+5
+    b.fill(x0, 6, z0, x0 + 6, 7, z0 + 5, GUNMETAL).fill(x0, 8, z0 + 3, x0 + 6, 8, z0 + 5, GUNMETAL).fill(x0 + 1, 8, z0, x0 + 5, 8, z0 + 2, LIGHT);
+    b.fill(x0 + 1, 9, z0 + 3, x0 + 5, 9, z0 + 5, DARK).fill(x0 + 2, 9, z0 + 4, x0 + 4, 9, z0 + 4, 'teal');
+    for (var i = 0; i < 5; i += 2) b.fill(x0 + 1 + i, 9, z0 + 1, x0 + 1 + i, 9, z0 + 1, i === 2 ? RED : GOLD);
+    b.fill(x0 + 6, 8, z0 + 1, x0 + 6, 10, z0 + 1, GOLD).fill(x0 + 6, 11, z0 + 1, x0 + 6, 11, z0 + 1, RED);
+  }
+
+  // ---- the three machines --------------------------------------------------------------------------------------------------------------
+  function machineA() {
+    var b = base(new VoxelPart('lathe'));
+    b.fill(0, 6, 8, 6, 15, 15, GUNMETAL).fill(0, 6, 8, 6, 6, 15, LIGHT).fill(1, 7, 7, 5, 14, 7, DARK); gauge(b, 2, 8, 13, 7, 11);       // the energy tower, gauge nine of... lit to 11
+    b.fill(1, 6, 1, 6, 9, 6, GUNMETAL).fill(2, 7, 2, 5, 9, 5, DARK).fill(2, 7, 2, 5, 7, 5, TETRIUM).fill(1, 9, 1, 6, 9, 6, GOLD).cut(2, 9, 2, 5, 9, 5); // the ingot hopper
+    b.fill(7, 6, 4, 23, 7, 9, LIGHT).fill(7, 7, 4, 23, 7, 4, GOLD).fill(7, 7, 9, 23, 7, 9, GOLD);                                            // the bed and its rails
+    b.fill(7, 8, 5, 10, 13, 8, GUNMETAL).fill(8, 14, 6, 9, 14, 7, GOLD).fill(11, 8, 5, 11, 13, 8, GOLD).cut(11, 9, 6, 11, 12, 7);            // headstock and chuck
+    b.fill(21, 8, 5, 23, 12, 8, GUNMETAL).fill(20, 10, 6, 20, 11, 7, GOLD).fill(22, 13, 6, 22, 13, 7, RED);                                 // tailstock and its point
+    b.fill(24, 6, 1, 30, 6, 6, GUNMETAL).fill(24, 7, 1, 30, 7, 6, GOLD).cut(25, 7, 2, 29, 7, 5).fill(25, 7, 2, 29, 7, 5, DARK);              // the output tray
+    console(b, 24, 10);
+    var g = new T.Group(); g.add(b.build().group);
+    var work = centred(barrelPiece()); work.position.set(16, 10.5, 6.5); work.scale.setScalar(0.75); g.add(work);
+    var tool = new VoxelPart('tool'); tool.fill(0, 0, 0, 2, 2, 2, GUNMETAL).fill(1, 3, 0, 1, 3, 2, GUNMETAL).fill(1, 4, 2, 1, 4, 2, 'teal'); tool.build(); g.add(tool.group);
+    var out = centred(barrelPiece()); out.position.set(27, 8, 3.5); out.scale.setScalar(0.6); out.rotation.y = 0.3; g.add(out);
+    var sparks = new Sparks(g, 24, GOLD), lamp = new T.PointLight(TEAL, 0.5, 18); lamp.position.set(16, 14, 2); g.add(lamp);
+    return {
+      group: g, cam: { pos: [48, 30, 56], look: [16, 8, 8] }, floor: [-16, -16, 47, 31],
+      labels: [['Energy tower', [3, 17, 11]], ['Ingot hopper', [3, 11, 0]], ['Chuck', [11, 15, 6.5]], ['Tool carriage', [16, 4, -1]], ['Tailstock', [22, 15, 6.5]], ['Output tray', [27, 9, -1]], ['Console', [27, 13, 13]]],
+      animate: function (now, dt, st, job) {
+        var working = st.working && job.state === 'working';
+        if (working && !reduced) work.rotation.x += dt * 9;
+        work.visible = !(st.working && job.state === 'done');
+        var tx = working ? 12 + 7 * (0.5 - 0.5 * Math.cos(job.p * Math.PI * 3)) : 19;
+        tool.group.position.set(tx, 6, 1);
+        if (working && !reduced) sparks.spit(tx + 1.5, 11, 4, 2);
+        sparks.tick(dt);
+        out.visible = st.working && job.state === 'done';
+        lamp.intensity = working ? 0.5 + 0.3 * Math.abs(Math.sin(now * 8)) : 0.2;
+      }
+    };
+  }
+  function machineB() {
+    var b = base(new VoxelPart('press'));
+    b.fill(2, 6, 10, 13, 15, 15, GUNMETAL).fill(2, 13, 2, 13, 15, 9, GUNMETAL).fill(2, 15, 2, 13, 15, 15, GOLD).cut(3, 15, 3, 12, 15, 14);  // the C-frame
+    b.fill(4, 6, 3, 11, 6, 9, LIGHT).fill(5, 6, 4, 10, 6, 8, DARK).fill(6, 6, 5, 9, 6, 7, OFF);                                              // the anvil and its mould
+    b.fill(0, 6, 1, 1, 9, 9, GUNMETAL).fill(0, 7, 2, 1, 9, 8, DARK).fill(0, 7, 2, 1, 7, 8, TETRIUM).fill(0, 9, 1, 1, 9, 9, GOLD).cut(0, 9, 2, 1, 9, 8); // hopper, left side
+    b.fill(14, 6, 5, 30, 6, 10, BELT).fill(14, 7, 4, 30, 7, 4, GUNMETAL).fill(14, 7, 11, 30, 7, 11, GUNMETAL);                               // the belt and its sides
+    for (var x = 15; x <= 29; x += 3) b.fill(x, 6, 4, x, 6, 4, GOLD).fill(x, 6, 11, x, 6, 11, GOLD);                                          // rollers
+    b.fill(29, 6, 1, 31, 8, 4, GUNMETAL).fill(30, 7, 1, 31, 8, 4, DARK).fill(31, 6, 1, 31, 6, 4, GOLD);                                      // the output chute
+    b.fill(26, 6, 12, 30, 15, 15, GUNMETAL).fill(27, 7, 11, 29, 14, 11, DARK); gauge(b, 27, 8, 13, 11, 11);                                   // the gauge tower
+    for (var bx = 16; bx <= 24; bx += 2) b.fill(bx, 6, 1, bx, 6, 1, bx % 4 === 0 ? RED : GOLD).fill(bx, 6, 2, bx, 6, 2, GUNMETAL);           // buttons along the front
+    b.fill(14, 6, 0, 26, 6, 2, GUNMETAL); for (var bx2 = 16; bx2 <= 24; bx2 += 2) b.fill(bx2, 7, 1, bx2, 7, 1, bx2 % 4 === 0 ? RED : GOLD);
+    var g = new T.Group(); g.add(b.build().group);
+    var head = new VoxelPart('head'); head.fill(0, 0, 0, 5, 2, 5, GOLD).fill(1, 0, 1, 4, 0, 4, DARK).fill(2, 3, 2, 3, 6, 3, GUNMETAL); head.build(); g.add(head.group);
+    var flash = new VoxelPart('flash'); flash.fill(0, 0, 0, 3, 0, 2, 'teal'); flash.build(); flash.group.position.set(6, 7, 5); g.add(flash.group);
+    var tiles = [];
+    for (var i = 0; i < 3; i++) { var t = new VoxelPart('tile'); t.fill(0, 0, 0, 3, 0, 4, LIGHT).fill(1, 0, 1, 2, 0, 3, i === 2 ? TETRIUM : DARK); t.build(); g.add(t.group); tiles.push(t.group); }
+    var out = centred(barrelPiece()); out.position.set(30, 10, 2.5); out.scale.setScalar(0.6); out.rotation.y = 1.2; g.add(out);
+    var sparks = new Sparks(g, 24, TEAL), lamp = new T.PointLight(TEAL, 0.5, 18); lamp.position.set(8, 12, 4); g.add(lamp);
+    return {
+      group: g, cam: { pos: [48, 30, 56], look: [16, 8, 8] }, floor: [-16, -16, 47, 31],
+      labels: [['Press head', [8, 17, 6]], ['Anvil and mould', [8, 3, -3]], ['Hopper', [-3, 12, 5]], ['Belt', [22, 4, 8]], ['Output chute', [33, 10, 0]], ['Gauge', [28, 17, 10]], ['Buttons', [20, 9, -3]]],
+      animate: function (now, dt, st, job) {
+        var working = st.working && job.state === 'working';
+        var press = working ? Math.max(0, Math.sin(job.p * Math.PI * 2)) : 0;
+        head.group.position.set(5, 12 - 5 * smooth(press * 1.4), 3);
+        flash.group.visible = working && press > 0.9;
+        if (flash.group.visible && !reduced) sparks.spit(7.5, 7.5, 6.5, 2);
+        sparks.tick(dt);
+        for (var i = 0; i < 3; i++) { var u = ((working ? job.p * 2 : 0) + i / 3) % 1; tiles[i].position.set(15 + 11 * u, 7, 5.5); tiles[i].visible = !working || u < 0.98; }
+        out.visible = st.working && job.state === 'done';
+        lamp.intensity = working ? 0.4 + 0.5 * press : 0.2;
+      }
+    };
+  }
+  function machineC() {
+    var b = base(new VoxelPart('printer'));
+    b.fill(6, 6, 3, 25, 6, 12, DARK); for (var gx = 7; gx <= 24; gx += 3) for (var gz = 4; gz <= 11; gz += 3) b.fill(gx, 6, gz, gx, 6, gz, 'teal');  // the bed and its grid
+    [[5, 2], [26, 2], [5, 13], [26, 13]].forEach(function (c) { b.fill(c[0], 6, c[1], c[0], 15, c[1], GUNMETAL); });                              // four posts
+    b.fill(5, 15, 2, 5, 15, 13, GOLD).fill(26, 15, 2, 26, 15, 13, GOLD);                                                                        // the rails along z
+    b.fill(0, 6, 4, 4, 15, 15, GUNMETAL).fill(1, 8, 3, 3, 13, 3, DARK); gauge(b, 1, 9, 12, 3, 11);                                            // the left tower: gauge
+    b.fill(0, 9, 7, 0, 14, 12, DARK).fill(0, 10, 8, 0, 13, 11, 'teal').fill(0, 11, 9, 0, 12, 10, GUNMETAL);                                     // the spool on its side
+    b.fill(27, 6, 3, 31, 6, 12, GUNMETAL); console(b, 25, 0);                                                                                 // the console at the right front
+    b.fill(27, 6, 13, 31, 9, 15, GUNMETAL).fill(27, 10, 13, 31, 10, 15, GOLD).cut(28, 10, 14, 30, 10, 14).fill(28, 10, 14, 30, 10, 14, DARK);  // the tray at the back right
+    var g = new T.Group(); g.add(b.build().group);
+    var bridge = new VoxelPart('bridge'); bridge.fill(0, 0, 0, 21, 0, 1, GUNMETAL).fill(0, 0, 0, 21, 0, 0, GOLD); bridge.build(); g.add(bridge.group);
+    var head = new VoxelPart('head'); head.fill(0, 0, 0, 1, 2, 1, GUNMETAL).fill(0, 3, 0, 1, 3, 1, GOLD).fill(0, -1, 0, 1, -1, 1, 'teal'); head.build(); g.add(head.group);
+    var layers = [];
+    for (var i = 0; i < 3; i++) { var l = new VoxelPart('layer'); l.fill(0, 0, 0, 11, 0, 2, TETRIUM); if (i === 0 || i === 2) { l.fill(0, 0, 0, 0, 0, 2, GOLD); l.fill(10, 0, 0, 11, 0, 2, GOLD); } if (i === 1) { l.cut(0, 0, 1, 0, 0, 1).cut(10, 0, 1, 11, 0, 1).fill(11, 0, 1, 11, 0, 1, 'teal'); } l.build(); l.group.position.set(10, 7 + i, 6); g.add(l.group); layers.push(l.group); }
+    var out = centred(barrelPiece()); out.position.set(29, 11.5, 14); out.scale.setScalar(0.5); out.rotation.y = 0.2; g.add(out);
+    var sparks = new Sparks(g, 24, TEAL), lamp = new T.PointLight(TEAL, 0.5, 18); lamp.position.set(16, 12, 8); g.add(lamp);
+    return {
+      group: g, cam: { pos: [48, 30, 56], look: [16, 8, 8] }, floor: [-16, -16, 47, 31],
+      labels: [['Spool and gauge', [2, 17, 9]], ['Bridge', [16, 17, 7]], ['Head', [16, 12, -1]], ['Bed', [16, 5, -1]], ['Console', [28, 13, 1]], ['Tray', [29, 13, 16]]],
+      animate: function (now, dt, st, job) {
+        var working = st.working && job.state === 'working';
+        var p = working ? job.p : 0, layer = Math.min(2, Math.floor(p * 3)), within = (p * 3) % 1;
+        var hz = working ? 6 + 2 * (Math.floor(within * 6) % 3) : 7, hx = working ? 10 + 11 * (0.5 - 0.5 * Math.cos(within * Math.PI * 6)) : 15;
+        bridge.group.position.set(5, 13, hz); head.group.position.set(hx, 10, hz);
+        // idle: a bare bed; working: the layers so far; done: the part has gone to the tray. Not working: the finished part lies on the bed.
+        for (var i = 0; i < 3; i++) layers[i].visible = !st.working || (job.state === 'working' && i < layer);
+        if (working && !reduced) sparks.spit(hx + 1, 9, hz + 1, 1);
+        sparks.tick(dt);
+        out.visible = st.working && job.state === 'done';
+        lamp.intensity = working ? 0.5 + 0.3 * Math.abs(Math.sin(now * 10)) : 0.2;
+      }
+    };
+  }
+  var stages = [];
+  function makeStage(el, build, fov) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var m = build();
+    var camera = new T.PerspectiveCamera(fov || 30, 4 / 3, 0.1, 500);
+    camera.position.set(m.cam.pos[0], m.cam.pos[1], m.cam.pos[2]); camera.lookAt(m.cam.look[0], m.cam.look[1], m.cam.look[2]);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var pivot = new T.Group(); pivot.position.set(m.cam.look[0], 0, m.cam.look[2]); scene.add(pivot);
+    m.group.position.set(-m.cam.look[0], 0, -m.cam.look[2]); pivot.add(m.group);
+    if (m.floor) { var f = floor(m.floor[0], m.floor[1], m.floor[2], m.floor[3]); f.group.position.copy(m.group.position); pivot.add(f.group); }
+    var labels = [];
+    (m.labels || []).forEach(function (l) { var d = document.createElement('div'); d.className = 'label'; d.textContent = l[0]; el.appendChild(d); labels.push({ el: d, at: new T.Vector3(l[1][0], l[1][1], l[1][2]) }); });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pivot: pivot, machine: m, labels: labels, labelsOn: true, yaw: m.yaw === undefined ? 0.5 : m.yaw, dragging: false, lastX: 0, working: !reduced, spin: m.spin || 0.22 };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  var builders = { a: machineA, b: machineB, c: machineC };
+  ['a', 'b', 'c'].forEach(function (key) {
+    var st = makeStage(document.querySelector('[data-block="' + key + '"]'), builders[key]);
+    var holder = document.querySelector('.controls[data-for="' + key + '"]');
+    group(holder, 'STATE', ['WORKING', 'IDLE'], reduced ? 1 : 0, function (i) { st.working = i === 0; });
+    group(holder, 'LABELS', ['ON', 'OFF'], 0, function (i) { st.labelsOn = i === 0; });
+  });
+
+  // ---- the screens: 256 x 232 at the game's pixel size, the inventory at row 150 ----------------------------------------------------------
+  var C = { panel: '#10151C', slot: '#0C0E12', dim: '#2A2F3A', muted: '#9AA3B5', text: '#E6EBF2', teal: '#19D3B0', violet: '#B58CFF', gold: '#FFD23A', red: '#FF6B5C', board: '#0B0F14', faint: '#3A4150', empty: '#1A1F27', tetrium: '#6B4FA3' };
+  var STATES = ['READY', 'WORKING', 'IDLE', 'NO POWER'];
+  var state = { a: 'READY', b: 'READY', c: 'READY' };
+  function sit(key) { var s = state[key]; return { chosen: s !== 'IDLE', working: s === 'WORKING', power: s !== 'NO POWER', frac: s === 'NO POWER' ? 0 : 0.62, progress: s === 'WORKING' ? 0.6 : 0 }; }
+  var LIST = ['Focused Barrel', 'Scatter Barrel', 'Thermal Barrel', 'Pulse Barrel', 'Energy Cell', 'Overcharge Cell', 'Magazine', 'EMP Cell', 'Standard Grip', 'Light Grip', 'Heavy Grip', 'Iron Sight'];
+  var KINDS = ['barrel', 'barrel', 'barrel', 'barrel', 'cell', 'cell', 'cell', 'cell', 'grip', 'grip', 'grip', 'optic'];
+  var TOP = ['barrel', 'cell', 'grip', 'optic', 'chip', 'engram', 'core', 'catalyst', 'round'];
+
+  function px(ctx) { ctx.imageSmoothingEnabled = false; ctx.textBaseline = 'top'; }
+  function text(ctx, s, x, y, colour, size) { ctx.fillStyle = colour || C.text; ctx.font = (size || 16) + 'px VT323, monospace'; ctx.fillText(s, x, y); }
+  function rect(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); }
+  function frame(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x, y, 1, h); ctx.fillRect(x + w - 1, y, 1, h); }
+  /** 8 x 8 glyphs for what the machine makes. */
+  function glyph(ctx, kind, x, y, tint) {
+    var m = tint || '#7D97B0';
+    if (kind === 'barrel') { rect(ctx, x, y + 3, 8, 2, m); rect(ctx, x, y + 2, 1, 4, '#D9B23A'); rect(ctx, x + 7, y + 3, 1, 2, '#19D3B0'); }
+    else if (kind === 'cell') { rect(ctx, x + 1, y + 1, 6, 6, m); rect(ctx, x + 2, y + 3, 1, 2, '#19D3B0'); rect(ctx, x + 5, y + 3, 1, 2, '#19D3B0'); rect(ctx, x + 1, y, 6, 1, '#D9B23A'); }
+    else if (kind === 'grip') { rect(ctx, x + 2, y, 4, 2, m); rect(ctx, x + 2, y + 2, 3, 2, m); rect(ctx, x + 1, y + 4, 3, 2, m); rect(ctx, x, y + 6, 3, 2, m); }
+    else if (kind === 'optic') { rect(ctx, x, y + 3, 8, 3, m); rect(ctx, x + 7, y + 4, 1, 1, '#19D3B0'); rect(ctx, x + 3, y + 1, 2, 2, '#D9B23A'); }
+    else if (kind === 'chip') { rect(ctx, x + 1, y + 5, 6, 2, '#2E343D'); rect(ctx, x + 1, y + 4, 6, 1, '#D9B23A'); rect(ctx, x + 2, y + 2, 4, 2, '#FFD23A'); rect(ctx, x + 3, y, 2, 2, '#FFD23A'); rect(ctx, x + 2, y + 7, 1, 1, '#D9B23A'); rect(ctx, x + 5, y + 7, 1, 1, '#D9B23A'); }
+    else if (kind === 'engram') { rect(ctx, x + 1, y, 6, 8, '#2E343D'); rect(ctx, x + 2, y + 2, 4, 3, '#14181E'); rect(ctx, x + 3, y + 3, 2, 1, '#19D3B0'); rect(ctx, x + 2, y + 7, 1, 1, '#D9B23A'); rect(ctx, x + 4, y + 7, 1, 1, '#D9B23A'); rect(ctx, x + 6, y + 7, 1, 1, '#D9B23A'); }
+    else if (kind === 'blank') { rect(ctx, x + 1, y, 6, 8, '#2E343D'); rect(ctx, x + 2, y + 2, 4, 3, '#14181E'); rect(ctx, x + 2, y + 7, 1, 1, '#8C949F'); rect(ctx, x + 4, y + 7, 1, 1, '#8C949F'); rect(ctx, x + 6, y + 7, 1, 1, '#8C949F'); }
+    else if (kind === 'core') { rect(ctx, x + 1, y + 1, 6, 6, '#D9B23A'); rect(ctx, x + 2, y + 2, 4, 4, '#4DA3FF'); rect(ctx, x + 3, y + 1, 2, 6, '#4DA3FF'); rect(ctx, x + 1, y + 3, 6, 2, '#4DA3FF'); }
+    else if (kind === 'catalyst') { rect(ctx, x + 2, y + 2, 4, 6, '#8AE8DC'); rect(ctx, x + 3, y + 4, 2, 3, '#2A4AC8'); rect(ctx, x + 2, y, 4, 2, '#D9B23A'); rect(ctx, x + 4, y + 5, 1, 1, '#E03A3A'); }
+    else if (kind === 'round') { rect(ctx, x + 1, y + 3, 5, 2, '#2E343D'); rect(ctx, x + 6, y + 3, 2, 2, '#19D3B0'); rect(ctx, x + 2, y + 3, 1, 2, '#D9B23A'); }
+    else if (kind === 'ingot') { rect(ctx, x + 1, y + 3, 6, 3, m); rect(ctx, x + 2, y + 2, 4, 1, m); rect(ctx, x + 1, y + 3, 6, 1, 'rgba(255,255,255,0.3)'); }
+  }
+  function slot(ctx, x, y, label, filled, kind, tint, count) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, filled ? C.dim : C.empty);
+    if (filled) { ctx.save(); ctx.translate(x + 5, y + 5); ctx.scale(1, 1); glyph(ctx, kind, 0, 0, tint); ctx.restore(); if (count) text(ctx, String(count), x + 11, y + 9, C.text, 10); }
+    if (label) text(ctx, label, x, y + 19, filled ? C.muted : C.faint, 10);
+  }
+  function ghost(ctx, x, y, kind, tint, count) { rect(ctx, x, y, 12, 12, C.slot); frame(ctx, x, y, 12, 12, C.faint); ctx.globalAlpha = 0.6; glyph(ctx, kind, x + 2, y + 2, tint); ctx.globalAlpha = 1; if (count) text(ctx, '×' + count, x + 14, y + 1, C.muted, 11); }
+  function button(ctx, x, y, w, label, on) { var colour = on ? C.teal : C.faint; rect(ctx, x, y, w, 14, C.slot); frame(ctx, x, y, w, 14, colour); text(ctx, label, x + 4, y + 1, colour, 14); }
+  function gaugeV(ctx, x, y, w, h, frac) { rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim); var fh = Math.round((h - 2) * frac); rect(ctx, x + 1, y + h - 1 - fh, w - 2, fh, frac > 0 ? C.gold : C.slot); for (var yy = y + 8; yy < y + h - 1; yy += 8) rect(ctx, x + 1, yy, w - 2, 1, C.slot); }
+  function gaugeH(ctx, x, y, w, h, frac) { rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim); var fw = Math.round((w - 2) * frac); rect(ctx, x + 1, y + 1, fw, h - 2, frac > 0 ? C.gold : C.slot); for (var xx = x + 8; xx < x + w - 1; xx += 8) rect(ctx, xx, y + 1, 1, h - 2, C.slot); }
+  function progress(ctx, x, y, w, frac, working) { rect(ctx, x, y, w, 6, C.slot); frame(ctx, x, y, w, 6, C.dim); if (frac > 0) rect(ctx, x + 1, y + 1, Math.round((w - 2) * frac), 4, working ? C.teal : C.dim); }
+  function title(ctx, s) { text(ctx, s, 6, 4, C.gold, 18); rect(ctx, 6, 20, 244, 1, C.dim); }
+  function inventory(ctx) { for (var r = 0; r < 3; r++) for (var c = 0; c < 9; c++) { rect(ctx, 47 + c * 18, 150 + r * 18, 18, 18, C.slot); frame(ctx, 47 + c * 18, 150 + r * 18, 18, 18, C.empty); } for (var c2 = 0; c2 < 9; c2++) { rect(ctx, 47 + c2 * 18, 208, 18, 18, C.slot); frame(ctx, 47 + c2 * 18, 208, 18, 18, C.empty); } }
+  function statusLine(ctx, x, y, key, st, w) {
+    var s = state[key], msg, bad = false;
+    if (s === 'NO POWER') { msg = 'Not enough charge: 0 of 800 FE.'; bad = true; }
+    else if (s === 'IDLE') msg = 'Choose what to make.';
+    else if (s === 'WORKING') msg = 'Making a Focused Barrel: 2 s left.';
+    else msg = 'MAKE: 800 FE, 3 Tetrium Ingot, 1 Lapis Catalyst, 4 s.';
+    text(ctx, msg, x, y, bad ? C.red : C.muted, 11);
+  }
+  function list(ctx, x, y, w, rowH, chosen, size) {
+    for (var i = 0; i < LIST.length; i++) {
+      var yy = y + i * rowH, on = chosen && i === 0;
+      if (on) { rect(ctx, x - 2, yy - 1, w, rowH, '#15202A'); frame(ctx, x - 2, yy - 1, w, rowH, C.teal); }
+      glyph(ctx, KINDS[i], x, yy, on ? C.tetrium : '#7D97B0');
+      text(ctx, LIST[i], x + 11, yy - 2, on ? C.text : C.muted, size || 11);
+    }
+  }
+  function tabs(ctx, x, y) { ['PARTS', 'CHIPS', 'ENGRAM', 'MORE'].forEach(function (t, i) { var tx = x + i * 34, on = i === 0; if (on) rect(ctx, tx, y, 33, 12, C.slot); frame(ctx, tx, y, 33, 12, on ? C.teal : C.dim); text(ctx, t, tx + 2, y + 1, on ? C.teal : C.faint, 10); }); }
+  /** The Focused Barrel from the side, large, in the material's colour. */
+  function barrelSide(ctx, x, y, s, tint) {
+    function r(a, b, w, h, c) { rect(ctx, x + a * s, y + b * s, w * s, h * s, c); }
+    r(0, 2, 36, 6, tint); r(0, 2, 36, 1, 'rgba(255,255,255,0.18)'); r(0, 7, 36, 1, 'rgba(0,0,0,0.3)');
+    r(0, 1, 3, 8, '#D9B23A'); r(31, 1, 3, 8, '#D9B23A'); r(34, 3, 2, 4, tint); r(36, 4, 1, 2, '#19D3B0'); r(8, 0, 20, 2, '#14181E'); r(10, 1, 1, 1, '#4A5363'); r(24, 1, 1, 1, '#4A5363');
+  }
+
+  function screenA(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 232, C.panel); frame(ctx, 0, 0, 256, 232, C.dim); text(ctx, 'WEAPON FABRICATOR', 6, 5, C.gold, 16); rect(ctx, 6, 20, 244, 1, C.dim);
+    tabs(ctx, 118, 5);
+    rect(ctx, 6, 24, 98, 122, C.slot); frame(ctx, 6, 24, 98, 122, C.dim);
+    list(ctx, 11, 29, 92, 10, st.chosen, 11);
+    text(ctx, st.chosen ? 'Focused Barrel' : 'nothing chosen', 110, 24, st.chosen ? C.text : C.faint, 14);
+    if (st.chosen) { text(ctx, 'needs', 110, 38, C.muted, 11); ghost(ctx, 138, 37, 'ingot', C.tetrium, 3); text(ctx, 'any ingot', 164, 38, C.faint, 11); ghost(ctx, 138, 51, 'catalyst', null, 1); text(ctx, 'for the roll', 164, 52, C.faint, 11); }
+    slot(ctx, 108, 70, 'MATERIAL', st.chosen, 'ingot', C.tetrium, 5); slot(ctx, 150, 70, 'ROLL', st.chosen, 'catalyst', null, 2); slot(ctx, 190, 70, 'BLANK', false);
+    slot(ctx, 228, 70, 'OUT', st.working && st.progress >= 1, 'barrel', C.tetrium);
+    progress(ctx, 108, 100, 138, st.progress, st.working); text(ctx, st.working ? '60%' : '', 216, 92, C.teal, 11);
+    gaugeV(ctx, 242, 24, 8, 40, st.frac); text(ctx, 'FE', 241, 65, st.power ? C.gold : C.red, 11);
+    button(ctx, 108, 112, 40, 'MAKE', st.chosen && st.power && !st.working);
+    text(ctx, '800 FE · 4 s', 154, 113, st.chosen ? C.muted : C.faint, 11);
+    statusLine(ctx, 108, 133, key, st, 140);
+    inventory(ctx);
+  }
+  function screenB(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 232, C.panel); frame(ctx, 0, 0, 256, 232, C.dim); title(ctx, 'WEAPON FABRICATOR');
+    TOP.forEach(function (k, i) { var tx = 8 + i * 22, on = st.chosen && i === 0; rect(ctx, tx, 24, 18, 18, C.slot); frame(ctx, tx, 24, 18, 18, on ? C.teal : C.dim); glyph(ctx, k, tx + 5, 29, on ? C.tetrium : null); });
+    text(ctx, st.chosen ? 'Focused Barrel' : 'pick a kind above', 8, 44, st.chosen ? C.text : C.faint, 12);
+    rect(ctx, 60, 56, 130, 48, C.slot); frame(ctx, 60, 56, 130, 48, C.dim);
+    if (st.chosen) { barrelSide(ctx, 70, 66, 3, st.working || true ? C.tetrium : '#7D97B0'); } else text(ctx, 'empty', 112, 74, C.faint, 12);
+    slot(ctx, 8, 60, 'MATERIAL', st.chosen, 'ingot', C.tetrium, 5); rect(ctx, 26, 69, 34, 1, st.chosen ? C.teal : C.faint);
+    slot(ctx, 8, 88, 'ROLL', st.chosen, 'catalyst', null, 2); rect(ctx, 26, 97, 10, 1, st.chosen ? C.teal : C.faint); rect(ctx, 36, 69, 1, 29, st.chosen ? C.teal : C.faint);
+    slot(ctx, 8, 116, 'BLANK', false); rect(ctx, 26, 125, 6, 1, C.faint); rect(ctx, 32, 97, 1, 29, C.faint);
+    progress(ctx, 60, 108, 130, st.progress, st.working);
+    button(ctx, 60, 120, 40, 'MAKE', st.chosen && st.power && !st.working);
+    text(ctx, st.working ? 'working · 2 s left' : (st.chosen ? '800 FE · 4 s' : ''), 106, 121, C.muted, 11);
+    text(ctx, st.chosen ? 'costs' : '', 196, 56, C.muted, 11); if (st.chosen) { ghost(ctx, 196, 68, 'ingot', C.tetrium, 3); ghost(ctx, 196, 84, 'catalyst', null, 1); }
+    gaugeV(ctx, 242, 24, 8, 76, st.frac); text(ctx, 'FE', 241, 101, st.power ? C.gold : C.red, 11);
+    slot(ctx, 220, 112, 'OUT', st.working && st.progress >= 1, 'barrel', C.tetrium);
+    statusLine(ctx, 8, 137, key, st, 200);
+    inventory(ctx);
+  }
+  function screenC(ctx, key) {
+    var st = sit(key);
+    rect(ctx, 0, 0, 256, 232, C.panel); frame(ctx, 0, 0, 256, 232, C.dim); title(ctx, 'WEAPON FABRICATOR');
+    text(ctx, st.power ? '12,400 FE' : '0 FE', 150, 5, st.power ? C.gold : C.red, 11); gaugeH(ctx, 196, 8, 54, 6, st.frac);
+    rect(ctx, 6, 24, 82, 86, C.slot); frame(ctx, 6, 24, 82, 86, C.dim);
+    list(ctx, 11, 28, 76, 7, st.chosen, 9);
+    var lx = 94, ly = 24;
+    text(ctx, st.chosen ? 'FOCUSED BARREL' : 'NOTHING CHOSEN', lx, ly, st.chosen ? C.gold : C.faint, 13);
+    var lines = st.chosen ? [['cost', '3 × ingot, any material', C.text], ['charge', '800 FE', C.gold], ['time', '4 s', C.text], ['roll', 'Lapis Catalyst · 70 / 25 / 5 / 0', C.violet]] : [];
+    lines.forEach(function (l, i) { text(ctx, l[0], lx, ly + 14 + i * 10, C.muted, 11); text(ctx, l[1], lx + 36, ly + 14 + i * 10, l[2], 11); });
+    if (st.chosen) {
+      text(ctx, 'a Tetrium one adds', lx, ly + 56, C.muted, 11);
+      [['DAMAGE', '+14%', 0.4], ['RANGE', '+25%', 0.6], ['SPREAD', '-20%', 0.3], ['DURABILITY', '+60', 0.35]].forEach(function (b, i) {
+        var by = ly + 68 + i * 8; text(ctx, b[0], lx, by - 1, C.muted, 10); rect(ctx, lx + 46, by + 1, 70, 4, C.slot); frame(ctx, lx + 46, by + 1, 70, 4, C.dim); rect(ctx, lx + 47, by + 2, Math.round(68 * b[2]), 2, C.teal); text(ctx, b[1], lx + 120, by - 1, C.teal, 10);
+      });
+    }
+    slot(ctx, 92, 114, 'MATERIAL', st.chosen, 'ingot', C.tetrium, 5); slot(ctx, 134, 114, 'ROLL', st.chosen, 'catalyst', null, 2); slot(ctx, 168, 114, 'BLANK', false);
+    progress(ctx, 192, 120, 32, st.progress, st.working); slot(ctx, 228, 114, 'OUT', st.working && st.progress >= 1, 'barrel', C.tetrium);
+    button(ctx, 8, 118, 40, 'MAKE', st.chosen && st.power && !st.working); text(ctx, st.chosen ? '800 FE' : '', 52, 119, C.faint, 11);
+    statusLine(ctx, 8, 137, key, st, 240);
+    inventory(ctx);
+  }
+  var screens = { a: screenA, b: screenB, c: screenC };
+  function drawScreens(key) {
+    var big = document.querySelector('[data-screen="' + key + '"]'), fit = document.querySelector('[data-fit="' + key + '"]');
+    var ctx = big.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 256, 232); screens[key](ctx, key);
+    var f = fit.getContext('2d'); px(f); f.setTransform(1, 0, 0, 1, 0, 0); rect(f, 0, 0, 320, 240, '#07090C'); f.save(); f.translate(32, 4); screens[key](f, key); f.restore();
+    frame(f, 0, 0, 320, 240, C.violet); text(f, '320 x 240', 262, 226, C.violet, 12);
+  }
+  ['a', 'b', 'c'].forEach(function (key) {
+    drawScreens(key);
+    group(document.querySelector('.controls[data-tabs="' + key + '"]'), 'STATE', STATES, 0, function (i) { state[key] = STATES[i]; drawScreens(key); });
+  });
+
+  // ---- the blank engram: the Data Chip as built, then three blanks -----------------------------------------------------------------------
+  function dataChip() {
+    var p = new VoxelPart('Data Chip');
+    p.fill(0, 0, 0, 7, 1, 9, GUNMETAL).cut(0, 0, 0, 0, 1, 0).fill(1, 1, 1, 6, 1, 8, LIGHT);
+    [1, 3, 5].forEach(function (x) { p.fill(x, 0, 9, x, 1, 9, GOLD).fill(x, 1, 8, x, 1, 8, GOLD); });
+    p.fill(2, 2, 2, 5, 2, 5, DARK).fill(3, 2, 3, 4, 2, 4, 'teal').fill(2, 1, 6, 5, 1, 6, GOLD);
+    return p;
+  }
+  function blankA() {
+    var p = new VoxelPart('A');
+    p.fill(0, 0, 0, 7, 1, 9, GUNMETAL).cut(0, 0, 0, 0, 1, 0).fill(1, 1, 1, 6, 1, 8, LIGHT);
+    [1, 3, 5].forEach(function (x) { p.fill(x, 0, 9, x, 1, 9, STEEL).fill(x, 1, 8, x, 1, 8, STEEL); });
+    p.fill(2, 2, 2, 5, 2, 5, DARK).fill(2, 1, 6, 5, 1, 6, LIGHT);
+    return p;
+  }
+  function blankB() {
+    var p = new VoxelPart('B');
+    p.fill(0, 0, 0, 9, 0, 9, DARK).fill(0, 0, 0, 9, 0, 0, GUNMETAL).fill(0, 0, 9, 9, 0, 9, GUNMETAL).fill(0, 0, 0, 0, 0, 9, GUNMETAL).fill(9, 0, 0, 9, 0, 9, GUNMETAL);
+    for (var x = 2; x <= 7; x += 2) p.fill(x, 1, 1, x, 1, 8, LIGHT);
+    for (var z = 2; z <= 7; z += 2) p.fill(1, 1, z, 8, 1, z, LIGHT);
+    p.fill(1, 1, 1, 8, 1, 8, 'glass').fill(8, 1, 8, 9, 2, 9, GOLD).fill(0, 1, 0, 0, 1, 1, GOLD);
+    return p;
+  }
+  function blankC() {
+    var p = new VoxelPart('C');
+    p.fill(0, 0, 0, 7, 7, 2, 'teal').cut(0, 0, 0, 0, 0, 2).cut(7, 0, 0, 7, 0, 2).cut(0, 7, 0, 0, 7, 2).cut(7, 7, 0, 7, 7, 2);
+    p.fill(1, 1, -1, 6, 6, 3, GUNMETAL).cut(1, 1, 0, 6, 6, 2).fill(2, 2, -1, 5, 5, 3, GUNMETAL).fill(3, 3, -1, 4, 4, 3, DARK);
+    p.fill(1, 1, 0, 6, 6, 2, 'teal').fill(2, 2, 0, 5, 5, 2, GUNMETAL).fill(3, 3, 0, 4, 4, 2, DARK);
+    p.fill(7, 3, 1, 8, 3, 1, 'teal').fill(8, 2, 1, 8, 2, 1, GOLD);
+    return p;
+  }
+  var blankModels = [dataChip(), blankA(), blankB(), blankC()], blankNames = ['Data Chip (D61, as built)', 'Unwritten Chip', 'Slate', 'Spool'];
+  var blankStage = makeStage(document.querySelector('[data-stage="blank"]'), function () {
+    var g = new T.Group(), labels = [];
+    blankModels.forEach(function (mdl, i) {
+      mdl.build(); var b = mdl.bounds(), c = b.getCenter(new T.Vector3());
+      var holder = new T.Group(); holder.position.set((i - 1.5) * 16, 0, 0); g.add(holder);
+      mdl.group.position.set(-c.x, -b.min.y, -c.z); holder.add(mdl.group); mdl.holder = holder;
+      labels.push([(i === 0 ? '' : String.fromCharCode(64 + i) + ' ') + blankNames[i], [(i - 1.5) * 16, b.max.y - b.min.y + 4, 0]]);
+    });
+    return { group: g, cam: { pos: [0, 28, 64], look: [0, 3, 0] }, floor: null, labels: labels, spin: 0, holders: true, animate: function (now, dt, st) { blankModels.forEach(function (m) { m.holder.rotation.y = st.yaw; }); } };
+  }, 26);
+  blankStage.spin = 0.5;
+  blankStage.pivot.rotation.y = 0; // the holders turn, not the pivot
+  blankStage.turnsHolders = true;
+
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+  var iconKey = new T.DirectionalLight(0xFFF3DC, 0.8); iconKey.position.set(30, 50, 40); iconScene.add(iconKey);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModels = [dataChip(), blankA(), blankB(), blankC()];
+  iconModels.forEach(function (m) { m.build(); });
+  function renderIcon(canvas, model, size) {
+    iconScene.children.forEach(function (c) { if (c.userData.model) iconScene.remove(c); });
+    model.group.userData.model = true; model.group.position.set(0, 0, 0); iconScene.add(model.group);
+    var b = model.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 32, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  (function strip() {
+    var holder = document.querySelector('[data-strip="blank"]');
+    ['Data Chip', 'A', 'B', 'C'].forEach(function (name, i) {
+      var lab = document.createElement('span'); lab.textContent = name; holder.appendChild(lab);
+      var set = document.createElement('div'); set.className = 'set'; holder.appendChild(set);
+      [16, 32].forEach(function (size) { var cv = document.createElement('canvas'); cv.width = size; cv.height = size; cv.style.width = (size * 2) + 'px'; cv.style.height = (size * 2) + 'px'; set.appendChild(cv); renderIcon(cv, iconModels[i], size); });
+    });
+  })();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ['a', 'b', 'c'].forEach(drawScreens); });
+
+  // ---- the loop ---------------------------------------------------------------------------------------------------------------------------
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    var job = jobPhase(now);
+    stages.forEach(function (st) {
+      st.machine.animate(now, dt, st, job);
+      if (!st.dragging && !reduced) st.yaw += dt * st.spin;
+      if (!st.turnsHolders) st.pivot.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        l.el.style.display = st.labelsOn ? '' : 'none'; if (!st.labelsOn) return;
+        v.copy(l.at); st.machine.group.localToWorld(v); v.project(st.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+      });
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

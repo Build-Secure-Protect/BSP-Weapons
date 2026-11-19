@@ -194,6 +194,17 @@ def catalyst():
     return p
 
 
+def blank_engram():
+    """D110, R31: the Slate. A flat board 10 x 2 x 10: a dark grid etched with light lines on a gunmetal plate, a gunmetal rim
+    with glass in it, a gold tab over the corner and a gold pin beside it."""
+    p = Part("blank_engram").fill(0, 0, 0, 9, 0, 9, GUNMETAL).fill(1, 0, 1, 8, 0, 8, DARK)
+    for line in (3, 6):
+        p.fill(1, 0, line, 8, 0, line, LIGHT).fill(line, 0, 1, line, 0, 8, LIGHT)
+    p.fill(0, 1, 0, 9, 1, 9, GUNMETAL).fill(1, 1, 1, 8, 1, 8, GLASS)
+    p.fill(8, 0, 0, 9, 1, 1, GOLD).fill(7, 1, 1, 7, 1, 1, GOLD)
+    return p
+
+
 def energy_round():
     """D68: the Capsule. A short gunmetal cartridge, a teal cap, a gold band."""
     return Part("energy_round").fill(0, 0, 0, 1, 1, 6, GUNMETAL).fill(0, 0, 7, 1, 1, 8, TEAL).fill(0, 0, 2, 1, 1, 2, GOLD).fill(0, 0, 0, 1, 1, 0, DARK)
@@ -346,7 +357,7 @@ def main():
         d.mkdir(parents=True, exist_ok=True)
     # remove only what this script writes (gen_block_models.py writes the machines' item models)
     for old in list(models_dir.glob("*.json")) + list(textures_dir.glob("part_*.png")):
-        if old.name not in ("weapon_assembler.json", "weapon_enhancer.json"):
+        if old.name not in ("weapon_assembler.json", "weapon_enhancer.json", "weapon_fabricator.json"):
             old.unlink()
     for name, (colour, shades) in TEXTURES.items():
         (textures_dir / f"{name}.png").write_bytes(texture(colour, shades))
@@ -354,7 +365,7 @@ def main():
     print(f"textures: {len(TEXTURES) + 1}")
     all_parts = parts()
     by_name = {p.name: p for p in all_parts}
-    for part in all_parts + [engram(), catalyst(), energy_round(), augment_chip()]:
+    for part in all_parts + [engram(), catalyst(), energy_round(), augment_chip(), blank_engram()]:
         data, n = model(part)
         (models_dir / f"{part.name}.json").write_text(json.dumps(data, indent=2) + "\n")
         print(f"{part.name}: {len(part.cubes)} voxels -> {n} cubes, gui scale {data['display']['gui']['scale'][0]}")

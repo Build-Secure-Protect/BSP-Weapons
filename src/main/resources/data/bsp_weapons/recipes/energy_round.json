@@ -1,0 +1,16 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "round",
+  "material": {
+    "tag": "forge:ingots/iron",
+    "count": 1
+  },
+  "result": {
+    "item": "bsp_weapons:energy_round",
+    "count": 8
+  },
+  "extra": {
+    "tag": "forge:dusts/redstone",
+    "count": 1
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=south": {
+      "model": "bsp_weapons:block/weapon_fabricator"
+    },
+    "facing=west": {
+      "model": "bsp_weapons:block/weapon_fabricator",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "bsp_weapons:block/weapon_fabricator",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "bsp_weapons:block/weapon_fabricator",
+      "y": 270
+    }
+  }
+}

@@ -5,5 +5,15 @@
     }
   },
   "colour": "#B58CFF",
-  "durability": 10
+  "durability": 10,
+  "ingredients": [
+    {
+      "tag": "forge:gems/amethyst",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

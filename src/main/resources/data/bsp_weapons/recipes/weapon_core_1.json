@@ -1,0 +1,16 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "core",
+  "material": {
+    "tag": "forge:ingots/iron",
+    "count": 4
+  },
+  "result": {
+    "item": "bsp_weapons:weapon_core",
+    "nbt": "{Tier:1}"
+  },
+  "extra": {
+    "tag": "forge:dusts/redstone",
+    "count": 2
+  }
+}

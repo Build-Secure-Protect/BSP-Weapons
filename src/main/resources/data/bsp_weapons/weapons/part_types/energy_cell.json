@@ -1,5 +1,6 @@
 {
   "kind": "CELL",
   "modifiers": {},
-  "ammo": "energy"
+  "ammo": "energy",
+  "cost": 2
 }

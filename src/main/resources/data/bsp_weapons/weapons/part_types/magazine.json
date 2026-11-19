@@ -8,5 +8,6 @@
       "percent": 15
     }
   },
-  "ammo": "rounds"
+  "ammo": "rounds",
+  "cost": 2
 }

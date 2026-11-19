@@ -9,5 +9,15 @@
   ],
   "colour": "#E6EBF2",
   "durability": 10,
-  "available": false
+  "available": false,
+  "ingredients": [
+    {
+      "tag": "forge:gems/diamond",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

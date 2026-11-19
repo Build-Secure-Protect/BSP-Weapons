@@ -30,6 +30,7 @@ public class BspWeapons {
         MinecraftForge.EVENT_BUS.addListener((AddReloadListenerEvent e) -> WeaponData.register(e));
         com.mrgregles.bsp_weapons.registry.ModBlocks.register(context.getModEventBus());
         ModItems.register(context.getModEventBus());
+        com.mrgregles.bsp_weapons.registry.ModRecipes.register(context.getModEventBus());
         com.mrgregles.bsp_weapons.registry.ModEntities.register(context.getModEventBus());
         WeaponsNetwork.register();
         MinecraftForge.EVENT_BUS.addListener(WeaponsNetwork::onDatapackSync);

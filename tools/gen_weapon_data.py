@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Writes the part system's data files under src/main/resources/data/bsp_weapons/weapons/: patterns, materials, bands,
-part types, augments and catalysts (owner decisions D5 to D36). Edit this script, never the output. The materials come
-from the vault's materials survey (2026-11-16); a material's numbers are its band's defaults unless listed here.
+part types, augments and catalysts (owner decisions D5 to D36), and the Weapon Fabricator's recipes under
+data/bsp_weapons/recipes/ (D100 to D104, D112 to D118). Edit this script, never the output. The materials come from the
+vault's materials survey (2026-11-16); a material's numbers are its band's defaults unless listed here.
 
   python3 tools/gen_weapon_data.py
 """
@@ -193,6 +194,10 @@ PART_TYPES = {
     "scope": {"kind": "OPTIC", "modifiers": merge(flat(zoom=3), pct(spread=-25), pct(fire_rate=-10))},
     "holo_sight": {"kind": "OPTIC", "modifiers": merge(flat(zoom=1), pct(spread=-10))},
 }
+# D100: the ingots or gems of the chosen material one part costs at the Weapon Fabricator
+PART_COST = {"BARREL": 3, "CELL": 2, "GRIP": 2, "OPTIC": 1}
+for _t in PART_TYPES.values():
+    _t.setdefault("cost", PART_COST[_t["kind"]])
 
 # ---- patterns (D5, D17): the first class; the others come with their tasks ------------------------------------------------
 PATTERNS = {
@@ -201,6 +206,8 @@ PATTERNS = {
         "slots": ["BARREL", "CELL", "GRIP", "OPTIC"],
         "base": {"DAMAGE": 4.0, "PIERCING": 0, "RANGE": 24, "FIRE_RATE": 2.5, "CHARGE_TIME": 0, "CAPACITY": 24, "RECHARGE": 60,
                  "SPREAD": 2.0, "ZOOM": 1, "HEAT_CAP": 50, "BLOCK_DAMAGE": 0, "RICOCHETS": 0, "DURABILITY": 300},
+        # D102: the Weapon Fabricator writes a Blank Engram into this class's Engram with its signature material
+        "signature": {"tag": "forge:ingots/tetrium", "count": 4},
     },
 }
 
@@ -218,6 +225,14 @@ AUGMENTS = {
     "breacher": {"modifiers": flat(block_damage=4), "kinds": ["ENERGY"], "colour": "#C98A4B", "durability": 10, "available": False},
     "ricochet": {"modifiers": flat(ricochets=1), "kinds": ["ENERGY"], "colour": "#E6EBF2", "durability": 10, "available": False},
 }
+# D101, D118: one vanilla gem matched to the chip's colour and two redstone make a chip at the Weapon Fabricator
+CHIP_GEM = {
+    "piercing": "forge:gems/diamond", "knockback": "forge:gems/quartz", "quick_draw": "forge:gems/emerald", "stabiliser": "forge:gems/lapis",
+    "overcharge": "forge:gems/quartz", "coolant": "forge:gems/prismarine", "extended_cell": "forge:gems/amethyst",
+    "breacher": "forge:gems/diamond", "ricochet": "forge:gems/diamond",
+}
+for _name, _a in AUGMENTS.items():
+    _a["ingredients"] = [{"tag": CHIP_GEM[_name], "count": 1}, {"tag": "forge:dusts/redstone", "count": 2}]
 
 # ---- catalysts (D21, D30): lapis plus one ingredient; odds Normal / Rare / Epic / S -----------------------------------------
 # colour: the ingredient's, which tints the vial's motes (D62)
@@ -229,8 +244,48 @@ CATALYSTS = {
 }
 
 
-def write(folder, items):
-    d = OUT / folder
+# ---- the Weapon Fabricator's fixed recipes (D102 to D104, D112 to D117): recipe type bsp_weapons:fabricating; "kind" picks
+# the charge in the config; "material" goes in MATERIAL, "extra" in the second slot (D113) ---------------------------------
+def fabricating(kind, material, result, extra=None):
+    r = {"type": "bsp_weapons:fabricating", "kind": kind, "material": material, "result": result}
+    if extra:
+        r["extra"] = extra
+    return r
+
+
+def need(tag_or_item, count):
+    return {"tag" if ":" in tag_or_item and "/" in tag_or_item else "item": tag_or_item, "count": count}
+
+
+CORE_RECIPES = {  # D103, D115: tier -> (material, extra or None)
+    1: (need("forge:ingots/iron", 4), need("forge:dusts/redstone", 2)),
+    2: (need("forge:ingots/tetrium", 4), None),
+    3: (need("forge:ingots/magnatite", 4), need("forge:gems/diamond", 1)),
+    4: (need("forge:ingots/allthemodium", 4), None),
+    5: (need("forge:ingots/illyrium", 4), need("forge:ingots/unobtainium", 1)),
+}
+
+
+def recipes():
+    out = [
+        # R32: the Blank Engram on the crafting table
+        ("blank_engram", {"type": "minecraft:crafting_shapeless",
+                          "ingredients": [{"tag": "forge:ingots/iron"}] * 4 + [{"tag": "forge:dusts/redstone"}, {"tag": "forge:glass_panes"}],
+                          "result": {"item": "bsp_weapons:blank_engram", "count": 1}}),
+    ]
+    for name, p in PATTERNS.items():  # D102: a class's Engram from a Blank Engram and its signature material
+        if "signature" in p:
+            out.append((f"{name}_engram", fabricating("engram", p["signature"], {"item": f"bsp_weapons:{name}_engram"}, need("bsp_weapons:blank_engram", 1))))
+    for tier, (material, extra) in CORE_RECIPES.items():
+        out.append((f"weapon_core_{tier}", fabricating("core", material, {"item": "bsp_weapons:weapon_core", "nbt": "{Tier:%d}" % tier}, extra)))
+    for name, c in CATALYSTS.items():  # D104, D116: two lapis and the ingredient
+        out.append((name, fabricating("catalyst", need("forge:gems/lapis", 2), {"item": f"bsp_weapons:{name}"}, need(c["ingredient"], 1))))
+    out.append(("energy_round", fabricating("round", need("forge:ingots/iron", 1), {"item": "bsp_weapons:energy_round", "count": 8}, need("forge:dusts/redstone", 1))))  # D104, D117
+    return out
+
+
+def write(folder, items, root=None):
+    d = (root or OUT) / folder
     if d.exists():
         shutil.rmtree(d)
     d.mkdir(parents=True)
@@ -252,7 +307,11 @@ def main():
         "type": "minecraft:block",
         "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "bsp_weapons:weapon_enhancer"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}],
     }, indent=2) + "\n")
-    print("loot_tables: 2")
+    (LOOT / "weapon_fabricator.json").write_text(json.dumps({
+        "type": "minecraft:block",
+        "pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "bsp_weapons:weapon_fabricator"}], "conditions": [{"condition": "minecraft:survives_explosion"}]}],
+    }, indent=2) + "\n")
+    print("loot_tables: 3")
     dt = OUT.parent / "damage_type"
     dt.mkdir(parents=True, exist_ok=True)
     (dt / "laser.json").write_text(json.dumps({"message_id": "bsp_weapons.laser", "exhaustion": 0.1, "scaling": "when_caused_by_living_non_player"}, indent=2) + "\n")
@@ -274,6 +333,7 @@ def main():
     write("patterns", list(PATTERNS.items()))
     write("augments", list(AUGMENTS.items()))
     write("catalysts", list(CATALYSTS.items()))
+    write("recipes", recipes(), root=OUT.parent)
 
 
 if __name__ == "__main__":

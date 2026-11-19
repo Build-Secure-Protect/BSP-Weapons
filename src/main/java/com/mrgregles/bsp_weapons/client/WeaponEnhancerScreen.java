@@ -40,16 +40,16 @@ import java.util.Locale;
  * the charge as a gauge beside the title; the weapon's name, Core line and chips on the right over the sheet as bars
  * (teal the parts' share, gold the Core and roll's, violet the chips', a red mark where a chip costs); FIT (SWAP when a
  * full socket is chosen and a chip waits), REMOVE, UPGRADE and REPAIR, each lit when its check passes; one status line. The
- * machine's part of the screen is 148 rows over the player's inventory; 256 x 232. Text is worked out when a slot or the
+ * machine's part of the screen is 148 rows over the player's inventory; 300 x 232 (D123). Text is worked out when a slot or the
  * charge changes, not every frame.
  */
 public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancerMenu> {
     private static final int PANEL = 0xFF10151C, SLOT = 0xFF0C0E12, DIM = 0xFF2A2F3A, MUTED = 0xFF9AA3B5, TEXT = 0xFFE6EBF2, TEAL = 0xFF19D3B0, GOLD = 0xFFFFD23A, VIOLET = 0xFFB58CFF, RED = 0xFFFF6B5C, FAINT = 0xFF3A4150, EMPTY = 0xFF1A1F27;
     private static final Stat[] BARS = {Stat.DAMAGE, Stat.PIERCING, Stat.RANGE, Stat.FIRE_RATE, Stat.HEAT_CAP, Stat.DURABILITY};
     private static final double[] BAR_MAX = {20, 75, 160, 12, 200, 2000};
-    private static final int SOCKET_Y = 22, RAIL_Y = 60, RAIL_X0 = 24, RAIL_X1 = 146, KEY_H = 14;
-    private static final int FIT_X = 8, FIT_W = 38, REMOVE_X = 50, REMOVE_W = 52, KEYS_Y = 104, UPGRADE_X = 8, UPGRADE_W = 54, REPAIR_X = 66, REPAIR_W = 48, KEYS2_Y = 120;
-    private static final int RIGHT_X = 154, RIGHT_W = 96, BARS_Y = 100, BAR_ROW = 7, GAUGE_X = 154, GAUGE_Y = 5, GAUGE_W = 96, GAUGE_H = 7;
+    private static final int SOCKET_Y = 22, RAIL_Y = 60, RAIL_X0 = 24, RAIL_X1 = 162, KEY_H = 14, STATUS_Y = 139, STATUS_W = 286;
+    private static final int FIT_X = 8, FIT_W = 38, REMOVE_X = 50, REMOVE_W = 52, KEYS_Y = 108, UPGRADE_X = 8, UPGRADE_W = 54, REPAIR_X = 66, REPAIR_W = 48, KEYS2_Y = 124;
+    private static final int RIGHT_X = 170, RIGHT_W = 124, BARS_Y = 100, BAR_ROW = 6, GAUGE_X = 170, GAUGE_Y = 5, GAUGE_W = 124, GAUGE_H = 7;
     private static final String[] SLOT_KEYS = {"weapon", "chip_in", "core", "repair"};
     private final ItemStackHandler items;
     private final Object[] lastTags = new Object[Enhancing.SLOTS];
@@ -71,7 +71,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
     public WeaponEnhancerScreen(WeaponEnhancerMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.items = menu.blockEntity().items();
-        imageWidth = 256;
+        imageWidth = 300;
         imageHeight = 232;
     }
 
@@ -86,7 +86,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
         removeLabel = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".enhancer.remove"), REMOVE_W - 8);
         upgradeLabel = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".enhancer.upgrade"), UPGRADE_W - 8);
         repairLabel = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".enhancer.repair"), REPAIR_W - 8);
-        for (int i = 0; i < Enhancing.SLOTS; i++) slotLabels[i] = Text.cut(font, Component.translatable("slot." + BspWeapons.MODID + "." + SLOT_KEYS[i]), 34);
+        for (int i = 0; i < Enhancing.SLOTS; i++) slotLabels[i] = Text.cut(font, Component.translatable("slot." + BspWeapons.MODID + "." + SLOT_KEYS[i]), 36);
         for (int i = 0; i < BARS.length; i++) statNames[i] = Component.translatable("stat." + BspWeapons.MODID + "." + BARS[i].id()).getString();
         first = true;
         refresh();
@@ -170,7 +170,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
             if (repairWhy != null) { line = repairWhy; statusBad = true; }
             else { line = Component.translatable("gui." + BspWeapons.MODID + ".enhancer.upgrade_cost", repairLabel, String.format(Locale.ROOT, "%,d", Enhancing.repairCost())); statusBad = false; }
         } else { line = Component.translatable("gui." + BspWeapons.MODID + ".enhancer.idle"); statusBad = false; }
-        status = Text.cut(font, line, 140);
+        status = Text.cut(font, line, STATUS_W);
     }
 
     private static int barWidth() {
@@ -182,7 +182,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
     }
 
     private int socketX(int i) {
-        return sockets <= 3 ? 76 + i * 28 : 64 + i * 24;
+        return sockets <= 3 ? 84 + i * 28 : 72 + i * 24;
     }
 
     @Override
@@ -203,7 +203,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
         g.fill(x, y, x + imageWidth, y + imageHeight, PANEL);
         frame(g, x, y, imageWidth, imageHeight, DIM);
         g.drawString(font, title, x + 6, y + 6, GOLD, false);
-        g.fill(x + 6, y + 18, x + 250, y + 19, DIM);
+        g.fill(x + 6, y + 18, x + 294, y + 19, DIM);
         // the charge: a gold gauge beside the title with the numbers under it
         g.fill(x + GAUGE_X, y + GAUGE_Y, x + GAUGE_X + GAUGE_W, y + GAUGE_Y + GAUGE_H, SLOT);
         frame(g, x + GAUGE_X, y + GAUGE_Y, GAUGE_W, GAUGE_H, DIM);
@@ -281,7 +281,7 @@ public class WeaponEnhancerScreen extends AbstractContainerScreen<WeaponEnhancer
         key(g, x + REMOVE_X, y + KEYS_Y, REMOVE_W, removeLabel, canRemove ? TEAL : FAINT, canRemove && hovered(mouseX, mouseY, REMOVE_X, KEYS_Y, REMOVE_W, KEY_H));
         key(g, x + UPGRADE_X, y + KEYS2_Y, UPGRADE_W, upgradeLabel, canUpgrade ? TEAL : FAINT, canUpgrade && hovered(mouseX, mouseY, UPGRADE_X, KEYS2_Y, UPGRADE_W, KEY_H));
         key(g, x + REPAIR_X, y + KEYS2_Y, REPAIR_W, repairLabel, canRepair ? TEAL : FAINT, canRepair && hovered(mouseX, mouseY, REPAIR_X, KEYS2_Y, REPAIR_W, KEY_H));
-        g.drawString(font, status, x + 8, y + 137, statusBad ? RED : MUTED, false);
+        g.drawString(font, status, x + 8, y + STATUS_Y, statusBad ? RED : MUTED, false);
     }
 
     /** The weapon as an item frame shows it: side on, still (R20), over the rail. */

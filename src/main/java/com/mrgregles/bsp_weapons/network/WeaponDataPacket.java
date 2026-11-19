@@ -9,6 +9,7 @@ import com.mrgregles.bsp_weapons.parts.Rarity;
 import com.mrgregles.bsp_weapons.parts.Sheet;
 import com.mrgregles.bsp_weapons.parts.WeaponKind;
 import com.mrgregles.bsp_weapons.parts.Modifiers;
+import com.mrgregles.bsp_weapons.parts.Need;
 import com.mrgregles.bsp_weapons.parts.PartKind;
 import com.mrgregles.bsp_weapons.parts.PartType;
 import com.mrgregles.bsp_weapons.parts.Stat;
@@ -28,7 +29,8 @@ import java.util.function.Supplier;
 /**
  * The part data a client needs for icons and tooltips (materials, bands, part types), sent when a player joins and on
  * every {@code /reload}. Lists are capped on the reading side so a bad packet cannot ask for more than a few thousand
- * entries. Patterns and catalysts feed the assembler's screen; augments name and tint the chips (protocol 2).
+ * entries. Patterns and catalysts feed the assembler's screen; augments name and tint the chips (protocol 2); part costs,
+ * chip ingredients and engram signatures feed the fabricator's needs line (protocol 3).
  */
 public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, Map<Integer, BandDefaults> bands, Map<ResourceLocation, PartType> partTypes,
                                Map<ResourceLocation, Pattern> patterns, Map<ResourceLocation, Catalyst> catalysts, Map<ResourceLocation, Augment> augments) {
@@ -71,6 +73,7 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             buf.writeVarInt(t.classes().size());
             for (ResourceLocation c : t.classes()) buf.writeResourceLocation(c);
             buf.writeBoolean(t.holdsEnergy());
+            buf.writeVarInt(t.cost());
         }
         buf.writeVarInt(patterns.size());
         for (Pattern p : patterns.values()) {
@@ -79,6 +82,8 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             buf.writeVarInt(p.slots().size());
             for (PartKind k : p.slots()) buf.writeByte(k.ordinal());
             for (Stat s : Stat.values()) buf.writeDouble(p.base().get(s));
+            buf.writeBoolean(p.signature() != null);
+            if (p.signature() != null) p.signature().write(buf);
         }
         buf.writeVarInt(catalysts.size());
         for (Catalyst c : catalysts.values()) {
@@ -100,6 +105,8 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             buf.writeVarInt(a.durability());
             buf.writeBoolean(a.available());
             buf.writeDouble(a.push());
+            buf.writeVarInt(a.ingredients().size());
+            for (Need need : a.ingredients()) need.write(buf);
         }
     }
 
@@ -141,7 +148,8 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             Set<ResourceLocation> classes = new HashSet<>();
             for (int j = 0; j < cc; j++) classes.add(buf.readResourceLocation());
             boolean energy = buf.readBoolean();
-            types.put(id, new PartType(id, k, m, classes, energy ? PartType.ENERGY : PartType.ROUNDS));
+            int cost = Math.max(1, Math.min(Need.MAX_COUNT, buf.readVarInt()));
+            types.put(id, new PartType(id, k, m, classes, energy ? PartType.ENERGY : PartType.ROUNDS, cost));
         }
         Map<ResourceLocation, Pattern> patterns = new HashMap<>();
         int pn = Math.min(MAX_ENTRIES, buf.readVarInt());
@@ -156,7 +164,8 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             }
             Sheet base = new Sheet();
             for (Stat s : Stat.values()) base.set(s, buf.readDouble());
-            patterns.put(id, new Pattern(id, kind, slots, base));
+            Need signature = buf.readBoolean() ? Need.read(buf) : null;
+            patterns.put(id, new Pattern(id, kind, slots, base, signature));
         }
         Map<ResourceLocation, Catalyst> catalysts = new HashMap<>();
         int cn = Math.min(MAX_ENTRIES, buf.readVarInt());
@@ -187,7 +196,10 @@ public record WeaponDataPacket(Map<ResourceLocation, WeaponMaterial> materials, 
             int durability = Math.max(1, Math.min(255, buf.readVarInt()));
             boolean available = buf.readBoolean();
             double push = Math.max(0, Math.min(64, buf.readDouble()));
-            augments.put(id, new Augment(id, m, kinds, classes, colour, durability, available, push));
+            int ic = Math.min(Augment.MAX_INGREDIENTS, buf.readVarInt());
+            java.util.List<Need> ingredients = new java.util.ArrayList<>();
+            for (int j = 0; j < ic; j++) ingredients.add(Need.read(buf));
+            augments.put(id, new Augment(id, m, kinds, classes, colour, durability, available, push, ingredients));
         }
         return new WeaponDataPacket(materials, bands, types, patterns, catalysts, augments);
     }

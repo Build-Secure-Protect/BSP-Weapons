@@ -9,6 +9,7 @@ import com.mrgregles.bsp_weapons.parts.Augment;
 import com.mrgregles.bsp_weapons.parts.BandDefaults;
 import com.mrgregles.bsp_weapons.parts.Catalyst;
 import com.mrgregles.bsp_weapons.parts.Modifiers;
+import com.mrgregles.bsp_weapons.parts.Need;
 import com.mrgregles.bsp_weapons.parts.PartKind;
 import com.mrgregles.bsp_weapons.parts.PartType;
 import com.mrgregles.bsp_weapons.parts.Pattern;
@@ -111,7 +112,8 @@ public final class WeaponData {
             if (Double.isNaN(v) || Double.isInfinite(v)) throw new IllegalArgumentException("base '" + e.getKey() + "' is not a number");
             base.set(s, v);
         }
-        return new Pattern(id, kind, slots, base);
+        Need signature = o.has("signature") ? Need.fromJson(o.getAsJsonObject("signature")) : null;
+        return new Pattern(id, kind, slots, base, signature);
     }
 
     static WeaponMaterial readMaterial(ResourceLocation id, JsonObject o) {
@@ -153,7 +155,8 @@ public final class WeaponData {
         Modifiers m = o.has("modifiers") ? Modifiers.fromJson(o.getAsJsonObject("modifiers")) : Modifiers.NONE;
         String ammo = o.has("ammo") ? o.get("ammo").getAsString() : PartType.ENERGY;
         if (!ammo.equals(PartType.ENERGY) && !ammo.equals(PartType.ROUNDS)) throw new IllegalArgumentException("ammo must be energy or rounds, not '" + ammo + "'");
-        return new PartType(id, kind, m, ids(o, "classes"), ammo);
+        int cost = o.has("cost") ? o.get("cost").getAsInt() : PartType.defaultCost(kind);
+        return new PartType(id, kind, m, ids(o, "classes"), ammo, cost);
     }
 
     static Augment readAugment(ResourceLocation id, JsonObject o) {
@@ -170,7 +173,9 @@ public final class WeaponData {
         boolean available = !o.has("available") || o.get("available").getAsBoolean();
         double push = o.has("push") ? Modifiers.finite(o.get("push").getAsDouble(), "push") : 0;
         if (push < 0 || push > 64) throw new IllegalArgumentException("push must be 0 to 64 blocks, not " + push);
-        return new Augment(id, m, kinds, ids(o, "classes"), colour, durability, available, push);
+        var ingredients = new java.util.ArrayList<Need>();
+        if (o.has("ingredients")) for (JsonElement e : o.getAsJsonArray("ingredients")) ingredients.add(Need.fromJson(e.getAsJsonObject()));
+        return new Augment(id, m, kinds, ids(o, "classes"), colour, durability, available, push, ingredients);
     }
 
     static Catalyst readCatalyst(ResourceLocation id, JsonObject o) {

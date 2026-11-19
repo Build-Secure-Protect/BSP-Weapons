@@ -6,5 +6,15 @@
   },
   "colour": "#FF9A3A",
   "durability": 10,
-  "push": 1.0
+  "push": 1.0,
+  "ingredients": [
+    {
+      "tag": "forge:gems/quartz",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

@@ -5,5 +5,15 @@
     }
   },
   "colour": "#8AE8FF",
-  "durability": 10
+  "durability": 10,
+  "ingredients": [
+    {
+      "tag": "forge:gems/prismarine",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

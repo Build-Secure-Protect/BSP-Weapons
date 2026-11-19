@@ -10,5 +10,6 @@
     "FIRE_RATE": {
       "percent": -10
     }
-  }
+  },
+  "cost": 1
 }

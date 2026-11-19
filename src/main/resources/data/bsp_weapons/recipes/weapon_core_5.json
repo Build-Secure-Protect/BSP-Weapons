@@ -1,0 +1,16 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "core",
+  "material": {
+    "tag": "forge:ingots/illyrium",
+    "count": 4
+  },
+  "result": {
+    "item": "bsp_weapons:weapon_core",
+    "nbt": "{Tier:5}"
+  },
+  "extra": {
+    "tag": "forge:ingots/unobtainium",
+    "count": 1
+  }
+}

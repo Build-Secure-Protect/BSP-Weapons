@@ -1,0 +1,15 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "catalyst",
+  "material": {
+    "tag": "forge:gems/lapis",
+    "count": 2
+  },
+  "result": {
+    "item": "bsp_weapons:allthemodium_catalyst"
+  },
+  "extra": {
+    "tag": "forge:ingots/allthemodium",
+    "count": 1
+  }
+}

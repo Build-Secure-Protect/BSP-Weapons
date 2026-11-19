@@ -100,6 +100,65 @@ def enhancer():
     return b
 
 
+def fabricator():
+    """The Weapon Fabricator, the Gantry Printer (D108; tools/preview/fabricator_refined.html): 32 x 16 x 16 from the tower
+    space, the bridge and head parked at the back, the bed bare, the gauge lit to four of six. Drawn with the front at z 0
+    as the page draws it and mirrored at the end so the front is the model's south face (+z) like the other machines'."""
+    b = Part("weapon_fabricator")
+    b.fill(0, 0, 0, 31, 5, 15, GUNMETAL).fill(0, 0, 0, 31, 0, 15, DARK).fill(0, 5, 0, 31, 5, 15, GOLD).fill(1, 5, 1, 30, 5, 14, LIGHT)   # the base, gold seam
+    for z in range(2, 14, 3):
+        b.fill(0, 1, z, 0, 4, z, DARK).fill(31, 1, z, 31, 4, z, DARK)                                                                    # side vents
+    for x in range(8, 30, 3):
+        b.fill(x, 1, 0, x, 4, 0, DARK)                                                                                                    # front vents
+    b.fill(6, 6, 3, 25, 6, 12, DARK)                                                                                                       # the bed
+    for gx in range(7, 25, 3):
+        for gz in range(4, 12, 3):
+            b.fill(gx, 6, gz, gx, 6, gz, TEAL)                                                                                            # its teal grid
+    for cx, cz in ((5, 2), (26, 2), (5, 13), (26, 13)):
+        b.fill(cx, 6, cz, cx, 15, cz, GUNMETAL).fill(cx, 15, cz, cx, 15, cz, GOLD)                                                      # the four posts
+    b.fill(5, 15, 2, 5, 15, 13, GOLD).fill(26, 15, 2, 26, 15, 13, GOLD).fill(5, 14, 3, 5, 14, 12, LIGHT).fill(26, 14, 3, 26, 14, 12, LIGHT)  # the rails
+    b.fill(0, 6, 4, 4, 15, 15, GUNMETAL).fill(0, 6, 4, 4, 6, 15, LIGHT)                                                                   # the tower
+    b.fill(1, 7, 3, 3, 14, 3, DARK)
+    for y in range(8, 14):
+        b.fill(1, y, 3, 3, y, 3, GOLD if y <= 11 else DARK)                                                                               # the energy gauge on its front
+    b.fill(0, 15, 5, 4, 15, 10, GOLD).cut(1, 15, 6, 3, 15, 9).fill(1, 15, 6, 3, 15, 9, DARK).fill(1, 15, 7, 3, 15, 8, VIOLET)             # the hopper on top, an ingot in it
+    b.fill(0, 8, 7, 0, 13, 12, DARK).fill(0, 9, 8, 0, 12, 11, TEAL).fill(0, 10, 9, 0, 11, 10, GUNMETAL)                                   # the spool on the left side
+    b.fill(0, 11, 13, 0, 11, 14, GUNMETAL).fill(1, 11, 13, 4, 11, 13, GUNMETAL)                                                           # its feed tube
+    b.fill(27, 6, 0, 31, 7, 6, GUNMETAL).fill(27, 8, 3, 31, 8, 6, GUNMETAL).fill(28, 8, 0, 30, 8, 2, LIGHT).fill(28, 9, 3, 30, 9, 6, DARK).fill(29, 9, 4, 29, 9, 5, TEAL)  # the console
+    b.fill(28, 9, 1, 28, 9, 1, GOLD).fill(30, 9, 1, 30, 9, 1, RED)                                                                        # its two buttons
+    b.fill(31, 8, 1, 31, 10, 1, GOLD).fill(31, 11, 1, 31, 11, 1, RED).fill(27, 9, 1, 27, 9, 1, GOLD)                                     # the lever and the job lamp
+    b.fill(27, 6, 11, 31, 9, 15, GUNMETAL).fill(27, 10, 11, 31, 10, 15, GOLD).cut(28, 10, 12, 30, 10, 14).fill(28, 10, 12, 30, 10, 14, DARK)  # the tray, back right
+    b.fill(5, 13, 12, 26, 13, 13, GUNMETAL).fill(5, 13, 12, 26, 13, 12, GOLD).fill(5, 12, 12, 5, 12, 13, GUNMETAL).fill(26, 12, 12, 26, 12, 13, GUNMETAL)  # the bridge, parked at the back
+    b.fill(23, 10, 12, 24, 12, 13, GUNMETAL).fill(23, 13, 12, 24, 13, 13, GOLD).fill(23, 9, 12, 24, 9, 13, TEAL)                          # the head on it, nozzle down
+    b.cubes = {(x, y, 15 - z): r for (x, y, z), r in b.cubes.items()}
+    return b
+
+
+def gui_transform(part, fill=15.0):
+    """The item model's gui transform (D124): the machine seen as every block item is (30 degrees down, 225 degrees round),
+    scaled so its projection fills `fill` of the slot's 16 px and moved so the projection's centre sits on the slot's. The game
+    scales, then turns (X then Y, as its rotationXYZ does), then moves by the translation, then the slot flips y; so the
+    translation is minus the turned, scaled offset of the model's centre from (8, 8, 8), and the flip changes no extent."""
+    import math
+    xs = [k[0] for k in part.cubes] + [k[0] + 1 for k in part.cubes]
+    ys = [k[1] for k in part.cubes] + [k[1] + 1 for k in part.cubes]
+    zs = [k[2] for k in part.cubes] + [k[2] + 1 for k in part.cubes]
+    ax, ay = math.radians(30), math.radians(225)
+
+    def turn(v):
+        x, y, z = v
+        x, z = x * math.cos(ay) + z * math.sin(ay), -x * math.sin(ay) + z * math.cos(ay)   # round Y
+        y, z = y * math.cos(ax) - z * math.sin(ax), y * math.sin(ax) + z * math.cos(ax)    # then down about X
+        return x, y, z
+
+    corners = [turn((x - 8, y - 8, z - 8)) for x in (min(xs), max(xs)) for y in (min(ys), max(ys)) for z in (min(zs), max(zs))]
+    w = max(c[0] for c in corners) - min(c[0] for c in corners)
+    h = max(c[1] for c in corners) - min(c[1] for c in corners)
+    scale = round(fill / max(w, h), 3)
+    centre = turn(((min(xs) + max(xs)) / 2 - 8, (min(ys) + max(ys)) / 2 - 8, (min(zs) + max(zs)) / 2 - 8))
+    return {"rotation": [30, 225, 0], "translation": [round(-centre[0] * scale, 2), round(-centre[1] * scale, 2), 0], "scale": [scale, scale, scale]}
+
+
 def block_model(part, glass):
     """glass=False: every opaque cube, drawn solid; glass=True: the GLASS cubes alone, drawn translucent."""
     boxes = [b for b in part.boxes() if (b[6] == GLASS) == glass]
@@ -142,7 +201,7 @@ def main():
     (item_models / "weapon_assembler.json").write_text(json.dumps({
         "parent": "bsp_weapons:block/weapon_assembler",
         "display": {
-            "gui": {"rotation": [30, 225, 0], "translation": [-3, -2, 0], "scale": [0.3, 0.3, 0.3]},
+            "gui": gui_transform(m),
             "ground": {"scale": [0.15, 0.15, 0.15], "translation": [-1, 2, 0]},
             "fixed": {"rotation": [0, 180, 0], "scale": [0.3, 0.3, 0.3], "translation": [-3, -2, 0]},
             "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
@@ -167,7 +226,7 @@ def main():
     (item_models / "weapon_enhancer.json").write_text(json.dumps({
         "parent": "bsp_weapons:block/weapon_enhancer",
         "display": {
-            "gui": {"rotation": [30, 225, 0], "translation": [0, -3, 0], "scale": [0.28, 0.28, 0.28]},
+            "gui": gui_transform(e),
             "ground": {"scale": [0.15, 0.15, 0.15], "translation": [0, 2, 0]},
             "fixed": {"rotation": [0, 180, 0], "scale": [0.28, 0.28, 0.28], "translation": [0, -3, 0]},
             "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
@@ -177,6 +236,31 @@ def main():
         },
     }, indent=2) + "\n")
     print(f"weapon_enhancer: {len(e.cubes)} voxels -> {ne} cubes; blockstates 2; item model 1")
+    f = fabricator()
+    data, nf = block_model(f, False)
+    (models / "weapon_fabricator.json").write_text(json.dumps(data, indent=2) + "\n")
+    (models / "weapon_fabricator_console.json").write_text(json.dumps({"textures": {"particle": "bsp_weapons:item/part_gunmetal"}, "elements": []}, indent=2) + "\n")
+    variants = {}
+    for facing, y in turns.items():
+        v = {"model": "bsp_weapons:block/weapon_fabricator"}
+        if y:
+            v["y"] = y
+        variants[f"facing={facing}"] = v
+    (states / "weapon_fabricator.json").write_text(json.dumps({"variants": variants}, indent=2) + "\n")
+    (states / "weapon_fabricator_console.json").write_text(json.dumps({"variants": {"": {"model": "bsp_weapons:block/weapon_fabricator_console"}}}, indent=2) + "\n")
+    (item_models / "weapon_fabricator.json").write_text(json.dumps({
+        "parent": "bsp_weapons:block/weapon_fabricator",
+        "display": {
+            "gui": gui_transform(f),
+            "ground": {"scale": [0.15, 0.15, 0.15], "translation": [-1, 2, 0]},
+            "fixed": {"rotation": [0, 180, 0], "scale": [0.3, 0.3, 0.3], "translation": [-3, 0, 0]},
+            "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
+            "thirdperson_lefthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.2, 0.2, 0.2]},
+            "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [-2, 0, 0], "scale": [0.25, 0.25, 0.25]},
+            "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [-2, 0, 0], "scale": [0.25, 0.25, 0.25]},
+        },
+    }, indent=2) + "\n")
+    print(f"weapon_fabricator: {len(f.cubes)} voxels -> {nf} cubes; blockstates 2; item model 1")
 
 
 if __name__ == "__main__":

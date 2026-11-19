@@ -18,7 +18,7 @@ import net.minecraftforge.items.SlotItemHandler;
 public class WeaponAssemblerMenu extends AbstractContainerMenu {
     /** Slot positions on the screen, by {@link Assembly} slot number: engram, core, barrel, cell, grip, optic, roll, output. */
     public static final int[][] SLOT_XY = {{8, 48}, {119, 48}, {160, 48}, {119, 78}, {84, 78}, {92, 20}, {186, 78}, {218, 78}};
-    public static final int INVENTORY_X = 47, INVENTORY_Y = 150, HOTBAR_Y = 208;
+    public static final int INVENTORY_X = 69, INVENTORY_Y = 150, HOTBAR_Y = 208;
     private final WeaponAssemblerBlockEntity blockEntity;
     private final ContainerLevelAccess access;
     private final BlockPos pos;

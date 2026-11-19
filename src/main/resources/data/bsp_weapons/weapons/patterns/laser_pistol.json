@@ -20,5 +20,9 @@
     "BLOCK_DAMAGE": 0,
     "RICOCHETS": 0,
     "DURABILITY": 300
+  },
+  "signature": {
+    "tag": "forge:ingots/tetrium",
+    "count": 4
   }
 }

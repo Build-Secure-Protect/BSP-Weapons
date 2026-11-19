@@ -46,6 +46,7 @@ public final class ClientSetup {
         event.enqueueWork(() -> {
             MenuScreens.register(ModBlocks.WEAPON_ASSEMBLER_MENU.get(), WeaponAssemblerScreen::new);
             MenuScreens.register(ModBlocks.WEAPON_ENHANCER_MENU.get(), WeaponEnhancerScreen::new);
+            MenuScreens.register(ModBlocks.WEAPON_FABRICATOR_MENU.get(), WeaponFabricatorScreen::new);
         });
         WeaponItem.CLIENT_TIME = () -> { var level = net.minecraft.client.Minecraft.getInstance().level; return level == null ? 0 : level.getGameTime(); };
     }

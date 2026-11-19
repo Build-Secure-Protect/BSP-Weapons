@@ -5,5 +5,15 @@
     }
   },
   "colour": "#4DA3FF",
-  "durability": 10
+  "durability": 10,
+  "ingredients": [
+    {
+      "tag": "forge:gems/lapis",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

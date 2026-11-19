@@ -8,5 +8,15 @@
     }
   },
   "colour": "#FF6B5C",
-  "durability": 8
+  "durability": 8,
+  "ingredients": [
+    {
+      "tag": "forge:gems/quartz",
+      "count": 1
+    },
+    {
+      "tag": "forge:dusts/redstone",
+      "count": 2
+    }
+  ]
 }

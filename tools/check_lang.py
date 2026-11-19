@@ -41,9 +41,9 @@ def main():
     for p in (DATA / "patterns").glob("*.json"):
         needed.add(f"item.{MOD}.{p.stem}")
         needed.add(f"item.{MOD}.{p.stem}_engram")
-    for kind in ("engram", "core", "barrel", "cell", "grip", "optic", "roll", "weapon", "part", "chip_in", "repair"):
+    for kind in ("engram", "core", "barrel", "cell", "grip", "optic", "roll", "weapon", "part", "chip_in", "repair", "material", "extra", "blank", "out"):
         needed.add(f"slot.{MOD}.{kind}")
-    for block in ("weapon_assembler", "weapon_assembler_part", "weapon_enhancer", "weapon_enhancer_top"):
+    for block in ("weapon_assembler", "weapon_assembler_part", "weapon_enhancer", "weapon_enhancer_top", "weapon_fabricator", "weapon_fabricator_console"):
         needed.add(f"block.{MOD}.{block}")
     for key in ("laser", "laser.player"):
         needed.add(f"death.attack.{MOD}.{key}")
@@ -59,6 +59,15 @@ def main():
     needed |= {f"enhance.{MOD}.{k}" for k in re.findall(r'"enhance\." \+ BspWeapons\.MODID \+ "\.([a-z_]+)"', every)}
     for key in ("heat", "overheated", "reloading", "no_charge", "no_rounds"):
         needed.add(f"hud.{MOD}.{key}")
+    # the fabricator's refusals are built as "fabricate." + MODID + "." + key from cannot("key"); part kinds as part_kind.<id>
+    needed |= {f"fabricate.{MOD}.{k}" for k in re.findall(r'\bcannot\("([a-z_]+)"', every)}
+    for kind in ("core", "barrel", "cell", "grip", "optic"):
+        needed.add(f"part_kind.{MOD}.{kind}")
+    needed.add(f"item.{MOD}.blank_engram")
+    # the fabricator's tabs are built as "gui." + MODID + ".fabricator.tab." + tab.id(): a prefix ending in a dot names no key itself
+    needed = {k for k in needed if not k.endswith(".")}
+    for tab in ("parts", "chips", "engram", "more"):
+        needed.add(f"gui.{MOD}.fabricator.tab.{tab}")
     missing = sorted(k for k in needed if k not in lang)
     unused = sorted(k for k in lang if k not in needed and not k.startswith("itemGroup.") and k != f"{MOD}.name" and k != f"item.{MOD}.weapon_core")
     bad = 0

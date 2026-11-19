@@ -154,6 +154,14 @@ tasks.register('checkLang', Exec) {
     inputs.files(fileTree('src/main/java'), fileTree('src/main/resources/data/bsp_weapons/weapons'), 'src/main/resources/assets/bsp_weapons/lang/en_us.json', 'tools/check_lang.py')
     outputs.upToDateWhen { true }
 }
+// Every string a screen draws must fit the box it is drawn in, measured with the game's own glyph widths (tools/check_text_widths.py).
+tasks.register('checkTextWidths', Exec) {
+    group = 'verification'
+    description = 'Measures the screens\' strings against their boxes (tools/check_text_widths.py).'
+    commandLine 'python3', 'tools/check_text_widths.py'
+    inputs.files('src/main/resources/assets/bsp_weapons/lang/en_us.json', 'tools/check_text_widths.py')
+    outputs.upToDateWhen { true }
+}
 tasks.named('check') {
-    dependsOn 'checkLang'
+    dependsOn 'checkLang', 'checkTextWidths'
 }

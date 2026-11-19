@@ -1,0 +1,529 @@
+<title>Fabricator Refined</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: header; the Gantry Printer (voxel, turning, running PART / CHIP / ENGRAM jobs, labelled, a player beside it) with its build notes; the Catalogue screen at 2x with a 320 x 240 fit check and its notes; the Slate turning beside its icons and tooltip; the points to confirm. BSP dark-board look, single theme by choice. */
+  :root {
+    --board: #0B0F14; --panel: #10151C; --slot: #0C0E12; --dim: #2A2F3A; --muted: #9AA3B5; --text: #E6EBF2;
+    --teal: #19D3B0; --violet: #B58CFF; --gold: #FFD23A; --red: #FF6B5C;
+    --pixel: 'VT323', 'Courier New', monospace; --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+  }
+  body { background: var(--board); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 40px; }
+  header { max-width: 1240px; margin: 0 auto 16px; display: grid; gap: 6px; }
+  h1 { font-family: var(--pixel); font-weight: 400; font-size: 40px; line-height: 1; margin: 0; color: var(--gold); text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 80ch; }
+  .two { max-width: 1240px; margin: 0 auto 16px; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+  .one { max-width: 1240px; margin: 0 auto 16px; }
+  @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--dim); min-width: 0; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 4px; flex-wrap: wrap; }
+  .head h2 { font-family: var(--pixel); font-weight: 400; font-size: 28px; line-height: 1; margin: 0; color: var(--violet); }
+  .head small { font-family: var(--pixel); font-size: 17px; color: var(--muted); }
+  .stage { position: relative; background: var(--slot); aspect-ratio: 4 / 3; max-width: 100%; overflow: hidden; border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); cursor: grab; }
+  .stage.wide { aspect-ratio: 2 / 1; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -50%); font-family: var(--pixel); font-size: 16px; line-height: 1; color: var(--text); background: rgba(12,14,18,0.8); border: 1px solid var(--dim); padding: 2px 6px; pointer-events: none; white-space: nowrap; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; border-bottom: 1px solid var(--dim); align-items: center; }
+  .group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .k { font-family: var(--pixel); font-size: 17px; color: var(--muted); margin-right: 4px; }
+  button { font-family: var(--pixel); font-size: 17px; line-height: 1; color: var(--text); background: var(--slot); border: 1px solid var(--dim); padding: 4px 8px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  button[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); }
+  .blurb { margin: 0; padding: 8px 14px 14px; color: var(--muted); }
+  .blurb b, .details b { color: var(--text); font-weight: 500; }
+  .details { padding: 10px 14px 14px; display: grid; gap: 8px; align-content: start; color: var(--muted); }
+  .details h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 6px 0 0; color: var(--teal); }
+  .details ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; }
+  .screen { padding: 10px 14px 0; display: grid; gap: 8px; }
+  .screen canvas { width: 100%; height: auto; max-width: 100%; image-rendering: pixelated; border: 1px solid var(--dim); }
+  .fit { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .fit canvas { width: 320px; height: 240px; max-width: 100%; }
+  .fit span { font-family: var(--pixel); font-size: 16px; color: var(--muted); max-width: 22ch; }
+  .icons { padding: 10px 14px 14px; display: grid; gap: 10px; align-content: start; }
+  .icons h3 { font-family: var(--pixel); font-weight: 400; font-size: 22px; margin: 0; color: var(--teal); }
+  .strip { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .strip canvas { image-rendering: pixelated; background: #8B8B8B; border: 2px solid; border-color: #373737 #FFFFFF #FFFFFF #373737; }
+  .tooltip { image-rendering: pixelated; width: 300px; max-width: 100%; height: auto; }
+  .points ol { margin: 0; padding-left: 22px; display: grid; gap: 5px; color: var(--muted); }
+  .points li::marker { color: var(--gold); font-family: var(--pixel); }
+</style>
+
+<header>
+  <h1>THE WEAPON FABRICATOR, REFINED</h1>
+  <p>The picks of 19 November: the Gantry Printer for the block (D108), the Catalogue for the screen (D109), the Slate for the Blank Engram (D110), the product on the tray at the end of a job (D111). The printer is drawn at full detail, two blocks wide, with a player beside it for scale and three jobs animated: PART grows a Tetrium barrel in three layers, CHIP grows a Shard Key, ENGRAM writes a glyph into a Slate. The Catalogue gains an ENGRAM state showing the BLANK slot at work, a roll odds line and a scroll bar. The Slate is grown to 10 by 2 by 10 voxels, with its tooltip. Drag any stage to turn it.</p>
+</header>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE MACHINE: GANTRY PRINTER</h2><small>32 x 16 x 16 voxels, two block spaces</small></div>
+    <div class="stage" data-view="machine"><div class="grid"></div></div>
+    <div class="controls" data-for="machine"></div>
+    <p class="blurb"><b>The bed:</b> dark with a teal grid of lit points, where the product grows. <b>The frame:</b> four gunmetal posts with gold rails along the sides; a bridge runs along the rails and the head runs along the bridge, its teal nozzle just over the work. <b>The left tower:</b> the material hopper on top with an ingot in it, the gold energy gauge on the front, the spool of drawn material on the side, teal tape wound on a gunmetal hub. <b>The right front:</b> a stepped console with a teal readout, gold and red buttons and a lever. <b>The back right:</b> the tray with a gold rim, where the finished product lands.</p>
+  </section>
+  <section class="card">
+    <div class="details">
+      <h3>HOW IT IS BUILT</h3>
+      <ul>
+        <li><b>Two block spaces side by side</b> as the assembler: the left space (the tower) holds the block entity, the inventory, the charge and the whole model; the right space is a companion block that opens the same screen; breaking either drops the machine as one item. It faces the player who placed it, tower on their left.</li>
+        <li><b>Heights.</b> Base 0 to 5, bed at 6, the product up to 9, posts and rails to 15, the tower 6 to 15, the console 6 to 11.</li>
+        <li><b>Idle.</b> The bridge parked at the back, the head at its end, the bed bare, the gauge lit to the charge, the readout breathing teal.</li>
+        <li><b>Working, about four seconds.</b> The bridge runs the bed and the head runs the bridge in a raster, sparks at the nozzle, the product growing in layers; the lamp in the console turns gold. At the end the product lifts from the bed to the tray and lies there for a moment while it also appears in OUT.</li>
+        <li><b>Each product has its own little build</b> (R26): a part grows in three layers; a chip grows clasp, crystal, tip; an engram is the Slate laid on the bed and the glyph written into its grid pixel by pixel; a Core grows as a cube; catalysts and rounds as a small stack.</li>
+        <li><b>Automation</b> (D105): cables and pipes connect to either space; items insert from any side into the slot that takes them, the product extracts from the bottom; the chosen job is kept.</li>
+        <li><b>Light and sound.</b> Light level 7; a hum and the head's ticking while working, a chime when the product lands, a short buzz on a refusal.</li>
+      </ul>
+      <h3>WHAT THE OWNER PICKED</h3>
+      <ul>
+        <li>"1. C": the gantry printer, grown from the set 9 sketch with the hopper, the lever, the lamp and the three jobs.</li>
+        <li>"2. A": the catalogue, with the roll odds line and a scroll bar added.</li>
+        <li>"3. B": the slate, now with a gunmetal rim, an index pin and the glass set into the rim.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE SCREEN: CATALOGUE</h2><small>D109, 256 x 232 at 2x, the inventory at row 150</small></div>
+    <div class="screen">
+      <canvas data-screen width="512" height="464"></canvas>
+      <div class="fit"><canvas data-fit width="320" height="240"></canvas><span>at GUI scale 1 in a 320 x 240 window</span></div>
+    </div>
+    <div class="controls" data-tabs></div>
+    <p class="blurb"><b>As picked, with the rules drawn in.</b> The tabs PARTS, CHIPS, ENGRAM and MORE each fill the list; the list scrolls with a thin bar and a click chooses a row, kept by the machine. On the right the job: its name, what it needs as ghost items with counts (the "any ingot" ghost cycles through the tag's items), ROLL marked optional, the four slots, the progress with its percentage, MAKE with the charge and time, a roll odds line in violet when a catalyst sits in ROLL, and the status line with the cost or the refusal. The gauge is the charge.</p>
+  </section>
+  <section class="card">
+    <div class="details">
+      <h3>WHAT THE STATES SHOW</h3>
+      <ul>
+        <li><b>READY.</b> Focused Barrel chosen, five Tetrium ingots in MATERIAL, two Lapis Catalysts in ROLL, the odds line, MAKE lit, "MAKE: 800 FE, 3 Tetrium Ingot, 1 Lapis Catalyst, 4 s."</li>
+        <li><b>WORKING.</b> The progress at 60 %, MAKE grey, "Making a Focused Barrel: 2 s left."</li>
+        <li><b>ENGRAM.</b> The ENGRAM tab, Laser Pistol Engram chosen, a Slate in BLANK and four Tetrium in MATERIAL, no roll (engrams have none), the Data Chip ghost in OUT.</li>
+        <li><b>IDLE.</b> Nothing chosen: the right side faint, "Choose what to make."</li>
+        <li><b>NO POWER.</b> The gauge empty, MAKE grey, the status in red.</li>
+      </ul>
+      <h3>WHAT A LINE MEANS</h3>
+      <ul>
+        <li><b>Needs.</b> A ghost item with "×3" is three of that item; "any ingot" means any material allowed for that part kind (gems for optics too); "optional" on ROLL means the job runs without a catalyst and rolls Normal.</li>
+        <li><b>Odds.</b> "roll: Normal 70 · Rare 25 · Epic 5 · S 0" is the catalyst in ROLL, as the assembler shows it.</li>
+        <li><b>The status.</b> The cost of MAKE, or why it is grey: no charge, missing items, OUT full, a material the kind refuses.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="two">
+  <section class="card">
+    <div class="head"><h2>THE BLANK ENGRAM: SLATE</h2><small>D110, 10 x 2 x 10 voxels</small></div>
+    <div class="stage wide" data-stage="blank"><div class="grid"></div></div>
+    <p class="blurb"><b>One item.</b> A dark board in a gunmetal rim, a light grid etched into it (four by four cells), a gold tab at one corner the machine grips it by, a gold index pin at the opposite corner, and a pane of glass set into the rim over the grid. The Fabricator writes the class's glyph into the grid; what comes out is the class's Data Chip (D61). Beside it: the Slate as the machine leaves it mid-write, the glyph half drawn in teal, which is only ever seen on the bed.</p>
+  </section>
+  <section class="card">
+    <div class="icons">
+      <h3>ICONS: 16 PX AND 32 PX</h3>
+      <div class="strip" data-strip="blank"></div>
+      <h3>TOOLTIP</h3>
+      <canvas class="tooltip" data-tooltip width="300" height="120"></canvas>
+      <p class="blurb" style="padding:0"><b>Crafting table</b> (D102): four iron ingots, a redstone dust and a glass pane, shapeless, make one Blank Engram; it stacks to 16. <b>Fabricator:</b> a Blank Engram in BLANK and four of the class's signature material in MATERIAL make that class's Engram.</p>
+    </div>
+  </section>
+</div>
+
+<div class="one">
+  <section class="card points">
+    <div class="head"><h2>POINTS TO CONFIRM</h2><small>R24 to R32; "yes" takes every default as drawn</small></div>
+    <div class="details">
+      <ol start="24">
+        <li><b>R24 Footprint and facing.</b> Two spaces side by side, the tower space holding the block entity and the console space its companion, tower on the viewer's left, as drawn. Or: console left.</li>
+        <li><b>R25 The job's look.</b> Idle with the bridge parked at the back and the bed bare; about four seconds of raster with sparks while the product grows; the product lifting to the tray at the end and lying there two seconds, as drawn. Or: no tray, the product only in OUT.</li>
+        <li><b>R26 What grows.</b> Each product its own build: a part in three layers, a chip as clasp, crystal and tip, an engram as the Slate being written, a Core as a cube, catalysts and rounds as a small stack. Or: one generic block for every job.</li>
+        <li><b>R27 The tabs.</b> PARTS, CHIPS, ENGRAM, MORE (Cores, catalysts, rounds), each a scrolling list chosen by click and kept by the machine, as drawn. Or: one long list.</li>
+        <li><b>R28 The needs line.</b> Ghost items with counts; "any ingot" cycles through the tag's items each second as JEI does; ROLL marked optional, as drawn. Or: fixed icons, no cycling.</li>
+        <li><b>R29 The odds line.</b> In violet under MAKE when a catalyst sits in ROLL, as the assembler shows it. Or: in the status line.</li>
+        <li><b>R30 One job at a time.</b> MAKE is grey while OUT holds a product; a job's progress is saved and goes on with the screen closed; the chosen row is kept. Or: a queue of jobs.</li>
+        <li><b>R31 The Slate.</b> 10 by 2 by 10 voxels, gold tab and pin, glass in the rim, held flat in the hand, as drawn. Or: 8 by 1 by 8, no glass.</li>
+        <li><b>R32 The blank's recipe.</b> Shapeless: four iron ingots, one redstone dust, one glass pane, on the crafting table (D102). Or: shaped, the pane in the middle of a ring of iron with redstone below.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.THREE;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GUNMETAL = 0x2E343D, GOLD = 0xD9B23A, TEAL = 0x19D3B0, DARK = 0x14181E, STONE = 0x4A4F58, LIGHT = 0x5A6270, MAT = 0x7D97B0, RED = 0xFF6B5C, OFF = 0x1C2230, STEEL = 0x8C949F, VIOLET = 0xB58CFF, LAMP = 0xFFD23A, TETRIUM = 0x6B4FA3;
+
+  function hash(x, y, z) { var h = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h >>> 0) % 1000) / 1000; }
+  function isGlow(r) { return r === 'teal' || r === 'glow' || r === 'red' || r === 'violet' || r === 'lamp' || (typeof r === 'string' && r.slice(0, 2) === 'g:'); }
+  function VoxelPart(name) { this.name = name; this.cubes = {}; this.group = new T.Group(); }
+  VoxelPart.prototype.fill = function (x0, y0, z0, x1, y1, z1, role) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) this.cubes[x + ',' + y + ',' + z] = role; return this; };
+  VoxelPart.prototype.cut = function (x0, y0, z0, x1, y1, z1) { for (var x = x0; x <= x1; x++) for (var y = y0; y <= y1; y++) for (var z = z0; z <= z1; z++) delete this.cubes[x + ',' + y + ',' + z]; return this; };
+  VoxelPart.prototype.build = function () {
+    var lit = [], glow = [], glass = [], self = this;
+    Object.keys(this.cubes).forEach(function (k) { var r = self.cubes[k]; if (r === 'glass') glass.push(k); else if (isGlow(r)) glow.push(k); else lit.push(k); });
+    var cube = new T.BoxGeometry(1, 1, 1), m = new T.Matrix4();
+    function mesh(keys, material) {
+      if (!keys.length) return null;
+      var im = new T.InstancedMesh(cube, material, keys.length);
+      keys.forEach(function (k, i) { var p = k.split(',').map(Number); m.makeTranslation(p[0] + 0.5, p[1] + 0.5, p[2] + 0.5); im.setMatrixAt(i, m); });
+      im.instanceMatrix.needsUpdate = true; self.group.add(im); return im;
+    }
+    this.lit = lit; this.glow = glow;
+    this.mesh = mesh(lit, new T.MeshLambertMaterial({ color: 0xFFFFFF }));
+    this.glowMesh = mesh(glow, new T.MeshBasicMaterial({ color: 0xFFFFFF }));
+    this.glassMesh = mesh(glass, new T.MeshBasicMaterial({ color: 0x8AE8DC, transparent: true, opacity: 0.42, depthWrite: false }));
+    this.paint();
+    return this;
+  };
+  VoxelPart.prototype.paint = function () {
+    var self = this;
+    function colour(r) { if (r === 'teal' || r === 'glow') return TEAL; if (r === 'red') return RED; if (r === 'violet') return VIOLET; if (r === 'lamp') return LAMP; if (typeof r === 'string' && r.slice(0, 2) === 'g:') return parseInt(r.slice(2), 16); return r; }
+    [[this.mesh, this.lit], [this.glowMesh, this.glow]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[1].forEach(function (k, i) { var p = k.split(',').map(Number), h = hash(p[0], p[1], p[2]); var c = new T.Color(colour(self.cubes[k])); c.multiplyScalar(h < 0.5 ? 1.0 : (h < 0.82 ? 0.84 : 0.68)); pair[0].setColorAt(i, c); });
+      pair[0].instanceColor.needsUpdate = true;
+    });
+  };
+  VoxelPart.prototype.bounds = function () { var b = new T.Box3(); Object.keys(this.cubes).forEach(function (k) { var p = k.split(',').map(Number); b.expandByPoint(new T.Vector3(p[0], p[1], p[2])); b.expandByPoint(new T.Vector3(p[0] + 1, p[1] + 1, p[2] + 1)); }); return b; };
+  function centred(part) { part.build(); var b = part.bounds(), c = b.getCenter(new T.Vector3()); var g = new T.Group(); part.group.position.set(-c.x, -c.y, -c.z); g.add(part.group); return g; }
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  function Sparks(parent, n, colour) {
+    this.items = []; this.m = new T.Matrix4();
+    this.mesh = new T.InstancedMesh(new T.BoxGeometry(0.5, 0.5, 0.5), new T.MeshBasicMaterial({ color: colour }), n);
+    for (var i = 0; i < n; i++) this.items.push({ p: new T.Vector3(), v: new T.Vector3(), life: 0 });
+    parent.add(this.mesh); this.tick(0);
+  }
+  Sparks.prototype.spit = function (x, y, z, count) { var n = 0; for (var i = 0; i < this.items.length && n < count; i++) { var it = this.items[i]; if (it.life > 0) continue; it.p.set(x, y, z); it.v.set((Math.random() - 0.5) * 10, 4 + Math.random() * 6, (Math.random() - 0.5) * 10); it.life = 0.3 + Math.random() * 0.3; n++; } };
+  Sparks.prototype.tick = function (dt) {
+    var self = this;
+    this.items.forEach(function (it, i) {
+      if (it.life > 0) { it.life -= dt; it.v.y -= 30 * dt; it.p.addScaledVector(it.v, dt); self.m.makeTranslation(it.p.x, it.p.y, it.p.z); } else self.m.makeScale(0.001, 0.001, 0.001);
+      self.mesh.setMatrixAt(i, self.m);
+    });
+    this.mesh.instanceMatrix.needsUpdate = true;
+  };
+  function floor(x0, z0, x1, z1) { var f = new VoxelPart('floor'); f.fill(x0, -1, z0, x1, -1, z1, STONE); return f.build(); }
+  /** The job cycle, 8 s: idle 1 s, working 5 s (p 0 to 1), landing 0.6 s (the product flies to the tray), done to 8 s. */
+  function jobPhase(now) { var t = now % 8; if (t < 1) return { p: 0, state: 'idle' }; if (t < 6) return { p: (t - 1) / 5, state: 'working' }; if (t < 6.6) return { p: 1, state: 'landing', e: smooth((t - 6) / 0.6) }; return { p: 1, state: 'done' }; }
+
+  function player(x, z) {
+    var p = new VoxelPart('player'), SKIN = 0xC9956B, HAIR = 0x3B2A1E, SHIRT = 0x1F5F6A, TROUSERS = 0x2A3550, BOOT = 0x1A1D24;
+    p.fill(0, 0, 0, 3, 10, 3, TROUSERS).fill(4, 0, 0, 7, 10, 3, TROUSERS).fill(0, 0, 0, 7, 1, 3, BOOT);
+    p.fill(0, 11, 0, 7, 21, 3, SHIRT).fill(-4, 11, 0, -1, 21, 3, SHIRT).fill(-4, 11, 0, -1, 14, 3, SKIN).fill(8, 11, 0, 11, 21, 3, SHIRT).fill(8, 11, 0, 11, 14, 3, SKIN);
+    p.fill(0, 22, -2, 7, 29, 5, SKIN).fill(0, 29, -2, 7, 29, 5, HAIR).fill(0, 27, -2, 7, 28, -2, HAIR).fill(0, 26, 5, 7, 28, 5, HAIR).fill(1, 26, 5, 2, 26, 5, 0xFFFFFF).fill(5, 26, 5, 6, 26, 5, 0xFFFFFF).fill(2, 26, 5, 2, 26, 5, 0x2A3550).fill(5, 26, 5, 5, 26, 5, 0x2A3550);
+    p.build(); p.group.position.set(x, 0, z); return p.group;
+  }
+
+  // ---- the products, each as the layers it grows in (bottom first), all lying on the bed around x 10..21, z 6..8 -----------------------
+  function barrelLayers() {
+    var out = [];
+    for (var i = 0; i < 3; i++) { var l = new VoxelPart('layer'); l.fill(0, 0, 0, 11, 0, 2, TETRIUM); if (i !== 1) { l.fill(0, 0, 0, 0, 0, 2, GOLD); l.fill(10, 0, 0, 11, 0, 2, GOLD); } else { l.cut(0, 0, 1, 0, 0, 1).cut(10, 0, 1, 11, 0, 1).fill(11, 0, 1, 11, 0, 1, 'teal'); } if (i === 2) l.fill(3, 0, 1, 8, 0, 1, DARK); l.build(); l.group.position.set(10, 7 + i, 6); out.push(l.group); }
+    return out;
+  }
+  function chipLayers() {
+    var clasp = new VoxelPart('clasp'); clasp.fill(0, 0, 0, 7, 0, 3, GUNMETAL).fill(1, 0, 1, 2, 0, 2, GOLD).fill(5, 0, 1, 6, 0, 2, GOLD); clasp.build(); clasp.group.position.set(12, 7, 6);
+    var crystal = new VoxelPart('crystal'); crystal.fill(1, 0, 0, 6, 0, 3, 'g:FFD23A').fill(0, 0, 0, 7, 0, 3, GOLD).cut(1, 0, 1, 6, 0, 2); crystal.fill(1, 0, 1, 6, 0, 2, 'g:FFD23A'); crystal.build(); crystal.group.position.set(12, 8, 6);
+    var tip = new VoxelPart('tip'); tip.fill(2, 0, 1, 5, 0, 2, 'g:FFD23A'); tip.build(); tip.group.position.set(12, 9, 6);
+    return [clasp.group, crystal.group, tip.group];
+  }
+  function slateOnBed(written) {
+    var s = new VoxelPart('slate');
+    s.fill(0, 0, 0, 9, 0, 9, DARK).fill(0, 0, 0, 9, 0, 0, GUNMETAL).fill(0, 0, 9, 9, 0, 9, GUNMETAL).fill(0, 0, 0, 0, 0, 9, GUNMETAL).fill(9, 0, 0, 9, 0, 9, GUNMETAL);
+    for (var x = 2; x <= 7; x += 2) s.fill(x, 0, 1, x, 0, 8, LIGHT);
+    for (var z = 2; z <= 7; z += 2) s.fill(1, 0, z, 8, 0, z, LIGHT);
+    s.fill(8, 1, 8, 9, 1, 9, GOLD).fill(0, 1, 0, 0, 1, 0, GOLD);
+    return s;
+  }
+  var GLYPH = [[1, 1], [3, 1], [5, 1], [7, 1], [1, 3], [3, 3], [5, 3], [1, 5], [7, 5], [1, 7], [3, 7], [5, 7], [7, 7], [7, 3]];
+  function glyphDots() { var out = []; GLYPH.forEach(function (d) { var v = new VoxelPart('dot'); v.fill(0, 0, 0, 0, 0, 0, 'teal'); v.build(); v.group.position.set(11 + d[0], 7, 3 + d[1]); out.push(v.group); }); return out; }
+  function dataChip() {
+    var p = new VoxelPart('Data Chip');
+    p.fill(0, 0, 0, 7, 1, 9, GUNMETAL).cut(0, 0, 0, 0, 1, 0).fill(1, 1, 1, 6, 1, 8, LIGHT);
+    [1, 3, 5].forEach(function (x) { p.fill(x, 0, 9, x, 1, 9, GOLD).fill(x, 1, 8, x, 1, 8, GOLD); });
+    p.fill(2, 2, 2, 5, 2, 5, DARK).fill(3, 2, 3, 4, 2, 4, 'teal').fill(2, 1, 6, 5, 1, 6, GOLD);
+    return p;
+  }
+  function barrelWhole() { var b = new VoxelPart('barrel'); b.fill(0, 0, 0, 11, 2, 2, TETRIUM).fill(0, 0, 0, 0, 2, 2, GOLD).cut(0, 1, 1, 0, 1, 1).fill(10, 0, 0, 11, 2, 2, GOLD).cut(10, 1, 1, 11, 1, 1).fill(11, 1, 1, 11, 1, 1, 'teal').fill(3, 2, 1, 8, 2, 1, DARK); return b; }
+  function shardWhole() { var c = new VoxelPart('shard'); c.fill(0, 0, 0, 7, 0, 3, GUNMETAL).fill(0, 1, 0, 7, 1, 3, GOLD).cut(1, 1, 1, 6, 1, 2).fill(1, 1, 1, 6, 1, 2, 'g:FFD23A').fill(2, 2, 1, 5, 2, 2, 'g:FFD23A'); return c; }
+
+  // ---- the Gantry Printer ----------------------------------------------------------------------------------------------------------------
+  function printer() {
+    var b = new VoxelPart('printer');
+    b.fill(0, 0, 0, 31, 5, 15, GUNMETAL).fill(0, 0, 0, 31, 0, 15, DARK).fill(0, 5, 0, 31, 5, 15, GOLD).fill(1, 5, 1, 30, 5, 14, LIGHT);        // the base, gold seam
+    for (var z = 2; z <= 13; z += 3) { b.fill(0, 1, z, 0, 4, z, DARK); b.fill(31, 1, z, 31, 4, z, DARK); }
+    for (var x = 8; x <= 29; x += 3) b.fill(x, 1, 0, x, 4, 0, DARK);                                                                            // vents
+    b.fill(6, 6, 3, 25, 6, 12, DARK); for (var gx = 7; gx <= 24; gx += 3) for (var gz = 4; gz <= 11; gz += 3) b.fill(gx, 6, gz, gx, 6, gz, 'teal');  // the bed
+    [[5, 2], [26, 2], [5, 13], [26, 13]].forEach(function (c) { b.fill(c[0], 6, c[1], c[0], 15, c[1], GUNMETAL).fill(c[0], 15, c[1], c[0], 15, c[1], GOLD); });  // posts
+    b.fill(5, 15, 2, 5, 15, 13, GOLD).fill(26, 15, 2, 26, 15, 13, GOLD).fill(5, 14, 3, 5, 14, 12, LIGHT).fill(26, 14, 3, 26, 14, 12, LIGHT);      // rails
+    b.fill(0, 6, 4, 4, 15, 15, GUNMETAL).fill(0, 6, 4, 4, 6, 15, LIGHT);                                                                           // the tower
+    b.fill(1, 7, 3, 3, 14, 3, DARK); for (var y = 8; y <= 13; y++) b.fill(1, y, 3, 3, y, 3, y <= 11 ? 'lamp' : OFF);                                // gauge, front of the tower
+    b.fill(0, 15, 5, 4, 15, 10, GOLD).cut(1, 15, 6, 3, 15, 9).fill(1, 15, 6, 3, 15, 9, DARK).fill(1, 15, 7, 3, 15, 8, TETRIUM);                     // the hopper on top with an ingot
+    b.fill(0, 8, 7, 0, 13, 12, DARK).fill(0, 9, 8, 0, 12, 11, 'teal').fill(0, 10, 9, 0, 11, 10, GUNMETAL);                                         // the spool, left side
+    b.fill(0, 11, 13, 0, 11, 14, GUNMETAL).fill(1, 11, 13, 4, 11, 13, GUNMETAL);                                                                   // its feed tube
+    b.fill(27, 6, 0, 31, 7, 6, GUNMETAL).fill(27, 8, 3, 31, 8, 6, GUNMETAL).fill(28, 8, 0, 30, 8, 2, LIGHT).fill(28, 9, 3, 30, 9, 6, DARK).fill(29, 9, 4, 29, 9, 5, 'teal'); // the console
+    [28, 30].forEach(function (bx, i) { b.fill(bx, 9, 1, bx, 9, 1, i === 0 ? GOLD : RED); });
+    b.fill(31, 8, 1, 31, 10, 1, GOLD).fill(31, 11, 1, 31, 11, 1, RED).fill(27, 9, 1, 27, 9, 1, OFF);                                               // lever and the job lamp
+    b.fill(27, 6, 11, 31, 9, 15, GUNMETAL).fill(27, 10, 11, 31, 10, 15, GOLD).cut(28, 10, 12, 30, 10, 14).fill(28, 10, 12, 30, 10, 14, DARK);     // the tray, back right
+    var g = new T.Group(); g.add(b.build().group);
+    var bridge = new VoxelPart('bridge'); bridge.fill(0, 0, 0, 21, 0, 1, GUNMETAL).fill(0, 0, 0, 21, 0, 0, GOLD).fill(0, -1, 0, 0, -1, 1, GUNMETAL).fill(21, -1, 0, 21, -1, 1, GUNMETAL); bridge.build(); g.add(bridge.group);
+    var head = new VoxelPart('head'); head.fill(0, 0, 0, 1, 2, 1, GUNMETAL).fill(0, 3, 0, 1, 3, 1, GOLD).fill(0, -1, 0, 1, -1, 1, 'teal'); head.build(); g.add(head.group);
+    var lampVox = new VoxelPart('lamp'); lampVox.fill(0, 0, 0, 0, 0, 0, 'lamp'); lampVox.build(); lampVox.group.position.set(27, 9, 1); g.add(lampVox.group);
+    var jobs = {
+      part: { layers: barrelLayers(), whole: centred(barrelWhole()), scale: 0.6 },
+      chip: { layers: chipLayers(), whole: centred(shardWhole()), scale: 0.7 },
+      engram: { layers: glyphDots(), whole: centred(dataChip()), scale: 0.6 }
+    };
+    var slate = slateOnBed(); slate.build(); slate.group.position.set(11, 6.01, 3); g.add(slate.group);
+    Object.keys(jobs).forEach(function (k) { jobs[k].layers.forEach(function (l) { g.add(l); }); g.add(jobs[k].whole); jobs[k].whole.visible = false; });
+    var sparks = new Sparks(g, 24, TEAL), lamp = new T.PointLight(TEAL, 0.5, 18); lamp.position.set(16, 12, 8); g.add(lamp);
+    g.add(player(-18, 4));
+    return {
+      group: g, cam: { pos: [60, 40, 70], look: [14, 7, 8] }, floor: [-26, -16, 47, 31], yaw: 0.5,
+      labels: [['Hopper', [2, 17, 7.5]], ['Energy gauge', [2, 10, 1]], ['Spool', [-2, 11, 9.5]], ['Bridge', [16, 17, 8]], ['Head', [16, 12, -2]], ['Bed', [16, 4, 1]], ['Console', [29, 12, -1]], ['Tray', [29, 12, 16]], ['Player, 1.9 blocks', [-14, 32, 6]]],
+      animate: function (now, dt, st, job) {
+        var active = jobs[st.op], working = st.working && job.state === 'working';
+        var p = working ? job.p : 0, n = active.layers.length, layer = Math.min(n, Math.floor(p * (n + 0.5)));
+        var within = working ? (p * n) % 1 : 0;
+        var hz = working ? 5 + 2 * (Math.floor(within * 8) % 4) : 12, hx = working ? 10 + 11 * (0.5 - 0.5 * Math.cos(within * Math.PI * 8)) : 25;
+        bridge.group.position.set(5, 13, hz); head.group.position.set(hx, 10, hz);
+        Object.keys(jobs).forEach(function (k) { jobs[k].layers.forEach(function (l, i) { l.visible = k === st.op && (st.working ? (job.state === 'working' && i < layer) : true); }); });
+        slate.group.visible = st.op === 'engram' && (!st.working || job.state === 'working');
+        var whole = active.whole;
+        if (st.working && (job.state === 'landing' || job.state === 'done')) {
+          var e = job.state === 'done' ? 1 : job.e;
+          whole.visible = true; whole.scale.setScalar(active.scale);
+          whole.position.set(16 + (29 - 16) * e, 8 + (11.5 - 8) * e + Math.sin(Math.PI * e) * 6, 7 + (13 - 7) * e);
+        } else whole.visible = false;
+        Object.keys(jobs).forEach(function (k) { if (k !== st.op) jobs[k].whole.visible = false; });
+        if (working && !reduced) sparks.spit(hx + 1, 9, hz + 1, 1);
+        sparks.tick(dt);
+        lampVox.group.visible = true; lamp.intensity = working ? 0.5 + 0.3 * Math.abs(Math.sin(now * 10)) : 0.2;
+      }
+    };
+  }
+  var stages = [];
+  function makeStage(el, build, fov) {
+    var renderer = new T.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    el.insertBefore(renderer.domElement, el.firstChild);
+    var scene = new T.Scene();
+    var m = build();
+    var camera = new T.PerspectiveCamera(fov || 30, 4 / 3, 0.1, 500);
+    camera.position.set(m.cam.pos[0], m.cam.pos[1], m.cam.pos[2]); camera.lookAt(m.cam.look[0], m.cam.look[1], m.cam.look[2]);
+    scene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.85));
+    var key = new T.DirectionalLight(0xFFF3DC, 0.75); key.position.set(30, 50, 40); scene.add(key);
+    var fill = new T.DirectionalLight(0x19D3B0, 0.2); fill.position.set(-30, 10, -40); scene.add(fill);
+    var pivot = new T.Group(); pivot.position.set(m.cam.look[0], 0, m.cam.look[2]); scene.add(pivot);
+    m.group.position.set(-m.cam.look[0], 0, -m.cam.look[2]); pivot.add(m.group);
+    if (m.floor) { var f = floor(m.floor[0], m.floor[1], m.floor[2], m.floor[3]); f.group.position.copy(m.group.position); pivot.add(f.group); }
+    var labels = [];
+    (m.labels || []).forEach(function (l) { var d = document.createElement('div'); d.className = 'label'; d.textContent = l[0]; el.appendChild(d); labels.push({ el: d, at: new T.Vector3(l[1][0], l[1][1], l[1][2]) }); });
+    var st = { el: el, renderer: renderer, scene: scene, camera: camera, pivot: pivot, machine: m, labels: labels, labelsOn: true, yaw: m.yaw === undefined ? 0.5 : m.yaw, dragging: false, lastX: 0, working: !reduced, op: 'part', spin: m.spin || 0.22 };
+    el.addEventListener('pointerdown', function (ev) { st.dragging = true; st.lastX = ev.clientX; el.setPointerCapture(ev.pointerId); });
+    el.addEventListener('pointermove', function (ev) { if (!st.dragging) return; st.yaw += (ev.clientX - st.lastX) * 0.01; st.lastX = ev.clientX; });
+    el.addEventListener('pointerup', function () { st.dragging = false; });
+    el.addEventListener('pointercancel', function () { st.dragging = false; });
+    function resize() { var r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(el); else window.addEventListener('resize', resize);
+    resize();
+    stages.push(st);
+    return st;
+  }
+  function group(holder, label, items, current, onPick) {
+    var g = document.createElement('div'); g.className = 'group';
+    var k = document.createElement('span'); k.className = 'k'; k.textContent = label; g.appendChild(k);
+    var buttons = [];
+    items.forEach(function (it, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = it; b.setAttribute('aria-pressed', String(i === current));
+      b.addEventListener('click', function () { buttons.forEach(function (x, j) { x.setAttribute('aria-pressed', String(j === i)); }); onPick(i); });
+      buttons.push(b); g.appendChild(b);
+    });
+    holder.appendChild(g);
+  }
+  var machineStage = makeStage(document.querySelector('[data-view="machine"]'), printer);
+  (function () {
+    var holder = document.querySelector('.controls[data-for="machine"]'), ops = ['part', 'chip', 'engram'];
+    group(holder, 'JOB', ['PART', 'CHIP', 'ENGRAM'], 0, function (i) { machineStage.op = ops[i]; });
+    group(holder, 'STATE', ['WORKING', 'IDLE'], reduced ? 1 : 0, function (i) { machineStage.working = i === 0; });
+    group(holder, 'LABELS', ['ON', 'OFF'], 0, function (i) { machineStage.labelsOn = i === 0; });
+  })();
+
+  // ---- the Catalogue screen ----------------------------------------------------------------------------------------------------------------
+  var C = { panel: '#10151C', slot: '#0C0E12', dim: '#2A2F3A', muted: '#9AA3B5', text: '#E6EBF2', teal: '#19D3B0', violet: '#B58CFF', gold: '#FFD23A', red: '#FF6B5C', faint: '#3A4150', empty: '#1A1F27', tetrium: '#6B4FA3' };
+  var STATES = ['READY', 'WORKING', 'ENGRAM', 'IDLE', 'NO POWER'];
+  var state = 'READY';
+  var PARTS = ['Focused Barrel', 'Scatter Barrel', 'Thermal Barrel', 'Pulse Barrel', 'Energy Cell', 'Overcharge Cell', 'Magazine', 'EMP Cell', 'Standard Grip', 'Light Grip', 'Heavy Grip', 'Iron Sight'];
+  var PART_KINDS = ['barrel', 'barrel', 'barrel', 'barrel', 'cell', 'cell', 'cell', 'cell', 'grip', 'grip', 'grip', 'optic'];
+  var ENGRAMS = ['Laser Pistol', 'Laser Rifle', 'Rail Gun', 'Launcher', 'Sniper', 'EMP'];
+  function sit() { var s = state; return { engram: s === 'ENGRAM', chosen: s !== 'IDLE', working: s === 'WORKING', power: s !== 'NO POWER', frac: s === 'NO POWER' ? 0 : 0.62, progress: s === 'WORKING' ? 0.6 : 0 }; }
+
+  function px(ctx) { ctx.imageSmoothingEnabled = false; ctx.textBaseline = 'top'; }
+  function text(ctx, s, x, y, colour, size) { ctx.fillStyle = colour || C.text; ctx.font = (size || 16) + 'px VT323, monospace'; ctx.fillText(s, x, y); }
+  function rect(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); }
+  function frame(ctx, x, y, w, h, colour) { ctx.fillStyle = colour; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1); ctx.fillRect(x, y, 1, h); ctx.fillRect(x + w - 1, y, 1, h); }
+  function glyph(ctx, kind, x, y, tint) {
+    var m = tint || '#7D97B0';
+    if (kind === 'barrel') { rect(ctx, x, y + 3, 8, 2, m); rect(ctx, x, y + 2, 1, 4, '#D9B23A'); rect(ctx, x + 7, y + 3, 1, 2, '#19D3B0'); }
+    else if (kind === 'cell') { rect(ctx, x + 1, y + 1, 6, 6, m); rect(ctx, x + 2, y + 3, 1, 2, '#19D3B0'); rect(ctx, x + 5, y + 3, 1, 2, '#19D3B0'); rect(ctx, x + 1, y, 6, 1, '#D9B23A'); }
+    else if (kind === 'grip') { rect(ctx, x + 2, y, 4, 2, m); rect(ctx, x + 2, y + 2, 3, 2, m); rect(ctx, x + 1, y + 4, 3, 2, m); rect(ctx, x, y + 6, 3, 2, m); }
+    else if (kind === 'optic') { rect(ctx, x, y + 3, 8, 3, m); rect(ctx, x + 7, y + 4, 1, 1, '#19D3B0'); rect(ctx, x + 3, y + 1, 2, 2, '#D9B23A'); }
+    else if (kind === 'engram') { rect(ctx, x + 1, y, 6, 8, '#2E343D'); rect(ctx, x + 2, y + 2, 4, 3, '#14181E'); rect(ctx, x + 3, y + 3, 2, 1, '#19D3B0'); rect(ctx, x + 2, y + 7, 1, 1, '#D9B23A'); rect(ctx, x + 4, y + 7, 1, 1, '#D9B23A'); rect(ctx, x + 6, y + 7, 1, 1, '#D9B23A'); }
+    else if (kind === 'slate') { rect(ctx, x, y, 8, 8, '#2E343D'); rect(ctx, x + 1, y + 1, 6, 6, '#14181E'); rect(ctx, x + 3, y + 1, 1, 6, '#5A6270'); rect(ctx, x + 1, y + 3, 6, 1, '#5A6270'); rect(ctx, x + 6, y + 6, 2, 2, '#D9B23A'); }
+    else if (kind === 'catalyst') { rect(ctx, x + 2, y + 2, 4, 6, '#8AE8DC'); rect(ctx, x + 3, y + 4, 2, 3, '#2A4AC8'); rect(ctx, x + 2, y, 4, 2, '#D9B23A'); rect(ctx, x + 4, y + 5, 1, 1, '#E03A3A'); }
+    else if (kind === 'ingot') { rect(ctx, x + 1, y + 3, 6, 3, m); rect(ctx, x + 2, y + 2, 4, 1, m); rect(ctx, x + 1, y + 3, 6, 1, 'rgba(255,255,255,0.3)'); }
+  }
+  function slot(ctx, x, y, label, filled, kind, tint, count) {
+    rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, filled ? C.dim : C.empty);
+    if (filled) { glyph(ctx, kind, x + 5, y + 5, tint); if (count) text(ctx, String(count), x + 11, y + 9, C.text, 10); }
+    if (label) text(ctx, label, x, y + 19, filled ? C.muted : C.faint, 10);
+  }
+  function ghostSlot(ctx, x, y, kind, tint) { rect(ctx, x, y, 18, 18, C.slot); frame(ctx, x, y, 18, 18, C.empty); ctx.globalAlpha = 0.35; glyph(ctx, kind, x + 5, y + 5, tint); ctx.globalAlpha = 1; }
+  function ghost(ctx, x, y, kind, tint, count) { rect(ctx, x, y, 12, 12, C.slot); frame(ctx, x, y, 12, 12, C.faint); ctx.globalAlpha = 0.6; glyph(ctx, kind, x + 2, y + 2, tint); ctx.globalAlpha = 1; if (count) text(ctx, '×' + count, x + 14, y + 1, C.muted, 11); }
+  function button(ctx, x, y, w, label, on) { var colour = on ? C.teal : C.faint; rect(ctx, x, y, w, 14, C.slot); frame(ctx, x, y, w, 14, colour); text(ctx, label, x + 4, y + 1, colour, 14); }
+  function gaugeV(ctx, x, y, w, h, frac) { rect(ctx, x, y, w, h, C.slot); frame(ctx, x, y, w, h, C.dim); var fh = Math.round((h - 2) * frac); rect(ctx, x + 1, y + h - 1 - fh, w - 2, fh, frac > 0 ? C.gold : C.slot); for (var yy = y + 8; yy < y + h - 1; yy += 8) rect(ctx, x + 1, yy, w - 2, 1, C.slot); }
+  function progress(ctx, x, y, w, frac, working) { rect(ctx, x, y, w, 6, C.slot); frame(ctx, x, y, w, 6, C.dim); if (frac > 0) rect(ctx, x + 1, y + 1, Math.round((w - 2) * frac), 4, working ? C.teal : C.dim); }
+  function inventory(ctx) { for (var r = 0; r < 3; r++) for (var c = 0; c < 9; c++) { rect(ctx, 47 + c * 18, 150 + r * 18, 18, 18, C.slot); frame(ctx, 47 + c * 18, 150 + r * 18, 18, 18, C.empty); } for (var c2 = 0; c2 < 9; c2++) { rect(ctx, 47 + c2 * 18, 208, 18, 18, C.slot); frame(ctx, 47 + c2 * 18, 208, 18, 18, C.empty); } }
+  function tabs(ctx, x, y, on) { ['PARTS', 'CHIPS', 'ENGRAM', 'MORE'].forEach(function (t, i) { var tx = x + i * 34, is = i === on; if (is) rect(ctx, tx, y, 33, 12, C.slot); frame(ctx, tx, y, 33, 12, is ? C.teal : C.dim); text(ctx, t, tx + 2, y + 1, is ? C.teal : C.faint, 10); }); }
+  function list(ctx, items, kinds, x, y, w, rowH, chosen) {
+    for (var i = 0; i < items.length; i++) {
+      var yy = y + i * rowH, on = chosen && i === 0;
+      if (on) { rect(ctx, x - 2, yy - 1, w, rowH, '#15202A'); frame(ctx, x - 2, yy - 1, w, rowH, C.teal); }
+      glyph(ctx, kinds[i], x, yy, on ? C.tetrium : '#7D97B0');
+      text(ctx, items[i], x + 11, yy - 2, on ? C.text : C.muted, 11);
+    }
+  }
+  function screen(ctx) {
+    var st = sit();
+    rect(ctx, 0, 0, 256, 232, C.panel); frame(ctx, 0, 0, 256, 232, C.dim);
+    text(ctx, 'WEAPON FABRICATOR', 6, 5, C.gold, 16); rect(ctx, 6, 20, 244, 1, C.dim);
+    tabs(ctx, 118, 5, st.engram ? 2 : 0);
+    rect(ctx, 6, 24, 98, 122, C.slot); frame(ctx, 6, 24, 98, 122, C.dim);
+    if (st.engram) list(ctx, ENGRAMS, ENGRAMS.map(function () { return 'engram'; }), 11, 29, 92, 10, true);
+    else list(ctx, PARTS, PART_KINDS, 11, 29, 92, 10, st.chosen);
+    rect(ctx, 100, 26, 2, 118, C.empty); rect(ctx, 100, 26, 2, st.engram ? 60 : 40, C.dim);                               // the scroll bar
+    var name = st.engram ? 'Laser Pistol Engram' : (st.chosen ? 'Focused Barrel' : 'nothing chosen');
+    text(ctx, name, 108, 24, st.chosen ? C.text : C.faint, 14);
+    if (st.chosen) {
+      text(ctx, 'needs', 108, 38, C.muted, 11);
+      if (st.engram) { ghost(ctx, 138, 37, 'ingot', C.tetrium, 4); text(ctx, 'Tetrium Ingot', 164, 38, C.faint, 11); ghost(ctx, 138, 51, 'slate', null, 1); text(ctx, 'Blank Engram', 164, 52, C.faint, 11); }
+      else { ghost(ctx, 138, 37, 'ingot', C.tetrium, 3); text(ctx, 'any ingot', 164, 38, C.faint, 11); ghost(ctx, 138, 51, 'catalyst', null, 1); text(ctx, 'optional, the roll', 164, 52, C.faint, 11); }
+    }
+    slot(ctx, 108, 70, 'MATERIAL', st.chosen, 'ingot', C.tetrium, st.engram ? 4 : 5);
+    slot(ctx, 150, 70, 'ROLL', st.chosen && !st.engram, 'catalyst', null, 2);
+    slot(ctx, 190, 70, 'BLANK', st.engram, 'slate', null, 1);
+    if (st.engram) ghostSlot(ctx, 228, 70, 'engram'); else if (st.working && st.progress >= 1) slot(ctx, 228, 70, null, true, 'barrel', C.tetrium); else ghostSlot(ctx, 228, 70, st.chosen ? 'barrel' : 'barrel', st.chosen ? C.tetrium : null);
+    text(ctx, 'OUT', 228, 89, st.chosen ? C.muted : C.faint, 10);
+    progress(ctx, 108, 100, 138, st.progress, st.working); if (st.working) text(ctx, '60%', 216, 92, C.teal, 11);
+    gaugeV(ctx, 242, 24, 8, 40, st.frac); text(ctx, 'FE', 241, 65, st.power ? C.gold : C.red, 11);
+    button(ctx, 108, 112, 40, 'MAKE', st.chosen && st.power && !st.working);
+    text(ctx, st.chosen ? (st.engram ? '2,000 FE · 4 s' : '800 FE · 4 s') : '', 154, 113, C.muted, 11);
+    if (st.chosen && !st.engram) text(ctx, 'roll: Normal 70 · Rare 25 · Epic 5 · S 0', 108, 128, C.violet, 11);
+    var msg, bad = false;
+    if (state === 'NO POWER') { msg = 'Not enough charge: 0 of 800 FE.'; bad = true; }
+    else if (state === 'IDLE') msg = 'Choose what to make.';
+    else if (state === 'WORKING') msg = 'Making a Focused Barrel: 2 s left.';
+    else if (state === 'ENGRAM') msg = 'MAKE: 2,000 FE, 4 Tetrium, 1 Blank Engram, 4 s.';
+    else msg = 'MAKE: 800 FE, 3 Tetrium Ingot, 1 Lapis Catalyst, 4 s.';
+    text(ctx, msg, 108, 137, bad ? C.red : C.muted, 11);
+    inventory(ctx);
+  }
+  function drawScreens() {
+    var big = document.querySelector('[data-screen]'), fit = document.querySelector('[data-fit]');
+    var ctx = big.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 256, 232); screen(ctx);
+    var f = fit.getContext('2d'); px(f); f.setTransform(1, 0, 0, 1, 0, 0); rect(f, 0, 0, 320, 240, '#07090C'); f.save(); f.translate(32, 4); screen(f); f.restore();
+    frame(f, 0, 0, 320, 240, C.violet); text(f, '320 x 240', 262, 226, C.violet, 12);
+  }
+  drawScreens();
+  group(document.querySelector('.controls[data-tabs]'), 'STATE', STATES, 0, function (i) { state = STATES[i]; drawScreens(); });
+
+  // ---- the Slate: turning, half written beside it, icons, tooltip --------------------------------------------------------------------------
+  function slate(written) {
+    var s = new VoxelPart('Slate');
+    s.fill(0, 0, 0, 9, 0, 9, DARK).fill(0, 0, 0, 9, 0, 0, GUNMETAL).fill(0, 0, 9, 9, 0, 9, GUNMETAL).fill(0, 0, 0, 0, 0, 9, GUNMETAL).fill(9, 0, 0, 9, 0, 9, GUNMETAL);
+    s.fill(0, 1, 0, 9, 1, 0, GUNMETAL).fill(0, 1, 9, 9, 1, 9, GUNMETAL).fill(0, 1, 0, 0, 1, 9, GUNMETAL).fill(9, 1, 0, 9, 1, 9, GUNMETAL);
+    for (var x = 2; x <= 7; x += 2) s.fill(x, 0, 1, x, 0, 8, LIGHT);
+    for (var z = 2; z <= 7; z += 2) s.fill(1, 0, z, 8, 0, z, LIGHT);
+    s.fill(1, 1, 1, 8, 1, 8, 'glass');
+    s.fill(8, 1, 8, 9, 2, 9, GOLD).fill(0, 1, 0, 0, 1, 0, GOLD).fill(0, 2, 0, 0, 2, 0, GOLD);
+    if (written) GLYPH.slice(0, 8).forEach(function (d) { s.fill(d[0], 0, d[1], d[0], 0, d[1], 'teal'); });
+    return s;
+  }
+  var blankModels = [slate(false), slate(true), dataChip()], blankNames = ['Blank Engram, the Slate', 'on the bed, half written', 'what comes out: the Data Chip'];
+  var blankStage = makeStage(document.querySelector('[data-stage="blank"]'), function () {
+    var g = new T.Group(), labels = [];
+    blankModels.forEach(function (mdl, i) {
+      mdl.build(); var b = mdl.bounds(), c = b.getCenter(new T.Vector3());
+      var holder = new T.Group(); holder.position.set((i - 1) * 18, 0, 0); g.add(holder);
+      mdl.group.position.set(-c.x, -b.min.y, -c.z); holder.add(mdl.group); mdl.holder = holder;
+      labels.push([blankNames[i], [(i - 1) * 18, b.max.y - b.min.y + 4, 0]]);
+    });
+    return { group: g, cam: { pos: [0, 26, 58], look: [0, 3, 0] }, floor: null, labels: labels, spin: 0.5, animate: function (now, dt, st) { blankModels.forEach(function (m) { m.holder.rotation.y = st.yaw; }); } };
+  }, 26);
+  blankStage.turnsHolders = true;
+
+  var iconRenderer = new T.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true });
+  iconRenderer.setPixelRatio(1); iconRenderer.outputEncoding = T.sRGBEncoding;
+  var iconScene = new T.Scene(); iconScene.add(new T.HemisphereLight(0xC9D6E8, 0x1A1F27, 0.9));
+  var iconKey = new T.DirectionalLight(0xFFF3DC, 0.8); iconKey.position.set(30, 50, 40); iconScene.add(iconKey);
+  var iconCamera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
+  var iconModels = [slate(false), dataChip()];
+  iconModels.forEach(function (m) { m.build(); });
+  function renderIcon(canvas, model, size) {
+    iconScene.children.forEach(function (c) { if (c.userData.model) iconScene.remove(c); });
+    model.group.userData.model = true; model.group.position.set(0, 0, 0); iconScene.add(model.group);
+    var b = model.bounds(), c = b.getCenter(new T.Vector3()), s = b.getSize(new T.Vector3());
+    var r = Math.max(s.x, s.y, s.z) * 0.72 + 0.6;
+    iconCamera.left = -r; iconCamera.right = r; iconCamera.top = r; iconCamera.bottom = -r; iconCamera.updateProjectionMatrix();
+    iconCamera.position.set(c.x + 40, c.y + 32, c.z + 40); iconCamera.lookAt(c);
+    iconRenderer.setSize(size, size, false); iconRenderer.render(iconScene, iconCamera);
+    var ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(iconRenderer.domElement, 0, 0, size, size, 0, 0, canvas.width, canvas.height);
+  }
+  (function strip() {
+    var holder = document.querySelector('[data-strip="blank"]');
+    [['Blank Engram', 0], ['Data Chip', 1]].forEach(function (e) {
+      var lab = document.createElement('span'); lab.className = 'k'; lab.textContent = e[0]; holder.appendChild(lab);
+      [16, 32].forEach(function (size) { var cv = document.createElement('canvas'); cv.width = size; cv.height = size; cv.style.width = (size * 2) + 'px'; cv.style.height = (size * 2) + 'px'; holder.appendChild(cv); renderIcon(cv, iconModels[e[1]], size); });
+    });
+  })();
+  function drawTooltip() {
+    var cv = document.querySelector('[data-tooltip]'), ctx = cv.getContext('2d'); px(ctx); ctx.setTransform(2, 0, 0, 2, 0, 0); ctx.clearRect(0, 0, 150, 60);
+    rect(ctx, 0, 0, 150, 60, '#100A1E'); frame(ctx, 0, 0, 150, 60, '#28007F'); frame(ctx, 1, 1, 148, 58, C.violet);
+    glyph(ctx, 'slate', 134, 6, null);
+    text(ctx, 'Blank Engram', 6, 5, C.text, 14);
+    text(ctx, 'Written at the Weapon Fabricator', 6, 20, C.muted, 11);
+    text(ctx, 'into a weapon class\'s Engram', 6, 30, C.muted, 11);
+    text(ctx, 'Takes 4 of the class\'s material', 6, 44, C.faint, 10);
+  }
+  drawTooltip();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { drawScreens(); drawTooltip(); });
+
+  // ---- the loop ---------------------------------------------------------------------------------------------------------------------------
+  var last = performance.now() / 1000, v = new T.Vector3();
+  function loop() {
+    var now = performance.now() / 1000, dt = Math.min(0.05, now - last); last = now;
+    var job = jobPhase(now);
+    stages.forEach(function (st) {
+      st.machine.animate(now, dt, st, job);
+      if (!st.dragging && !reduced) st.yaw += dt * st.spin;
+      if (!st.turnsHolders) st.pivot.rotation.y = st.yaw;
+      st.renderer.render(st.scene, st.camera);
+      var r = st.el.getBoundingClientRect();
+      st.labels.forEach(function (l) {
+        l.el.style.display = st.labelsOn ? '' : 'none'; if (!st.labelsOn) return;
+        v.copy(l.at); st.machine.group.localToWorld(v); v.project(st.camera);
+        l.el.style.left = ((v.x * 0.5 + 0.5) * r.width).toFixed(0) + 'px'; l.el.style.top = ((-v.y * 0.5 + 0.5) * r.height).toFixed(0) + 'px';
+      });
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

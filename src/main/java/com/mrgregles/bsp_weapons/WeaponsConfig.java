@@ -4,7 +4,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
 
-/** The server config: the multipliers of the layers (D7, D22, D29) and the caps. Numbers the owner tunes. */
+/** The server config: the multipliers of the layers (D7, D22, D29), the caps, firing, and the two powered machines' charges. Numbers the owner tunes. */
 public final class WeaponsConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.ConfigValue<List<? extends Double>> TIER_MULTIPLIERS;
@@ -19,6 +19,7 @@ public final class WeaponsConfig {
     public static final ForgeConfigSpec.BooleanValue ASSEMBLED_FULL;
     public static final ForgeConfigSpec.IntValue ENHANCER_CAPACITY, ENHANCER_MAX_RECEIVE, FIT_CHARGE, UPGRADE_CHARGE, REPAIR_CHARGE;
     public static final ForgeConfigSpec.DoubleValue REPAIR_SHARE;
+    public static final ForgeConfigSpec.IntValue FABRICATOR_CAPACITY, FABRICATOR_MAX_RECEIVE, PART_CHARGE, CHIP_CHARGE, ENGRAM_CHARGE, CORE_CHARGE_PER_TIER, CATALYST_CHARGE, ROUND_CHARGE, OTHER_CHARGE, FABRICATE_TICKS;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -53,6 +54,18 @@ public final class WeaponsConfig {
         UPGRADE_CHARGE = b.comment("Forge Energy a Core upgrade burns (D75, D76).").defineInRange("upgradeCharge", 2000, 0, 100000000);
         REPAIR_CHARGE = b.comment("Forge Energy a repair burns (D75, D77).").defineInRange("repairCharge", 1000, 0, 100000000);
         REPAIR_SHARE = b.comment("The share of a weapon's durability one ingot or gem restores (D77).").defineInRange("repairShare", 0.25, 0.01, 1.0);
+        b.pop();
+        b.push("fabricator");
+        FABRICATOR_CAPACITY = b.comment("Forge Energy the Weapon Fabricator stores (D99, D114).").defineInRange("fabricatorCapacity", 20000, 1, 100000000);
+        FABRICATOR_MAX_RECEIVE = b.comment("Forge Energy the Weapon Fabricator takes a tick from a cable or charger.").defineInRange("fabricatorMaxReceive", 1000, 1, 100000000);
+        PART_CHARGE = b.comment("Forge Energy a part draws when its job starts.").defineInRange("partCharge", 800, 0, 100000000);
+        CHIP_CHARGE = b.comment("Forge Energy an augment chip draws.").defineInRange("chipCharge", 1200, 0, 100000000);
+        ENGRAM_CHARGE = b.comment("Forge Energy an engram draws.").defineInRange("engramCharge", 2000, 0, 100000000);
+        CORE_CHARGE_PER_TIER = b.comment("Forge Energy a Weapon Core draws for each of its tiers (Tier III: three times this).").defineInRange("coreChargePerTier", 500, 0, 100000000);
+        CATALYST_CHARGE = b.comment("Forge Energy a catalyst draws.").defineInRange("catalystCharge", 200, 0, 100000000);
+        ROUND_CHARGE = b.comment("Forge Energy a batch of rounds draws.").defineInRange("roundCharge", 100, 0, 100000000);
+        OTHER_CHARGE = b.comment("Forge Energy a fabricating recipe of any other kind draws.").defineInRange("otherCharge", 1000, 0, 100000000);
+        FABRICATE_TICKS = b.comment("Ticks every job takes from its start to the product reaching OUT (D99: about four seconds).").defineInRange("fabricateTicks", 80, 1, 72000);
         b.pop();
         SPEC = b.build();
     }

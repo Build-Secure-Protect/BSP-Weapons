@@ -9,6 +9,10 @@ import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerBlock;
 import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerBlockEntity;
 import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerMenu;
 import com.mrgregles.bsp_weapons.enhancer.WeaponEnhancerTopBlock;
+import com.mrgregles.bsp_weapons.fabricator.WeaponFabricatorBlock;
+import com.mrgregles.bsp_weapons.fabricator.WeaponFabricatorBlockEntity;
+import com.mrgregles.bsp_weapons.fabricator.WeaponFabricatorConsoleBlock;
+import com.mrgregles.bsp_weapons.fabricator.WeaponFabricatorMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -45,6 +49,13 @@ public final class ModBlocks {
             () -> BlockEntityType.Builder.of(WeaponEnhancerBlockEntity::new, WEAPON_ENHANCER.get()).build(null));
     public static final RegistryObject<MenuType<WeaponEnhancerMenu>> WEAPON_ENHANCER_MENU = MENUS.register("weapon_enhancer",
             () -> IForgeMenuType.create((windowId, inventory, data) -> new WeaponEnhancerMenu(windowId, inventory, data.readBlockPos())));
+
+    public static final RegistryObject<WeaponFabricatorBlock> WEAPON_FABRICATOR = BLOCKS.register("weapon_fabricator", () -> new WeaponFabricatorBlock(machine()));
+    public static final RegistryObject<WeaponFabricatorConsoleBlock> WEAPON_FABRICATOR_CONSOLE = BLOCKS.register("weapon_fabricator_console", () -> new WeaponFabricatorConsoleBlock(machine().noLootTable()));
+    public static final RegistryObject<BlockEntityType<WeaponFabricatorBlockEntity>> WEAPON_FABRICATOR_ENTITY = BLOCK_ENTITIES.register("weapon_fabricator",
+            () -> BlockEntityType.Builder.of(WeaponFabricatorBlockEntity::new, WEAPON_FABRICATOR.get()).build(null));
+    public static final RegistryObject<MenuType<WeaponFabricatorMenu>> WEAPON_FABRICATOR_MENU = MENUS.register("weapon_fabricator",
+            () -> IForgeMenuType.create((windowId, inventory, data) -> new WeaponFabricatorMenu(windowId, inventory, data.readBlockPos())));
 
     private ModBlocks() {
     }

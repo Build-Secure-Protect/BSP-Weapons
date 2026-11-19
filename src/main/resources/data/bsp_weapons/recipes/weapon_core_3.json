@@ -1,0 +1,16 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "core",
+  "material": {
+    "tag": "forge:ingots/magnatite",
+    "count": 4
+  },
+  "result": {
+    "item": "bsp_weapons:weapon_core",
+    "nbt": "{Tier:3}"
+  },
+  "extra": {
+    "tag": "forge:gems/diamond",
+    "count": 1
+  }
+}

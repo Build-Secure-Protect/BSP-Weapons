@@ -1,0 +1,15 @@
+{
+  "type": "bsp_weapons:fabricating",
+  "kind": "engram",
+  "material": {
+    "tag": "forge:ingots/tetrium",
+    "count": 4
+  },
+  "result": {
+    "item": "bsp_weapons:laser_pistol_engram"
+  },
+  "extra": {
+    "item": "bsp_weapons:blank_engram",
+    "count": 1
+  }
+}

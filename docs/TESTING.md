@@ -134,7 +134,7 @@ Not tested in game or headless: the two keys on the Board and the burnt-out noti
 
 In game:
 - [ ] Put a worn Tier II Laser Pistol with a chip at 1 point in WEAPON and a Tier IV Weapon Core in CORE: UPGRADE turns teal and the status reads "UPGRADE: 2,000 FE and a point of every chip."; a second Tier II Core instead reads "The Core must be higher than Tier II." in red. Press UPGRADE: the tooltip reads Core IV with its sockets, the chip at 1 is gone and the action bar reads "<Augment> burnt out.", a Tier II Core sits in CORE, the gauge drops by 2,000.
-- [ ] Fire a pistol until its durability bar is well down. Put it in WEAPON and an ingot of one of its parts' materials in REPAIR (iron for an iron grip; a Tetrium ingot for a Tetrium barrel): REPAIR turns teal, "REPAIR: 1,000 FE and a point of every chip."; a copper ingot reads "Copper Ingot is not a material on this weapon." Press REPAIR with a stack of ingots: the bar fills by a quarter per ingot taken, the stack shrinks by the number used, the rest stays; at full the key greys with "The weapon is not worn."
+- [ ] Fire a pistol until its durability bar is well down. Put it in WEAPON and an ingot of one of its parts' materials in REPAIR (iron for an iron grip; a Tetrium ingot for a Tetrium barrel): REPAIR turns teal, "REPAIR: 1,000 FE and a point of every chip."; a copper ingot reads "Copper Ingot: not on this weapon." Press REPAIR with a stack of ingots: the bar fills by a quarter per ingot taken, the stack shrinks by the number used, the rest stays; at full the key greys with "The weapon is not worn."
 - [ ] `serverconfig/bsp_weapons-server.toml` `[enhancer]` now has upgradeCharge, repairCharge and repairShare.
 
 ## 2026-11-18: WP-6f, Knockback's push (unreleased)
@@ -148,3 +148,57 @@ In game:
 - [ ] Shoot an iron golem: it barely moves (knockback resistance applies to the push as to any knockback).
 - [ ] `serverconfig/bsp_weapons-server.toml` `[firing]` gains `pushScale`; at 0 the Knockback chip throws nothing extra, at 3 a zombie flies several blocks.
 
+## 2026-11-19: WP-7b, the Weapon Fabricator's recipes and rules (unreleased)
+
+Headless: 11 GameTests in the `fabricator` batch (63 required in all): the data loads with every part type's cost (barrels 3, cells 2, grips 2, optics 1), every augment's gem and two redstone, the Laser Pistol's four-Tetrium signature, the eleven fabricating recipes and the Blank Engram's table recipe; the catalogue lists the fourteen part types in order, the seven fittable chips and not Breacher or Ricochet, the Laser Pistol Engram on its tab, and on MORE the Cores, catalysts and rounds whose items exist on this server (Core IV and V and the Allthemodium Catalyst are left out where Allthemodium is not loaded); a Focused Barrel from five iron spends three and the Allthemodium Catalyst and rolls Epic or S, a Tetrium ingot is found by its tag, a diamond makes a Scope; a gem for a barrel, a stick, two iron of three and an empty slot are refused each with its own sentence and spend nothing; a Piercing Chip from a diamond and two redstone, refused short of either, Epic or S with an Illyrium Catalyst; a Laser Pistol Engram from four Tetrium and a Blank Engram, refused with three Tetrium, no blank or an ingot for a blank; Core I and Core III (three tiers' charge), a Lapis Catalyst from two lapis and a redstone, eight rounds from an iron and a redstone, the recipe matching the slots as a container; one FE short, anything in OUT and a running job refuse, a product waits while OUT is blocked, a catalyst on a Core job is left alone; the state's chosen row, product and ticks survive their tag; the slots' filters, charges and tabs; the table recipe takes a pane and not a glass block.
+
+Not tested in game or headless: the Blank Engram's look in hand and in the tab; the refusal sentences on a screen (no screen yet); the needs line; charging from a cable (no block yet). Nothing can be fabricated in game until WP-7c adds the block.
+
+In game:
+- [ ] On a crafting table, four iron ingots, one redstone dust and one glass pane (any arrangement) make one Blank Engram; a glass block does not. It stacks to 16. Its icon is the Slate: a dark gridded board in a gunmetal rim under glass with a gold tab and pin at one corner; its tooltip reads "Takes a weapon class's glyph at the Weapon Fabricator".
+- [ ] The BSP-Weapons creative tab shows the Blank Engram between the Weapon Enhancer and the Laser Pistol Engram.
+- [ ] `serverconfig/bsp_weapons-server.toml` gains `[fabricator]` with fabricatorCapacity, fabricatorMaxReceive, partCharge, chipCharge, engramCharge, coreChargePerTier, catalystCharge, roundCharge, otherCharge and fabricateTicks.
+- [ ] A client on the previous jar is refused by a server on this one (protocol 3).
+
+## 2026-11-19: WP-7c, the Weapon Fabricator block (unreleased)
+
+Headless: 4 GameTests in the `fabricator_block` batch (67 required in all): placing the tower puts the console on the viewer's right facing the same way, a tower with no room beside it cannot survive, breaking the console removes both and drops one machine and nothing else, breaking the tower removes the console; a job started through the block entity draws its charge, runs on the server's ticks with no screen, is half done half way, lands in OUT at the end and leaves the row chosen, survives a save mid-job with its product, charge and emptied slot, OUT full refuses the next job, and breaking the machine mid-job drops the product under way, the slot items and the machine; the energy capability is on every side, intake only, capped at the config's intake a push; the item capability on a side puts iron, a catalyst and redstone into their slots, refuses a stick and anything for OUT, and takes nothing out, the one below takes only the product, and the sideless one both puts in and takes the product; the menu reads the charge, progress and chosen row live on the server and reads back what it is sent elsewhere; the action packet chooses a row by index, clears it for an index past the catalogue, makes the chosen job, sends refusals back, ignores another position and an unknown action, and survives the wire; rows are named by their product.
+
+Not tested in game or headless: the Gantry Printer model in the world and in hand (150 cubes), its blockstate turns, the stand-in screen (slots, keys, gauge, progress, status line), the console space opening the screen on a right-click, piped automation from a real pipe or AE2 bus, the drop when a pipe would push into OUT.
+
+In game:
+- [ ] Place a Weapon Fabricator facing you: the tower (hopper, spool, gauge) on your left and the console on your right; the bed between the four posts with the bridge parked at the back and the head on it. Walk round it: the tray is behind the console. Break the console: the whole machine drops as one item. Place it again and break the tower: the same.
+- [ ] Right-click either space: the screen opens (the Catalogue, checked under WP-7d).
+- [ ] Power it from a cable on any side of the tower: the gauge fills in gold and FE turns gold. Put 5 iron ingots in MATERIAL with Focused Barrel chosen and press MAKE: three iron are taken, the gauge drops, the progress bar fills over four seconds, then a Normal Iron Focused Barrel sits in OUT and MAKE greys with "Take the product out of OUT first."
+- [ ] Put a Lapis Catalyst in ROLL and MAKE again: the catalyst is spent and the barrel is Normal, Rare or Epic. Choose Weapon Core (the Tier I row) with a catalyst in ROLL, 4 iron and 2 redstone: the catalyst stays.
+- [ ] Close the screen mid-job and open it after four seconds: the product is in OUT. Start a job, leave the world and come back: the job finishes or has finished.
+- [ ] A hopper or pipe on a side of the tower feeds iron into MATERIAL; a hopper under the tower pulls the product out of OUT and nothing else.
+- [ ] Shift-click iron from the inventory: it goes to MATERIAL; a catalyst goes to ROLL; redstone to the third slot; nothing can be put into OUT by hand or shift-click.
+- [ ] The creative tab shows the Weapon Fabricator after the Weapon Enhancer, drawn as the printer in the slot.
+
+## 2026-11-19: WP-7d, the Catalogue screen (unreleased)
+
+Headless: 1 GameTest added to the `fabricator` batch (68 required in all): the materials a kind cycles through are those that allow it and exist on this server, by id (iron and Tetrium make barrels, a diamond makes an optic and no barrel, Allthemodium only with its mod). The screen itself is client code and runs in no headless test.
+
+Not tested in game or headless: everything drawn (tabs, list, scroll bar and wheel, chosen row, name, needs ghosts and the cycling material name, slots and labels, OUT ghost, progress and percentage, gauge, MAKE and price, odds line, status line), the click on a row reaching the machine, and the text fitting at 320 x 240.
+
+In game:
+- [ ] Open the Fabricator: WEAPON FABRICATOR in gold over a rule, the tabs PARTS CHIPS ENGRAM MORE at the top right with PARTS framed teal, the list of fourteen parts with a glyph per kind (barrel, cell, grip, optic) and a scroll bar on its right, the thumb sized to the list; the wheel over the list scrolls it. On the right "nothing chosen", four empty slots labelled MATERIAL ROLL EXTRA OUT in faint, an empty progress bar, the gauge, MAKE grey, and "Choose what to make."
+- [ ] Click Focused Barrel: the row is framed teal, the name reads "Focused Barrel", the needs line shows a ghost ingot "×3" whose name changes each second through the materials (Iron Ingot, Tetrium Ingot, ...) with its tint, and a ghost catalyst "×1 optional, the roll"; OUT shows a faint barrel; MAKE's price reads "800 FE · 4 s" with the progress bar at its right; the status "Put 3 of a weapon material in MATERIAL." in red. Close and reopen: the row is still chosen (R27). Break and replace the machine: nothing chosen.
+- [ ] CHIPS lists the seven chips with a shard glyph in each augment's colour; ENGRAM lists "Laser Pistol Engram" and the third slot's label reads BLANK, the needs line "×4 Tetrium Ingot" and "×1 Blank Engram"; MORE lists Weapon Core (three to five rows by what the pack has), the catalysts and Energy Round. The chosen row's tab opens when the screen opens.
+- [ ] With 5 Tetrium in MATERIAL and 2 Lapis Catalysts in ROLL on Focused Barrel: the status reads "MAKE: 800 FE, 3 Tetrium Ingot." and "Normal 70  Rare 25  Epic 5  S 0" in violet under MAKE; MAKE is teal. Press it: the progress bar beside MAKE fills with the percentage inside it, the status counts "Making Focused Barrel: 3.2 s left.", MAKE grey; the odds line goes when the catalyst is spent. At the end the barrel sits in OUT over no ghost.
+- [ ] With no charge: FE in red, the status "Not enough charge: 0 of 800 FE." in red. With a diamond in MATERIAL on a barrel: "Diamond makes no barrel."
+- [ ] At 320 x 240 (GUI scale 1 in a small window) every text fits its box: long names in the list end in "..." and the status line never runs past the gauge.
+
+## 2026-11-19: fixes from the first client look (unreleased)
+
+Headless: no new GameTest (both are looks). The build now runs `tools/check_text_widths.py`, which measures 77 of the screens' strings against their boxes with the game's own glyph widths and fails when one is too long.
+
+Not tested in game or headless: everything below.
+
+In game:
+- [ ] All three screens are 300 px wide and 232 tall, the player's inventory centred under them, and open whole in a 320 x 240 window at GUI scale 1.
+- [ ] The Rail: ENGRAM, BARREL and WEAPON read whole under their slots; TAKE APART · 1 catalyst fits its key; with a catalyst in the roll slot the violet line reads "Normal 70  Rare 25  Epic 5  S 0" whole; the bars sit at the right with their numbers inside the panel.
+- [ ] The Board: WEAPON and CHIP IN read whole under their slots; the keys sit clear below the slot labels; the status line runs the full width under both columns ("Socket 1 chosen: REMOVE takes Piercing Chip." whole); the gauge spans the right column; the Core line and chip rows sit in the wider column.
+- [ ] The Catalogue: the tabs read PARTS CHIPS ENGRAM MORE whole; ten rows in the list with a pixel between the chosen row's frame and its neighbours; "Laser Pistol Engram" whole in its row; MATERIAL reads whole under its slot; "×16" never touches the need's name; MAKE, its price and the progress bar sit on one row with the percentage inside the bar; the odds line and the two-row status sit under them clear of the inventory.
+- [ ] The hotbar and inventory: the Weapon Assembler, Weapon Enhancer and Weapon Fabricator icons fill their slots and sit centred, each recognisable as its machine (pod and console, spire, printer frame); in hand and on the ground they look as before.

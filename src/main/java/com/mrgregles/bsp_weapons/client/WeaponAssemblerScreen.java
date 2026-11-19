@@ -29,8 +29,8 @@ public class WeaponAssemblerScreen extends AbstractContainerScreen<WeaponAssembl
     private static final int PANEL = 0xFF10151C, SLOT = 0xFF0C0E12, DIM = 0xFF2A2F3A, MUTED = 0xFF9AA3B5, TEXT = 0xFFE6EBF2, TEAL = 0xFF19D3B0, GOLD = 0xFFFFD23A, VIOLET = 0xFFB58CFF, RED = 0xFFFF6B5C, FAINT = 0xFF3A4150;
     private static final Stat[] BARS = {Stat.DAMAGE, Stat.PIERCING, Stat.RANGE, Stat.FIRE_RATE, Stat.HEAT_CAP, Stat.DURABILITY};
     private static final double[] BAR_MAX = {20, 75, 160, 12, 200, 2000};
-    private static final int ASSEMBLE_X = 8, ASSEMBLE_Y = 104, ASSEMBLE_W = 60, TAKE_X = 8, TAKE_Y = 122, TAKE_W = 110, KEY_H = 14;
-    private static final int BARS_X = 150, BARS_Y = 106, BARS_W = 98, BAR_ROW = 7;
+    private static final int ASSEMBLE_X = 8, ASSEMBLE_Y = 104, ASSEMBLE_W = 60, TAKE_X = 8, TAKE_Y = 122, TAKE_W = 130, KEY_H = 14, STATUS_W = 160;
+    private static final int BARS_X = 180, BARS_Y = 106, BARS_W = 110, BAR_ROW = 7;
     private final ItemStackHandler items;
     private String status = "", odds = "", assembleLabel = "", takeLabel = "", title = "", tabBuild = "", tabPlan = "";
     private final String[] slotLabels = new String[Assembly.SLOTS], statNames = new String[BARS.length], barText = new String[BARS.length];
@@ -45,7 +45,7 @@ public class WeaponAssemblerScreen extends AbstractContainerScreen<WeaponAssembl
     public WeaponAssemblerScreen(WeaponAssemblerMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.items = menu.blockEntity().items();
-        imageWidth = 256;
+        imageWidth = 300;
         imageHeight = 232;
     }
 
@@ -82,13 +82,13 @@ public class WeaponAssemblerScreen extends AbstractContainerScreen<WeaponAssembl
         sheetFromOutput = out != null;
         sheet = spec == null ? new Sheet() : SheetCalculator.compute(spec);
         String why = Assembly.cannotAssemble(items);
-        status = why == null || out != null ? "" : Text.cut(font, why, 118);
+        status = why == null || out != null ? "" : Text.cut(font, why, STATUS_W);
         Catalyst c = Assembly.rollCatalyst(items);
-        if (c == null) odds = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".assembler.no_catalyst"), 140);
+        if (c == null) odds = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".assembler.no_catalyst"), STATUS_W);
         else {
             int total = 0;
             for (Rarity r : Rarity.values()) total += c.weight(r);
-            odds = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".assembler.odds", pct(c, Rarity.NORMAL, total), pct(c, Rarity.RARE, total), pct(c, Rarity.EPIC, total), pct(c, Rarity.S, total)), 140);
+            odds = Text.cut(font, Component.translatable("gui." + BspWeapons.MODID + ".assembler.odds", pct(c, Rarity.NORMAL, total), pct(c, Rarity.RARE, total), pct(c, Rarity.EPIC, total), pct(c, Rarity.S, total)), STATUS_W);
         }
         canAssemble = status.isEmpty() && !sheetFromOutput && items.getStackInSlot(Assembly.OUTPUT).isEmpty();
         canTake = Assembly.cannotTakeApart(items) == null;
@@ -118,14 +118,14 @@ public class WeaponAssemblerScreen extends AbstractContainerScreen<WeaponAssembl
         g.fill(x, y, x + imageWidth, y + imageHeight, PANEL);
         frame(g, x, y, imageWidth, imageHeight, DIM);
         g.drawString(font, title, x + 6, y + 6, GOLD, false);
-        g.fill(x + 6, y + 18, x + 250, y + 19, DIM);
+        g.fill(x + 6, y + 18, x + 294, y + 19, DIM);
         // tabs: BUILD on, PLAN not yet
-        tab(g, x + 170, y + 4, tabBuild, true);
-        tab(g, x + 212, y + 4, tabPlan, false);
+        tab(g, x + 214, y + 4, tabBuild, true);
+        tab(g, x + 256, y + 4, tabPlan, false);
         // the rail
-        g.fill(x + 24, y + 55, x + 232, y + 59, 0xFF2E343D);
-        g.fill(x + 24, y + 55, x + 232, y + 56, 0xFF4A5363);
-        g.fill(x + 26, y + 57, x + 230, y + 58, 0xFFD9B23A);
+        g.fill(x + 24, y + 55, x + 276, y + 59, 0xFF2E343D);
+        g.fill(x + 24, y + 55, x + 276, y + 56, 0xFF4A5363);
+        g.fill(x + 26, y + 57, x + 274, y + 58, 0xFFD9B23A);
         // the slots, with faint names where empty
         for (int i = 0; i < Assembly.SLOTS; i++) {
             int sx = x + WeaponAssemblerMenu.SLOT_XY[i][0], sy = y + WeaponAssemblerMenu.SLOT_XY[i][1];
@@ -173,7 +173,7 @@ public class WeaponAssemblerScreen extends AbstractContainerScreen<WeaponAssembl
             PartKind k = Assembly.kindOf(slot);
             key = k == null ? "part" : k.id();
         }
-        return Text.cut(font, Component.translatable("slot." + BspWeapons.MODID + "." + key), 30);
+        return Text.cut(font, Component.translatable("slot." + BspWeapons.MODID + "." + key), 40);
     }
 
     private boolean hovered(int mouseX, int mouseY, int rx, int ry, int w, int h) {
